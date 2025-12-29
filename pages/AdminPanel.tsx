@@ -51,8 +51,8 @@ const AdminPanel: React.FC = () => {
     setTimeout(() => setIsRefreshing(false), 500);
   };
 
-  const handleFinish = (id: string, method: 'card' | 'cash') => {
-    updateBooking(id, { status: 'completed', paymentMethod: method });
+  const handleFinish = async (id: string, method: 'card' | 'cash') => {
+    await updateBooking(id, { status: 'completed', paymentMethod: method });
     setCompletingId(null);
   };
 
@@ -62,14 +62,14 @@ const AdminPanel: React.FC = () => {
 
     setProcessingId(bookingId);
 
-    // Важно: Използваме езика на клиента от резервацията
+    // Важно: Използваме езика на резервацията, не текущия език на админа
     const bookingLang = booking.language || 'bg'; 
     const bookingTrainers = getTrainers(bookingLang);
     const trainer = bookingTrainers.find(tr => tr.id === booking.trainerId);
     const currentT = TRANSLATIONS[bookingLang];
     
     if (booking.customerEmail && trainer) {
-      // 1. Форматиране на датата спрямо езика на клиента (напр. "понеделник, 24 май 2024 г.")
+      // 1. Форматиране на датата спрямо езика на клиента
       const dateObj = new Date(booking.date);
       const dateOptions: Intl.DateTimeFormatOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
       const formattedDate = dateObj.toLocaleDateString(bookingLang === 'bg' ? 'bg-BG' : 'en-US', dateOptions);
@@ -77,7 +77,18 @@ const AdminPanel: React.FC = () => {
         ? `${formattedDate} в ${booking.time} ч.`
         : `${formattedDate} @ ${booking.time}`;
 
-      // 2. Параметри за EmailJS шаблона
+      // 2. Google Calendar линк
+      const [year, month, day] = booking.date.split('-');
+      const [hour, minute] = booking.time.split(':');
+      const startIso = `${year}${month}${day}T${hour}${minute}00`;
+      const endHour = (parseInt(hour) + 1).toString().padStart(2, '0');
+      const endIso = `${year}${month}${day}T${endHour}${minute}00`;
+      
+      const calText = encodeURIComponent(bookingLang === 'bg' ? `Тренировка с ${trainer.name} @ ClassFit` : `Training with ${trainer.name} @ ClassFit`);
+      const calLoc = encodeURIComponent(`ClassFit Varna, Stop Mir, ${currentT.address}`);
+      const calendarUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=${calText}&dates=${startIso}/${endIso}&location=${calLoc}`;
+
+      // 3. Параметри за имейл шаблона
       const templateParams = {
         to_email: booking.customerEmail,
         gym_name: "ClassFit Varna",
@@ -87,18 +98,21 @@ const AdminPanel: React.FC = () => {
         start_datetime_human: humanReadableDateTime,
         duration_minutes: "60",
         coach_name: trainer.name,
-        location_name: "ClassFit Varna (Спирка МИР)",
+        location_name: "ClassFit Varna (Stop Mir)",
         address_line: currentT.address,
         price: booking.price.toFixed(2),
         currency: bookingLang === 'bg' ? 'лв.' : 'BGN',
         payment_method: currentT.payAtDesk,
         manage_booking_url: `${window.location.origin}/profile`,
+        add_to_calendar_url: calendarUrl,
         checkin_code: booking.id.slice(0, 6).toUpperCase(),
         support_email: "support@classfitvarna.bg",
         support_phone: currentT.gymPhone,
+        terms_url: `${window.location.origin}/about`,
+        privacy_url: `${window.location.origin}/about`
       };
 
-      // Избор на шаблон: template_8dnoxwb за български
+      // Избор на шаблон според езика
       const templateId = bookingLang === 'bg' ? 'template_8dnoxwb' : 'template_18zuajh'; 
 
       try {
@@ -108,12 +122,19 @@ const AdminPanel: React.FC = () => {
       }
     }
 
-    updateBooking(bookingId, { status: 'confirmed' });
+    await updateBooking(bookingId, { status: 'confirmed' });
     setProcessingId(null);
   };
 
   const handleDeleteBooking = (id: string) => {
     deleteBooking(id);
+  };
+
+  const handleFactoryReset = () => {
+    if (window.confirm(t.sure)) {
+        localStorage.clear();
+        window.location.reload();
+    }
   };
 
   const handleDeleteUser = (id: string) => {
@@ -224,9 +245,9 @@ const AdminPanel: React.FC = () => {
                    ))}
                    <tr className="bg-dark text-white border-t border-white/5 font-black uppercase italic text-xs">
                       <td className="px-8 py-6 text-slate-400">{t.totalTotal}</td>
-                      <td className="px-8 py-6 text-center text-brand">{analyticsSheet.reduce((acc, row) => acc + row.totalCount, 0)}</td>
-                      <td className="px-8 py-6 text-right">{analyticsSheet.reduce((acc, row) => acc + row.cashIncome, 0)} BGN</td>
-                      <td className="px-8 py-6 text-right">{analyticsSheet.reduce((acc, row) => acc + row.cardIncome, 0)} BGN</td>
+                      <td className="px-8 py-6 text-center text-brand">{analyticsSheet.reduce((a, b) => a + b.totalCount, 0)}</td>
+                      <td className="px-8 py-6 text-right">{analyticsSheet.reduce((a, b) => a + b.totalCount > 0 ? a + b.cashIncome : a, 0)} BGN</td>
+                      <td className="px-8 py-6 text-right">{analyticsSheet.reduce((a, b) => a + b.totalCount > 0 ? a + b.cardIncome : a, 0)} BGN</td>
                       <td className="px-8 py-6 text-right text-brand text-xl">{totalIncome} BGN</td>
                    </tr>
                  </tbody>

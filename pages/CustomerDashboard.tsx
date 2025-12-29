@@ -46,9 +46,14 @@ const CustomerDashboard: React.FC = () => {
   // Filter bookings for this user
   const myBookings = bookings.filter(b => b.userId === currentUser.id);
 
-  const handleCancelRequest = (id: string) => {
-    updateBooking(id, { status: 'cancelled' });
-    setCancellingId(null);
+  const handleCancelRequest = async (id: string) => {
+    try {
+      await updateBooking(id, { status: 'cancelled' });
+      setCancellingId(null);
+    } catch (e) {
+      console.error(e);
+      alert(language === 'bg' ? 'Неуспешна отмяна.' : 'Failed to cancel.');
+    }
   };
 
   const handleLogout = () => {

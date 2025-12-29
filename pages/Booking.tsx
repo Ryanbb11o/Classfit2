@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, Calendar as CalendarIcon, Clock, Info, User, Phone, X, LogIn, Mail } from 'lucide-react';
+import { Check, Calendar as CalendarIcon, Clock, Info, User, Phone, X, LogIn, Mail, Loader2 } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { getTrainers, TRANSLATIONS } from '../constants';
 import { Trainer, Booking } from '../types';
@@ -18,6 +18,7 @@ const BookingPage: React.FC = () => {
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [customerEmail, setCustomerEmail] = useState<string | undefined>(undefined);
   const [lastBooking, setLastBooking] = useState<Booking | null>(null);
   
@@ -27,27 +28,29 @@ const BookingPage: React.FC = () => {
   const [guestPhone, setGuestPhone] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
 
-  const initiateBooking = () => {
+  const initiateBooking = async () => {
     if (!selectedTrainer || !selectedTime || !selectedDate) return;
 
     if (currentUser) {
       // If logged in, book immediately using account email
-      finalizeBooking(currentUser.name, undefined, currentUser.id, currentUser.email);
+      await finalizeBooking(currentUser.name, undefined, currentUser.id, currentUser.email);
     } else {
       // If not logged in, show guest form
       setShowGuestForm(true);
     }
   };
 
-  const handleGuestSubmit = (e: React.FormEvent) => {
+  const handleGuestSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (guestName && guestPhone && guestEmail) {
-      finalizeBooking(guestName, guestPhone, undefined, guestEmail);
+      await finalizeBooking(guestName, guestPhone, undefined, guestEmail);
     }
   };
 
-  const finalizeBooking = (name: string, phone?: string, userId?: string, email?: string) => {
+  const finalizeBooking = async (name: string, phone?: string, userId?: string, email?: string) => {
     if (!selectedTrainer || !selectedTime || !selectedDate) return;
+
+    setIsSubmitting(true);
 
     const newBooking: Booking = {
       id: Math.random().toString(36).substr(2, 9),
@@ -56,18 +59,27 @@ const BookingPage: React.FC = () => {
       customerName: name,
       customerPhone: phone,
       customerEmail: email,
-      language: language, // Важно: Запазваме езика на потребителя тук
+      language: language,
       date: selectedDate,
       time: selectedTime,
       price: selectedTrainer.price,
       status: 'pending',
     };
 
-    addBooking(newBooking);
-    setLastBooking(newBooking);
-    setCustomerEmail(email);
-    setShowGuestForm(false);
-    setIsSuccess(true);
+    try {
+      await addBooking(newBooking);
+      setLastBooking(newBooking);
+      setCustomerEmail(email);
+      setShowGuestForm(false);
+      setIsSuccess(true);
+    } catch (error) {
+      console.error("Booking failed:", error);
+      alert(language === 'bg' 
+        ? 'Възникна грешка при записването на часа. Моля, опитайте отново.' 
+        : 'An error occurred while booking. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isSuccess && lastBooking) {
@@ -141,10 +153,10 @@ const BookingPage: React.FC = () => {
           {trainers.map(trainer => (
             <div 
               key={trainer.id}
-              onClick={() => setSelectedTrainer(trainer)}
+              onClick={() => !isSubmitting && setSelectedTrainer(trainer)}
               className={`p-5 rounded-3xl border-2 transition-quick cursor-pointer flex items-center gap-5 ${
                 selectedTrainer?.id === trainer.id ? 'border-brand bg-brand/10 shadow-lg shadow-brand/5' : 'border-white/5 hover:border-brand/30 bg-surface'
-              }`}
+              } ${isSubmitting ? 'opacity-50 pointer-events-none' : ''}`}
             >
               <img src={trainer.image} alt={trainer.name} className="w-16 h-16 rounded-2xl object-cover grayscale brightness-90 group-hover:grayscale-0" />
               <div>
@@ -177,6 +189,7 @@ const BookingPage: React.FC = () => {
                     value={selectedDate}
                     min={new Date().toISOString().split('T')[0]}
                     onChange={(e) => setSelectedDate(e.target.value)}
+                    disabled={isSubmitting}
                     className="bg-transparent text-white text-xs font-black uppercase tracking-widest outline-none border-none cursor-pointer w-full sm:w-auto [&::-webkit-calendar-picker-indicator]:invert"
                   />
                 </div>
@@ -189,11 +202,12 @@ const BookingPage: React.FC = () => {
                     <button
                       key={time}
                       onClick={() => setSelectedTime(time)}
+                      disabled={isSubmitting}
                       className={`py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-quick border-2 ${
                         selectedTime === time 
                         ? 'bg-brand text-dark border-brand shadow-lg shadow-brand/20' 
                         : 'bg-dark/50 text-slate-400 border-white/5 hover:border-brand/40'
-                      }`}
+                      } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                       {time}
                     </button>
@@ -213,15 +227,17 @@ const BookingPage: React.FC = () => {
                 </div>
                 
                 <button 
-                  disabled={!selectedTime}
+                  disabled={!selectedTime || isSubmitting}
                   onClick={initiateBooking}
                   className={`w-full sm:w-auto px-16 py-5 rounded-full font-black uppercase italic tracking-[0.2em] transition-quick shadow-2xl flex items-center justify-center gap-2 ${
-                    selectedTime
+                    selectedTime && !isSubmitting
                     ? 'bg-brand text-dark hover:bg-white hover:text-dark shadow-brand/20 active:scale-95' 
                     : 'bg-white/10 text-slate-500 cursor-not-allowed shadow-none'
                   }`}
                 >
-                  {t.bookNow}
+                  {isSubmitting ? (
+                    <span className="flex items-center gap-2"><Loader2 className="animate-spin" size={18}/> {language === 'bg' ? 'ОБРАБОТКА...' : 'PROCESSING...'}</span>
+                  ) : t.bookNow}
                 </button>
               </div>
             </div>
@@ -241,6 +257,7 @@ const BookingPage: React.FC = () => {
            <div className="bg-surface rounded-[2.5rem] p-8 md:p-10 max-w-md w-full shadow-2xl relative animate-in zoom-in-95 slide-in-from-bottom-4 duration-300 border border-white/10">
               <button 
                 onClick={() => setShowGuestForm(false)}
+                disabled={isSubmitting}
                 className="absolute top-6 right-6 p-2 bg-white/5 rounded-full hover:bg-white/10 transition-quick text-white"
               >
                 <X size={20} />
@@ -259,7 +276,8 @@ const BookingPage: React.FC = () => {
                       required
                       value={guestName}
                       onChange={(e) => setGuestName(e.target.value)}
-                      className="w-full bg-dark/50 border-2 border-transparent focus:border-brand focus:bg-dark rounded-xl pl-11 pr-5 py-4 font-bold outline-none transition-all text-white placeholder-slate-600"
+                      disabled={isSubmitting}
+                      className="w-full bg-dark/50 border-2 border-transparent focus:border-brand focus:bg-dark rounded-xl pl-11 pr-5 py-4 font-bold outline-none transition-all text-white placeholder-slate-600 disabled:opacity-50"
                       placeholder={t.yourName}
                     />
                   </div>
@@ -273,7 +291,8 @@ const BookingPage: React.FC = () => {
                       required
                       value={guestPhone}
                       onChange={(e) => setGuestPhone(e.target.value)}
-                      className="w-full bg-dark/50 border-2 border-transparent focus:border-brand focus:bg-dark rounded-xl pl-11 pr-5 py-4 font-bold outline-none transition-all text-white placeholder-slate-600"
+                      disabled={isSubmitting}
+                      className="w-full bg-dark/50 border-2 border-transparent focus:border-brand focus:bg-dark rounded-xl pl-11 pr-5 py-4 font-bold outline-none transition-all text-white placeholder-slate-600 disabled:opacity-50"
                       placeholder="0888 123 456"
                     />
                   </div>
@@ -287,7 +306,8 @@ const BookingPage: React.FC = () => {
                       required
                       value={guestEmail}
                       onChange={(e) => setGuestEmail(e.target.value)}
-                      className="w-full bg-dark/50 border-2 border-transparent focus:border-brand focus:bg-dark rounded-xl pl-11 pr-5 py-4 font-bold outline-none transition-all text-white placeholder-slate-600"
+                      disabled={isSubmitting}
+                      className="w-full bg-dark/50 border-2 border-transparent focus:border-brand focus:bg-dark rounded-xl pl-11 pr-5 py-4 font-bold outline-none transition-all text-white placeholder-slate-600 disabled:opacity-50"
                       placeholder="name@example.com"
                     />
                   </div>
@@ -295,9 +315,10 @@ const BookingPage: React.FC = () => {
 
                 <button 
                   type="submit"
-                  className="w-full bg-brand text-dark py-4 rounded-xl font-black uppercase tracking-widest hover:bg-white hover:text-dark transition-all duration-300 shadow-xl shadow-brand/20 mt-4 flex items-center justify-center gap-2"
+                  disabled={isSubmitting}
+                  className="w-full bg-brand text-dark py-4 rounded-xl font-black uppercase tracking-widest hover:bg-white hover:text-dark transition-all duration-300 shadow-xl shadow-brand/20 mt-4 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-wait"
                 >
-                   {t.confirmBooking}
+                   {isSubmitting ? <Loader2 className="animate-spin" /> : t.confirmBooking}
                 </button>
               </form>
 
@@ -305,7 +326,8 @@ const BookingPage: React.FC = () => {
                  <p className="text-xs font-bold text-slate-500 mb-3 uppercase tracking-wide">{t.haveAccount}</p>
                  <button 
                    onClick={() => navigate('/login')}
-                   className="flex items-center justify-center gap-2 w-full py-3 border-2 border-white/10 rounded-xl font-black uppercase tracking-widest text-white hover:border-brand transition-all text-xs"
+                   disabled={isSubmitting}
+                   className="flex items-center justify-center gap-2 w-full py-3 border-2 border-white/10 rounded-xl font-black uppercase tracking-widest text-white hover:border-brand transition-all text-xs disabled:opacity-50"
                  >
                    <LogIn size={14} /> {t.loginProfile}
                  </button>
