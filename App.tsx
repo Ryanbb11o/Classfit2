@@ -11,6 +11,7 @@ import AdminPanel from './pages/AdminPanel';
 import CustomerDashboard from './pages/CustomerDashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import TrainerSignUp from './pages/TrainerSignUp';
 import { Loader2, AlertTriangle, X, Copy, ExternalLink, RefreshCw, Database } from 'lucide-react';
 
 interface ErrorBoundaryProps {
@@ -21,7 +22,6 @@ interface ErrorBoundaryState {
   hasError: boolean;
 }
 
-// Fix: Using Component explicitly ensures that 'this.props' is correctly typed and recognized by the TypeScript compiler through inherited generic parameters.
 class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
@@ -30,6 +30,10 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 
   static getDerivedStateFromError(_error: any): ErrorBoundaryState { 
     return { hasError: true }; 
+  }
+
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error("ErrorBoundary caught an error", error, errorInfo);
   }
   
   render() {
@@ -163,6 +167,7 @@ const AppContent: React.FC = () => {
           <Route path="/profile" element={<CustomerDashboard />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Register />} />
+          <Route path="/trainer-signup" element={<TrainerSignUp />} />
         </Routes>
       </Layout>
     </div>

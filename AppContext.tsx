@@ -15,6 +15,7 @@ interface AppContextType {
   users: User[];
   login: (email: string, pass: string) => Promise<boolean>;
   register: (name: string, email: string, pass: string) => Promise<boolean>;
+  registerTrainer: (name: string, email: string, pass: string, phone: string, specialty: string) => Promise<boolean>;
   deleteUser: (id: string) => Promise<void>;
   logout: () => void;
   refreshData: () => Promise<void>;
@@ -48,8 +49,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           if (localUsers) setUsers(JSON.parse(localUsers));
         }
         
+        // Note: refreshData logic below now handles validation, but we still load initially for demo mode or offline
         const savedUser = localStorage.getItem('classfit_user');
-        if (savedUser) setCurrentUser(JSON.parse(savedUser));
+        if (savedUser) {
+           const parsedUser = JSON.parse(savedUser);
+           // Only set if we haven't been logged out by refreshData validation logic
+           if (localStorage.getItem('classfit_user')) {
+             setCurrentUser(parsedUser);
+           }
+        }
       } catch (err) {
         console.warn("Database Init Error:", err);
       } finally {
@@ -59,9 +67,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     init();
   }, [isDemoMode]);
 
+  const logout = () => {
+    setCurrentUser(null);
+    localStorage.removeItem('classfit_user');
+  };
+
   const refreshData = async () => {
     if (isDemoMode) return;
     try {
+      // 1. Fetch Bookings
       const { data: bData, error: bError } = await supabase.from('bookings').select('*').order('created_at', { ascending: false });
       if (bError) throw bError;
       if (bData) {
@@ -82,10 +96,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setBookings(mappedBookings);
       }
       
+      // 2. Fetch Users
       const { data: uData, error: uError } = await supabase.from('users').select('*');
       if (uError) throw uError;
+      
+      let mappedUsers: User[] = [];
       if (uData) {
-        const mappedUsers: User[] = uData.map((u: any) => ({
+        mappedUsers = uData.map((u: any) => ({
           id: u.id,
           name: u.name,
           email: u.email,
@@ -95,6 +112,21 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }));
         setUsers(mappedUsers);
       }
+
+      // 3. Security Check: Validate Session
+      // If a user is stored in local storage, check if they still exist in the database.
+      const storedUserStr = localStorage.getItem('classfit_user');
+      if (storedUserStr) {
+        const storedUser = JSON.parse(storedUserStr);
+        // We check if the stored user ID exists in the freshly fetched users list
+        const userExistsInDb = mappedUsers.some(u => u.id === storedUser.id);
+        
+        if (!userExistsInDb) {
+          console.warn(`User session invalid: User ${storedUser.email} deleted from database. Logging out.`);
+          logout(); // This clears localStorage and currentUser state
+        }
+      }
+
     } catch (e) {
       console.error("Refresh failed:", e);
     }
@@ -224,6 +256,35 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return true;
   };
 
+  const registerTrainer = async (name: string, email: string, pass: string, phone: string, specialty: string): Promise<boolean> => {
+    if (isDemoMode) {
+       // Mock trainer application
+       return true;
+    }
+
+    // Combine name with specialty for simple storage in MVP without schema migration
+    // Or just store basic info. The Role is key.
+    const { data, error } = await supabase
+      .from('users')
+      .insert([{ 
+        name: `${name} (${specialty})`, 
+        email, 
+        password: pass, 
+        role: 'trainer_pending' 
+      }])
+      .select()
+      .single();
+
+    if (error || !data) {
+        console.error("Trainer Reg Error", error);
+        return false;
+    }
+    
+    // We do NOT auto-login pending trainers
+    await refreshData();
+    return true;
+  };
+
   const deleteUser = async (id: string) => {
     if (isDemoMode) {
       const newUsers = users.filter(u => u.id !== id);
@@ -236,17 +297,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     await refreshData();
   };
 
-  const logout = () => {
-    setCurrentUser(null);
-    localStorage.removeItem('classfit_user');
-  };
-
   return (
     <AppContext.Provider value={{ 
       language, setLanguage, 
       bookings, addBooking, updateBooking, deleteBooking,
       isAdmin,
-      currentUser, users, login, register, deleteUser, logout, refreshData,
+      currentUser, users, login, register, registerTrainer, deleteUser, logout, refreshData,
       isLoading,
       isDemoMode
     }}>

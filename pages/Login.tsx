@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { LogIn, AlertCircle, RefreshCw } from 'lucide-react';
+import { LogIn, AlertCircle, RefreshCw, Briefcase } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS } from '../constants';
 
@@ -13,7 +13,6 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  // Fixed: Made handleSubmit asynchronous and added await for the login function to correctly handle its Promise<boolean> return value.
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const success = await login(email, password);
@@ -84,6 +83,12 @@ const Login: React.FC = () => {
         <p className="text-center mt-8 text-sm font-medium text-slate-400">
           {t.noAccount} <Link to="/signup" className="text-brand font-bold hover:text-white transition-colors">{t.registerHere}</Link>
         </p>
+        
+        <div className="mt-8 pt-8 border-t border-white/5 text-center">
+             <Link to="/trainer-signup" className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors">
+                <Briefcase size={14} /> Are you a trainer?
+             </Link>
+        </div>
 
         {/* Developer Tool: Hard Reset */}
         <div className="mt-12 text-center">

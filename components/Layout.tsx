@@ -169,6 +169,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               <a href="#" className="hover:text-brand transition-all duration-200">Instagram</a>
               <a href="#" className="hover:text-brand transition-all duration-200">Facebook</a>
               <a href="#" className="hover:text-brand transition-all duration-200">LinkedIn</a>
+              <NavLink to="/trainer-signup" className="text-brand hover:text-white transition-all duration-200 mt-4 block">
+                 Join Team (Trainers)
+              </NavLink>
             </div>
           </div>
           <div className="flex flex-col items-center md:items-end justify-start">
