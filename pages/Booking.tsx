@@ -1,8 +1,9 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check, Calendar as CalendarIcon, Clock, Info, User, Phone, X, LogIn, Mail, Loader2, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react';
 import { useAppContext } from '../AppContext';
-import { getTrainers, TRANSLATIONS } from '../constants';
+import { getTrainers, TRANSLATIONS, DEFAULT_PROFILE_IMAGE } from '../constants';
 import { Trainer, Booking } from '../types';
 
 const BookingPage: React.FC = () => {
@@ -14,17 +15,7 @@ const BookingPage: React.FC = () => {
   const trainers = useMemo(() => {
     const staticTrainers = getTrainers(language);
     
-    const getPlaceholderImage = (id: string) => {
-      const images = [
-        'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=400&auto=format&fit=crop', 
-        'https://images.unsplash.com/photo-1518310383802-640c2de311b2?q=80&w=400&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?q=80&w=400&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=400&auto=format&fit=crop'
-      ];
-      const charCodeSum = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-      return images[charCodeSum % images.length];
-    };
-
+    // Instead of random placeholder, use the default image for dynamic trainers if they don't have one
     const dynamicTrainers: Trainer[] = users
       .filter(u => u.role === 'trainer')
       .map(u => {
@@ -37,7 +28,7 @@ const BookingPage: React.FC = () => {
           name: displayName,
           specialty: displaySpecialty,
           price: 20, 
-          image: u.image || getPlaceholderImage(u.id), 
+          image: u.image || DEFAULT_PROFILE_IMAGE, 
           phone: u.phone || '',
           availability: ['08:00', '09:00', '10:00', '14:00', '15:00', '16:00', '17:00']
         };

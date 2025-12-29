@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Clock, CheckCircle, XCircle, User, Briefcase, RefreshCw, AlertCircle, Link as LinkIcon, Check, DollarSign, ListFilter, LayoutDashboard, Settings, Camera, Save, Loader2 } from 'lucide-react';
 import { useAppContext } from '../AppContext';
-import { TRANSLATIONS, getTrainers } from '../constants';
+import { TRANSLATIONS, getTrainers, DEFAULT_PROFILE_IMAGE } from '../constants';
 
 const TrainerDashboard: React.FC = () => {
   const { currentUser, bookings, updateBooking, updateUser, language, refreshData, isLoading } = useAppContext();
@@ -74,7 +75,7 @@ const TrainerDashboard: React.FC = () => {
       try {
           await updateUser(currentUser.id, {
               name: editName,
-              image: editImage,
+              image: editImage || '', // Allow saving empty to trigger default in UI, or save default string? Let's keep it empty in DB if they want, we handle display.
               bio: editBio,
               phone: editPhone
           });
@@ -121,6 +122,9 @@ const TrainerDashboard: React.FC = () => {
   
   const totalEarnings = completedBookings.reduce((sum, b) => sum + b.price, 0);
 
+  // Helper for displaying profile image
+  const displayImage = currentUser.image || DEFAULT_PROFILE_IMAGE;
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-24 animate-in fade-in slide-in-from-bottom-2 duration-500">
       
@@ -144,23 +148,25 @@ const TrainerDashboard: React.FC = () => {
         </button>
       </div>
 
-      {/* ALERT: Missing Profile Picture */}
+      {/* ALERT: Missing Profile Picture - Now modified to only show if they haven't explicitly set one, but we use a default */}
+      {/* Actually, if we have a default, we don't necessarily need to force them, but it's good practice. 
+          Let's hide the red alert now that we have a default fallback, or change it to a suggestion. */}
       {!currentUser.image && (
-          <div className="mb-12 p-6 bg-red-500/10 border border-red-500/20 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-6 animate-pulse">
+          <div className="mb-12 p-6 bg-blue-500/10 border border-blue-500/20 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center text-white shrink-0">
+                  <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white shrink-0">
                       <Camera size={24} />
                   </div>
                   <div>
-                      <h3 className="text-xl font-black uppercase italic text-white">Action Required</h3>
-                      <p className="text-slate-300 font-medium text-sm">You must set a profile picture to appear on the booking page.</p>
+                      <h3 className="text-xl font-black uppercase italic text-white">Profile Photo</h3>
+                      <p className="text-slate-300 font-medium text-sm">You are currently using the default profile picture. Upload your own to stand out!</p>
                   </div>
               </div>
               <button 
                 onClick={handleFixProfileClick}
-                className="px-8 py-3 bg-red-500 text-white rounded-xl font-black uppercase tracking-widest hover:bg-white hover:text-red-500 transition-all whitespace-nowrap"
+                className="px-8 py-3 bg-blue-500 text-white rounded-xl font-black uppercase tracking-widest hover:bg-white hover:text-blue-500 transition-all whitespace-nowrap"
               >
-                  Fix Now
+                  Update
               </button>
           </div>
       )}
@@ -223,7 +229,7 @@ const TrainerDashboard: React.FC = () => {
               className={`flex items-center gap-2 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'profile' ? 'bg-white text-dark' : 'bg-white/5 text-slate-400 hover:text-white'}`}
             >
                <Settings size={14} /> Profile Settings
-               {!currentUser.image && <span className="ml-2 w-2 h-2 rounded-full bg-red-500"></span>}
+               {!currentUser.image && <span className="ml-2 w-2 h-2 rounded-full bg-blue-500"></span>}
             </button>
          </div>
 
@@ -352,13 +358,13 @@ const TrainerDashboard: React.FC = () => {
                             <div className="w-full max-w-xs bg-surface border-2 border-brand rounded-3xl p-6 relative overflow-hidden group">
                                 <div className="aspect-square rounded-2xl bg-dark mb-4 overflow-hidden relative">
                                     <img 
-                                      src={editImage || 'https://via.placeholder.com/400x400?text=No+Image'} 
+                                      src={editImage || DEFAULT_PROFILE_IMAGE} 
                                       alt="Preview" 
                                       className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" 
                                     />
                                     {!editImage && (
-                                        <div className="absolute inset-0 flex items-center justify-center text-slate-600">
-                                            <Camera size={32} />
+                                        <div className="absolute inset-0 flex items-center justify-center text-white/50 bg-black/30 pointer-events-none">
+                                            <span className="text-xs font-bold uppercase tracking-widest">Default Image</span>
                                         </div>
                                     )}
                                 </div>
@@ -404,7 +410,7 @@ const TrainerDashboard: React.FC = () => {
                                             className="w-full bg-dark/50 border border-white/10 rounded-xl px-5 py-4 text-white font-bold outline-none focus:border-brand"
                                             value={editImage}
                                             onChange={(e) => setEditImage(e.target.value)}
-                                            placeholder="https://example.com/my-photo.jpg"
+                                            placeholder="Leave empty to use default image"
                                         />
                                         <button 
                                             type="button" 
@@ -414,7 +420,7 @@ const TrainerDashboard: React.FC = () => {
                                             Use Demo
                                         </button>
                                     </div>
-                                    <p className="text-[10px] text-slate-600 mt-1 ml-2">Provide a direct link to a square image (jpg/png).</p>
+                                    <p className="text-[10px] text-slate-600 mt-1 ml-2">Provide a direct link to a square image (jpg/png), or leave blank for default.</p>
                                 </div>
 
                                 <div>
