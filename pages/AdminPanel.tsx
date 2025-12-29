@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Calendar, Clock, User, Check, X, ShieldAlert, CheckCircle2, DollarSign, CreditCard, Banknote, LayoutDashboard, ListFilter, FileSpreadsheet, TrendingUp, Phone, Loader2, Trash2, Users, Shield, RefreshCw, History, Briefcase, CheckCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Calendar, Clock, User, Check, X, ShieldAlert, CheckCircle2, DollarSign, CreditCard, Banknote, LayoutDashboard, ListFilter, FileSpreadsheet, TrendingUp, Phone, Loader2, Trash2, Users, Shield, RefreshCw, History, Briefcase, CheckCircle, ArrowRight, AlertTriangle } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, getTrainers } from '../constants';
 import emailjs from '@emailjs/browser';
@@ -13,6 +13,11 @@ const AdminPanel: React.FC = () => {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'history' | 'finance' | 'users' | 'applications'>('overview');
+
+  // Refresh data on mount to ensure we see new applications
+  useEffect(() => {
+    refreshData();
+  }, []);
 
   const activeBookingsList = bookings.filter(b => b.status === 'pending' || b.status === 'confirmed');
   const historyBookingsList = bookings.filter(b => b.status === 'completed' || b.status === 'cancelled');
@@ -189,8 +194,9 @@ const AdminPanel: React.FC = () => {
           <button onClick={() => setActiveTab('bookings')} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'bookings' ? 'bg-brand text-dark' : 'text-slate-400'}`}>
             <ListFilter size={14} className="inline mr-2" />{t.tabBookings} {pendingCount > 0 && <span className="ml-1 px-1.5 py-0.5 bg-brand text-dark rounded text-[8px]">{pendingCount}</span>}
           </button>
+          {/* Renamed for clarity */}
           <button onClick={() => setActiveTab('applications')} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'applications' ? 'bg-brand text-dark' : 'text-slate-400'}`}>
-            <Briefcase size={14} className="inline mr-2" />Apps {appCount > 0 && <span className="ml-1 px-1.5 py-0.5 bg-white text-dark rounded text-[8px]">{appCount}</span>}
+            <Briefcase size={14} className="inline mr-2" /> Trainer Requests {appCount > 0 && <span className="ml-1 px-1.5 py-0.5 bg-white text-dark rounded text-[8px]">{appCount}</span>}
           </button>
           <button onClick={() => setActiveTab('users')} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'users' ? 'bg-brand text-dark' : 'text-slate-400'}`}>
             <Users size={14} className="inline mr-2" />{t.tabUsers}
@@ -201,6 +207,28 @@ const AdminPanel: React.FC = () => {
       <div className="min-h-[400px]">
         {activeTab === 'overview' && (
           <div className="animate-in fade-in slide-in-from-bottom-4">
+            
+            {/* ALERT BANNER FOR TRAINER APPLICATIONS */}
+            {pendingApplications.length > 0 && (
+                <div className="mb-8 p-6 bg-yellow-500/10 border border-yellow-500/20 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-yellow-500 text-dark rounded-xl">
+                        <AlertTriangle size={24} />
+                    </div>
+                    <div>
+                        <h3 className="text-xl font-black uppercase italic text-white">Action Required</h3>
+                        <p className="text-slate-400 font-medium">{pendingApplications.length} pending trainer application(s).</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setActiveTab('applications')}
+                    className="px-6 py-3 bg-yellow-500 text-dark rounded-xl font-black uppercase tracking-widest hover:bg-white transition-all flex items-center gap-2"
+                  >
+                    Review Now <ArrowRight size={16} />
+                  </button>
+                </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-16">
               <div className="p-10 bg-brand text-dark rounded-[2.5rem] shadow-xl relative overflow-hidden group">
                  <div className="relative z-10">
@@ -344,7 +372,7 @@ const AdminPanel: React.FC = () => {
           <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-hidden animate-in fade-in">
              <div className="p-8 border-b border-white/5 bg-white/5 flex items-center justify-between">
                 <h3 className="text-lg font-black uppercase italic text-white flex items-center gap-3">
-                   <Briefcase className="text-brand" size={20} /> Trainer Applications
+                   <Briefcase className="text-brand" size={20} /> Pending Trainer Applications
                 </h3>
              </div>
              <div className="overflow-x-auto">
@@ -429,49 +457,6 @@ const AdminPanel: React.FC = () => {
                  </tbody>
                </table>
              </div>
-          </div>
-        )}
-
-        {/* Removed redundant history tab to keep it clean, or keep if user wants logs */}
-        {activeTab === 'history' && (
-          <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-hidden animate-in fade-in">
-            <div className="p-8 border-b border-white/5 bg-white/5"><h3 className="text-lg font-black uppercase italic text-white">{t.historyBookings}</h3></div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="border-b border-white/5 text-[10px] font-black uppercase text-slate-500">
-                    <th className="px-8 py-6">{t.client}</th>
-                    <th className="px-8 py-6">{t.trainer}</th>
-                    <th className="px-8 py-6">{t.details}</th>
-                    <th className="px-8 py-6">{t.status}</th>
-                    <th className="px-8 py-6 text-right">{t.action}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {historyBookingsList.map(booking => {
-                    const trainer = trainers.find(tr => tr.id === booking.trainerId);
-                    return (
-                      <tr key={booking.id} className="hover:bg-white/5">
-                        <td className="px-8 py-6 flex items-center gap-3">
-                          <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-slate-400"><User size={18} /></div>
-                          <span className="font-black italic uppercase text-xs text-white">{booking.customerName}</span>
-                        </td>
-                        <td className="px-8 py-6 text-slate-400 font-bold uppercase text-[10px]">{trainer?.name}</td>
-                        <td className="px-8 py-6 text-[10px] font-black uppercase text-white">{booking.date} | {booking.time}</td>
-                        <td className="px-8 py-6">
-                           <span className={`text-[9px] font-black uppercase px-3 py-1.5 rounded-lg ${booking.status === 'cancelled' ? 'bg-red-500/10 text-red-500' : 'bg-white/10 text-slate-400'}`}>
-                             {t[`status${booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}` as keyof typeof t]}
-                           </span>
-                        </td>
-                        <td className="px-8 py-6 text-right">
-                           <button onClick={() => handleDeleteBooking(booking.id)} className="p-2 text-slate-600 hover:text-red-500 transition-all"><Trash2 size={16} /></button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
           </div>
         )}
       </div>
