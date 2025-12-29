@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Language, Booking, User } from './types';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
@@ -74,7 +73,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const refreshData = async () => {
-    if (isDemoMode) return;
+    if (isDemoMode) {
+      // Refresh local state from storage in case other tabs updated it
+      const localBookings = localStorage.getItem('classfit_bookings');
+      const localUsers = localStorage.getItem('classfit_users');
+      if (localBookings) setBookings(JSON.parse(localBookings));
+      if (localUsers) setUsers(JSON.parse(localUsers));
+      return;
+    }
+
     try {
       // 1. Fetch Bookings
       const { data: bData, error: bError } = await supabase.from('bookings').select('*').order('created_at', { ascending: false });
@@ -121,7 +128,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         const storedUser = JSON.parse(storedUserStr);
         const userExistsInDb = mappedUsers.some(u => u.id === storedUser.id);
         
-        if (!userExistsInDb) {
+        if (!userExistsInDb && !isDemoMode) { // Only force logout in real mode if user gone
           console.warn(`User session invalid: User ${storedUser.email} deleted from database. Logging out.`);
           logout();
         }
@@ -188,14 +195,24 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const login = async (email: string, pass: string): Promise<boolean> => {
     if (isDemoMode) {
-      const mockUser: User = { 
-        id: 'demo-1', 
-        name: 'Demo Admin', 
-        email, 
-        password: pass, 
-        role: email.includes('admin') ? 'admin' : 'user',
-        joinedDate: new Date().toISOString()
-      };
+      // Check if user exists in local 'db' first
+      const existingUser = users.find(u => u.email === email && u.password === pass);
+      
+      let mockUser: User;
+      if (existingUser) {
+          mockUser = existingUser;
+      } else {
+          // Fallback for "admin" quick login in demo
+          mockUser = { 
+            id: 'demo-1', 
+            name: 'Demo Admin', 
+            email, 
+            password: pass, 
+            role: email.includes('admin') ? 'admin' : 'user',
+            joinedDate: new Date().toISOString()
+          };
+      }
+      
       setCurrentUser(mockUser);
       localStorage.setItem('classfit_user', JSON.stringify(mockUser));
       return true;
@@ -228,7 +245,21 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const register = async (name: string, email: string, pass: string): Promise<boolean> => {
     if (isDemoMode) {
-       const mockUser: User = { id: Math.random().toString(), name, email, password: pass, role: 'user', joinedDate: new Date().toISOString() };
+       const mockUser: User = { 
+        id: Math.random().toString(36).substr(2, 9), 
+        name, 
+        email, 
+        password: pass, 
+        role: 'user', 
+        joinedDate: new Date().toISOString() 
+       };
+       
+       // Update "DB" in demo mode
+       const currentUsers = JSON.parse(localStorage.getItem('classfit_users') || '[]');
+       const newUsers = [...currentUsers, mockUser];
+       localStorage.setItem('classfit_users', JSON.stringify(newUsers));
+       setUsers(newUsers);
+
        setCurrentUser(mockUser);
        localStorage.setItem('classfit_user', JSON.stringify(mockUser));
        return true;
@@ -260,6 +291,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const registerTrainer = async (name: string, email: string, pass: string, phone: string, specialty: string): Promise<{ success: boolean; msg?: string }> => {
     if (isDemoMode) {
+       const newUser: User = { 
+        id: Math.random().toString(36).substr(2, 9), 
+        name: `${name} (${specialty})`, 
+        email, 
+        password: pass, 
+        phone,
+        role: 'trainer_pending',
+        joinedDate: new Date().toISOString()
+       };
+
+       // Update "DB" in demo mode
+       const currentUsers = JSON.parse(localStorage.getItem('classfit_users') || '[]');
+       const newUsers = [...currentUsers, newUser];
+       localStorage.setItem('classfit_users', JSON.stringify(newUsers));
+       setUsers(newUsers);
+
        return { success: true };
     }
 

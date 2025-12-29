@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, User, Check, X, ShieldAlert, CheckCircle2, DollarSign, CreditCard, Banknote, LayoutDashboard, ListFilter, FileSpreadsheet, TrendingUp, Phone, Loader2, Trash2, Users, Shield, RefreshCw, History, Briefcase, CheckCircle, ArrowRight, AlertTriangle } from 'lucide-react';
 import { useAppContext } from '../AppContext';
@@ -14,10 +13,10 @@ const AdminPanel: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'history' | 'finance' | 'users' | 'applications'>('overview');
 
-  // Refresh data on mount to ensure we see new applications
+  // Refresh data on mount AND when tab changes to ensure fresh data
   useEffect(() => {
     refreshData();
-  }, []);
+  }, [activeTab]);
 
   const activeBookingsList = bookings.filter(b => b.status === 'pending' || b.status === 'confirmed');
   const historyBookingsList = bookings.filter(b => b.status === 'completed' || b.status === 'cancelled');
@@ -54,8 +53,9 @@ const AdminPanel: React.FC = () => {
 
   const handleManualRefresh = () => {
     setIsRefreshing(true);
-    refreshData();
-    setTimeout(() => setIsRefreshing(false), 500);
+    refreshData().then(() => {
+      setTimeout(() => setIsRefreshing(false), 500);
+    });
   };
 
   const handleFinish = async (id: string, method: 'card' | 'cash') => {
@@ -374,6 +374,9 @@ const AdminPanel: React.FC = () => {
                 <h3 className="text-lg font-black uppercase italic text-white flex items-center gap-3">
                    <Briefcase className="text-brand" size={20} /> Pending Trainer Applications
                 </h3>
+                <button onClick={handleManualRefresh} className="text-xs text-slate-400 hover:text-white flex items-center gap-1">
+                   <RefreshCw size={12} className={isRefreshing ? "animate-spin" : ""} /> Refresh List
+                </button>
              </div>
              <div className="overflow-x-auto">
                <table className="w-full text-left">
