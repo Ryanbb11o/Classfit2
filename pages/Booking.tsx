@@ -287,7 +287,7 @@ const BookingPage: React.FC = () => {
                    <img 
                       src={trainer.image} 
                       alt={trainer.name} 
-                      className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500 bg-dark"
+                      className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500 bg-zinc-700"
                    />
                    <div className="absolute inset-0 bg-gradient-to-t from-dark via-transparent to-transparent opacity-90"></div>
                    
@@ -328,7 +328,7 @@ const BookingPage: React.FC = () => {
             <div className="lg:col-span-1 space-y-6">
                {/* Trainer Card Mini */}
                <div className="bg-surface p-6 rounded-[2rem] border border-white/5 flex items-center gap-5">
-                  <img src={selectedTrainer.image} alt={selectedTrainer.name} className="w-20 h-20 rounded-2xl object-cover" />
+                  <img src={selectedTrainer.image} alt={selectedTrainer.name} className="w-20 h-20 rounded-2xl object-cover bg-zinc-700" />
                   <div>
                     <h3 className="text-xl font-black uppercase italic text-white leading-none mb-1">{selectedTrainer.name}</h3>
                     <p className="text-xs text-brand font-black uppercase tracking-wider">{selectedTrainer.specialty}</p>
