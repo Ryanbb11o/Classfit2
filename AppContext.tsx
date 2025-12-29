@@ -383,11 +383,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
 
     const dbUpdates: any = {};
-    if (updates.role) dbUpdates.role = updates.role;
-    if (updates.name) dbUpdates.name = updates.name;
-    if (updates.phone) dbUpdates.phone = updates.phone;
-    if (updates.image) dbUpdates.image = updates.image;
-    if (updates.bio) dbUpdates.bio = updates.bio;
+    if (updates.role !== undefined) dbUpdates.role = updates.role;
+    if (updates.name !== undefined) dbUpdates.name = updates.name;
+    if (updates.phone !== undefined) dbUpdates.phone = updates.phone;
+    if (updates.image !== undefined) dbUpdates.image = updates.image;
+    if (updates.bio !== undefined) dbUpdates.bio = updates.bio;
 
     const { error } = await supabase.from('users').update(dbUpdates).eq('id', id);
     if (error) throw error;

@@ -79,9 +79,10 @@ const TrainerDashboard: React.FC = () => {
               phone: editPhone
           });
           alert(language === 'bg' ? 'Профилът е обновен!' : 'Profile updated successfully!');
-      } catch (err) {
+      } catch (err: any) {
           console.error(err);
-          alert('Failed to update profile.');
+          const msg = err.message || err.error_description || 'Unknown error';
+          alert(`Failed to update profile: ${msg}`);
       } finally {
           setIsSaving(false);
       }

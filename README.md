@@ -1,11 +1,30 @@
-
 # ClassFit Varna - Supabase + Vercel
 
 Professional fitness management platform.
 
 ## 🗄️ Database Setup (Supabase)
 
-Run the following SQL in your Supabase SQL Editor:
+**CRITICAL FIX: Run this SQL to enable Trainer Profiles & Images**
+
+If you see "Failed to update profile", run this in Supabase SQL Editor:
+
+```sql
+-- 1. Add missing columns for profile pictures and bios
+ALTER TABLE users ADD COLUMN IF NOT EXISTS image TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS phone TEXT;
+
+-- 2. Update the role check to allow trainers
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+ALTER TABLE users ADD CONSTRAINT users_role_check 
+CHECK (role IN ('user', 'admin', 'trainer_pending', 'trainer'));
+
+-- 3. Ensure Row Level Security allows updates
+DROP POLICY IF EXISTS "Allow public access" ON users;
+CREATE POLICY "Allow public access" ON users FOR ALL USING (true) WITH CHECK (true);
+```
+
+### Initial Setup (If starting from scratch)
 
 ```sql
 -- 1. Create Users Table
@@ -16,8 +35,9 @@ CREATE TABLE users (
   password TEXT NOT NULL,
   phone TEXT,
   role TEXT DEFAULT 'user',
+  image TEXT,
+  bio TEXT,
   joined_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  -- Explicitly naming the constraint prevents "does not exist" errors later
   CONSTRAINT users_role_check CHECK (role IN ('user', 'admin', 'trainer_pending', 'trainer'))
 );
 
@@ -38,28 +58,12 @@ CREATE TABLE bookings (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 3. Basic Security Policy (Simple)
+-- 3. Basic Security Policy
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bookings ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Allow public access" ON users FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow public access" ON bookings FOR ALL USING (true) WITH CHECK (true);
-```
-
-### ⚠️ Troubleshooting: "Constraint does not exist" Error
-
-If you are updating an existing table and get an error like `ERROR: 42704: constraint "users_role_check" does not exist`, it means the rule wasn't named correctly before. Run this **Safe Update Block**:
-
-```sql
--- 1. Safely remove old constraint if it exists
-ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
-
--- 2. Add the new constraint allowing Trainer roles
-ALTER TABLE users ADD CONSTRAINT users_role_check 
-CHECK (role IN ('user', 'admin', 'trainer_pending', 'trainer'));
-
--- 3. Add phone column if missing
-ALTER TABLE users ADD COLUMN IF NOT EXISTS phone TEXT;
 ```
 
 ## 🚀 Vercel Deployment

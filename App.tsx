@@ -73,91 +73,48 @@ const SetupGuide: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         </h2>
         
         <p className="text-slate-400 text-sm mb-8 leading-relaxed">
-          Ensure these **Environment Variables** are added to your Vercel project settings:
+          Ensure these **Environment Variables** are added to your Vercel Project Settings to enable the database connection.
         </p>
-        
+
         <div className="space-y-4 mb-8">
-          <div className="bg-dark/50 p-4 rounded-2xl border border-white/5 flex items-center justify-between group">
-            <div>
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Variable Key 1</p>
-              <code className="text-brand font-mono text-xs">VITE_SUPABASE_URL</code>
-            </div>
-            <button onClick={() => copyToClipboard('VITE_SUPABASE_URL')} className="p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <Copy size={14} className="text-slate-500 hover:text-white" />
-            </button>
-          </div>
-
-          <div className="bg-dark/50 p-4 rounded-2xl border border-white/5 flex items-center justify-between group">
-            <div>
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Variable Key 2</p>
-              <code className="text-brand font-mono text-xs">VITE_SUPABASE_ANON_KEY</code>
-            </div>
-            <button onClick={() => copyToClipboard('VITE_SUPABASE_ANON_KEY')} className="p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <Copy size={14} className="text-slate-500 hover:text-white" />
-            </button>
-          </div>
+           <div className="bg-dark p-4 rounded-xl border border-white/5 flex items-center justify-between group">
+              <code className="text-xs font-mono text-brand">VITE_SUPABASE_URL</code>
+              <button onClick={() => copyToClipboard('VITE_SUPABASE_URL')} className="text-slate-500 hover:text-white"><Copy size={14} /></button>
+           </div>
+           <div className="bg-dark p-4 rounded-xl border border-white/5 flex items-center justify-between group">
+              <code className="text-xs font-mono text-brand">VITE_SUPABASE_ANON_KEY</code>
+              <button onClick={() => copyToClipboard('VITE_SUPABASE_ANON_KEY')} className="text-slate-500 hover:text-white"><Copy size={14} /></button>
+           </div>
         </div>
 
-        <div className="space-y-3">
-          <a 
-            href="https://vercel.com/dashboard" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 w-full py-4 bg-white text-dark rounded-xl font-black uppercase tracking-widest text-xs hover:bg-brand transition-colors"
-          >
-            Open Vercel Dashboard <ExternalLink size={14} />
-          </a>
-          <button 
-            onClick={onClose}
-            className="w-full py-4 bg-white/5 text-slate-400 rounded-xl font-black uppercase tracking-widest text-xs hover:text-white"
-          >
-            Dismiss
-          </button>
-        </div>
-        
-        <p className="text-center mt-6 text-[10px] text-slate-600 font-bold uppercase tracking-widest">
-          Note: You must redeploy in Vercel after adding keys.
-        </p>
+        <button onClick={onClose} className="w-full py-4 bg-white text-dark rounded-xl font-black uppercase tracking-widest hover:bg-brand transition-all">
+           Got it
+        </button>
       </div>
     </div>
   );
 };
 
 const AppContent: React.FC = () => {
-  const { isLoading, isDemoMode } = useAppContext();
-  const [showGuide, setShowGuide] = useState(false);
+   const { isDemoMode } = useAppContext();
+   const [showGuide, setShowGuide] = useState(false);
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-dark flex flex-col items-center justify-center gap-4">
-        <div className="spinner"></div>
-        <p className="text-white/40 font-black uppercase tracking-[0.3em] text-[10px] animate-pulse">
-          ClassFit Varna
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="relative">
-      {isDemoMode && (
-        <div className="fixed top-0 left-0 right-0 z-[100] bg-yellow-500 text-dark py-1.5 px-4 text-center text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-4">
-          <div className="flex items-center gap-2">
-            <AlertTriangle size={14} /> 
-            Running in Local/Demo Mode. Supabase keys not detected.
-          </div>
-          <button 
-            onClick={() => setShowGuide(true)}
-            className="underline font-black hover:opacity-70 transition-opacity"
-          >
-            How to fix?
-          </button>
-        </div>
-      )}
-
-      {showGuide && <SetupGuide onClose={() => setShowGuide(false)} />}
-
+   return (
       <Layout>
+        {/* Dev Banner if in Demo Mode */}
+        {isDemoMode && (
+            <div className="fixed bottom-4 right-4 z-50">
+               <button 
+                 onClick={() => setShowGuide(true)}
+                 className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-2xl hover:bg-red-600 transition-all"
+               >
+                  <AlertTriangle size={12} /> Demo Mode
+               </button>
+            </div>
+        )}
+        
+        {showGuide && <SetupGuide onClose={() => setShowGuide(false)} />}
+
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
@@ -165,23 +122,22 @@ const AppContent: React.FC = () => {
           <Route path="/memberships" element={<Memberships />} />
           <Route path="/shop" element={<Shop />} />
           <Route path="/admin" element={<AdminPanel />} />
-          <Route path="/trainer" element={<TrainerDashboard />} />
           <Route path="/profile" element={<CustomerDashboard />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Register />} />
           <Route path="/trainer-signup" element={<TrainerSignUp />} />
+          <Route path="/trainer" element={<TrainerDashboard />} />
         </Routes>
       </Layout>
-    </div>
-  );
-};
+   );
+}
 
 const App: React.FC = () => {
   return (
     <ErrorBoundary>
       <AppProvider>
         <Router>
-          <AppContent />
+           <AppContent />
         </Router>
       </AppProvider>
     </ErrorBoundary>
