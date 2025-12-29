@@ -1,16 +1,43 @@
-import React, { useState } from 'react';
-import { Calendar, Clock, CheckCircle, Timer, XCircle, Trash2, CheckCircle2, User as UserIcon, Mail, CalendarPlus, Phone, MapPin } from 'lucide-react';
+
+import React, { useState, useMemo } from 'react';
+import { Calendar, Clock, CheckCircle, Timer, XCircle, Trash2, CheckCircle2, User as UserIcon, Mail, CalendarPlus, Phone, MapPin, ChevronRight } from 'lucide-react';
 import { useAppContext } from '../AppContext';
-import { TRANSLATIONS, getTrainers } from '../constants';
+import { TRANSLATIONS, getTrainers, DEFAULT_PROFILE_IMAGE } from '../constants';
 import { useNavigate } from 'react-router-dom';
 import { Trainer, Booking } from '../types';
 
 const CustomerDashboard: React.FC = () => {
-  const { language, bookings, updateBooking, currentUser, logout } = useAppContext();
+  const { language, bookings, updateBooking, currentUser, logout, users } = useAppContext();
   const t = TRANSLATIONS[language];
-  const trainers = getTrainers(language);
   const navigate = useNavigate();
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+
+  // 1. COMBINE STATIC AND DYNAMIC TRAINERS TO ENSURE WE FIND EVERYONE
+  const allTrainers = useMemo(() => {
+    const staticTrainers = getTrainers(language);
+    
+    // Convert users with role 'trainer' into Trainer objects
+    const dynamicTrainers: Trainer[] = users
+      .filter(u => u.role === 'trainer')
+      .map(u => {
+        const match = u.name.match(/^(.*)\s\((.*)\)$/);
+        const displayName = match ? match[1] : u.name;
+        const displaySpecialty = match ? match[2] : (language === 'bg' ? 'Персонален треньор' : 'Personal Trainer');
+
+        return {
+          id: u.id,
+          name: displayName,
+          specialty: displaySpecialty,
+          price: 20, 
+          image: u.image || DEFAULT_PROFILE_IMAGE, 
+          phone: u.phone || '',
+          availability: []
+        };
+      });
+
+    // Merge arrays, preferring dynamic if ID conflicts (unlikely with UUIDs)
+    return [...staticTrainers, ...dynamicTrainers];
+  }, [language, users]);
 
   if (!currentUser) {
     return (
@@ -27,11 +54,7 @@ const CustomerDashboard: React.FC = () => {
   const getGoogleCalendarUrl = (booking: Booking, trainer?: Trainer) => {
     const [year, month, day] = booking.date.split('-');
     const [hour, minute] = booking.time.split(':');
-    
-    // Format: YYYYMMDDTHHmmSS
     const startDate = `${year}${month}${day}T${hour}${minute}00`;
-    
-    // Default 1 hour duration
     const endHour = (parseInt(hour) + 1).toString().padStart(2, '0');
     const endDate = `${year}${month}${day}T${endHour}${minute}00`;
     
@@ -42,7 +65,6 @@ const CustomerDashboard: React.FC = () => {
     return `https://www.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${startDate}/${endDate}&details=${details}&location=${location}`;
   };
 
-  // Filter bookings for this user
   const myBookings = bookings.filter(b => b.userId === currentUser.id);
 
   const handleCancelRequest = async (id: string) => {
@@ -60,167 +82,149 @@ const CustomerDashboard: React.FC = () => {
     navigate('/');
   }
 
+  // Helper to safely get trainer image
+  const getTrainerImage = (trainer?: Trainer) => {
+      if (!trainer || !trainer.image) return DEFAULT_PROFILE_IMAGE;
+      return trainer.image;
+  };
+
   return (
-    <div className="max-w-4xl mx-auto px-6 py-24 animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="max-w-5xl mx-auto px-4 py-24 animate-in fade-in slide-in-from-bottom-2 duration-500">
       
-      {/* Profile Header */}
-      <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-8 mb-16 pb-16 border-b border-white/5">
-         <div>
-            <div className="flex flex-wrap items-center gap-3 mb-4">
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-surface border border-white/5 rounded-full text-xs font-black uppercase tracking-widest text-white">
-                    <UserIcon size={14} className="text-brand" /> {t.clubMember}
-                </div>
-                {/* Email Badge */}
-                <div className="inline-flex items-center gap-2 px-4 py-2 border border-white/5 bg-surface rounded-full text-xs font-bold text-slate-400">
-                    <Mail size={14} /> {currentUser.email}
+      {/* Profile Header - Compact Version */}
+      <div className="bg-surface rounded-[2rem] p-8 border border-white/5 flex flex-col md:flex-row items-center justify-between gap-6 mb-12 shadow-2xl">
+         <div className="flex items-center gap-6">
+            <div className="w-20 h-20 rounded-full border-2 border-brand p-1">
+                <img 
+                    src={currentUser.image || DEFAULT_PROFILE_IMAGE} 
+                    alt="Profile" 
+                    className="w-full h-full object-cover rounded-full"
+                />
+            </div>
+            <div>
+                <h1 className="text-2xl md:text-3xl font-black uppercase italic text-white leading-none mb-1">
+                    {currentUser.name}
+                </h1>
+                <div className="flex flex-wrap gap-2">
+                    <span className="text-brand text-xs font-black uppercase tracking-widest bg-brand/10 px-2 py-1 rounded">
+                        {t.clubMember}
+                    </span>
+                    <span className="text-slate-400 text-xs font-bold px-2 py-1 bg-white/5 rounded flex items-center gap-1">
+                        <Mail size={10} /> {currentUser.email}
+                    </span>
                 </div>
             </div>
-            
-            <h1 className="text-5xl font-black uppercase italic mb-2 tracking-tighter leading-none text-white">{t.hello}, <span className="text-brand">{currentUser.name.split(' ')[0]}</span></h1>
-            <p className="text-slate-400 font-medium italic">{t.welcomeBackUser}</p>
          </div>
          <button 
            onClick={handleLogout}
-           className="px-6 py-3 border-2 border-white/10 rounded-xl text-xs font-black uppercase tracking-widest text-slate-400 hover:border-red-500 hover:text-red-500 transition-all bg-surface hover:bg-surface/50"
+           className="px-6 py-2 border border-white/10 rounded-full text-xs font-black uppercase tracking-widest text-slate-400 hover:bg-white hover:text-dark transition-all whitespace-nowrap"
          >
            {t.logout}
          </button>
       </div>
 
-      <div className="mb-8 flex items-center gap-4">
+      <div className="mb-6 flex items-center gap-3">
           <h2 className="text-xl font-black uppercase italic tracking-tight text-white">{t.myBookings}</h2>
           <span className="bg-brand text-dark text-xs font-black px-2 py-1 rounded-md">{myBookings.length}</span>
       </div>
 
-      <div className="space-y-6">
+      <div className="grid grid-cols-1 gap-4">
         {myBookings.length === 0 ? (
             <div className="text-center py-20 bg-surface rounded-3xl border border-white/5 border-dashed">
-                <p className="text-slate-500 font-medium">{t.noBookings}</p>
-                <button onClick={() => navigate('/booking')} className="mt-4 text-brand font-black uppercase text-xs tracking-widest hover:text-white transition-colors">{t.makeFirst}</button>
+                <p className="text-slate-500 font-medium mb-4">{t.noBookings}</p>
+                <button onClick={() => navigate('/booking')} className="px-6 py-3 bg-brand text-dark rounded-full font-black uppercase text-xs tracking-widest hover:bg-white transition-colors shadow-lg shadow-brand/20">
+                    {t.makeFirst}
+                </button>
             </div>
         ) : (
             myBookings.map(booking => {
-                const trainer = trainers.find(tr => tr.id === booking.trainerId);
+                const trainer = allTrainers.find(tr => tr.id === booking.trainerId);
                 const isPending = booking.status === 'pending';
                 const isConfirmed = booking.status === 'confirmed';
-                
+                const isCancelled = booking.status === 'cancelled';
+                const isCompleted = booking.status === 'completed';
+
                 return (
-                    <div key={booking.id} className="bg-surface border border-white/5 rounded-[2.5rem] p-8 hover:border-brand/30 transition-all group relative overflow-hidden">
+                    <div key={booking.id} className="bg-surface border border-white/5 rounded-2xl p-5 hover:border-brand/30 transition-all group relative overflow-hidden flex flex-col md:flex-row gap-6">
                         
-                        <div className="flex flex-col md:flex-row gap-8 relative z-10">
-                            {/* Left: Trainer Image */}
-                            <div className="w-24 h-24 md:w-32 md:h-32 rounded-3xl bg-dark overflow-hidden shrink-0 border border-white/5 shadow-2xl">
-                                <img src={trainer?.image} alt={trainer?.name} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
-                            </div>
-
-                            {/* Middle: Info */}
-                            <div className="flex-1">
-                                <div className="flex flex-wrap items-start justify-between gap-4 mb-2">
-                                    <div>
-                                        <h3 className="font-black uppercase italic text-2xl text-white leading-none mb-2">{trainer?.name}</h3>
-                                        <p className="text-brand text-xs font-black uppercase tracking-widest">{trainer?.specialty}</p>
-                                    </div>
-                                    
-                                    {/* Status Badge */}
-                                    <div className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 ${
-                                        booking.status === 'confirmed' ? 'bg-green-500/10 text-green-500 border border-green-500/20' :
-                                        booking.status === 'pending' ? 'bg-brand text-dark' :
-                                        booking.status === 'cancelled' ? 'bg-red-500/10 text-red-500 border border-red-500/20' :
-                                        'bg-white/5 text-slate-500'
-                                    }`}>
-                                        {booking.status === 'confirmed' && <CheckCircle2 size={14} />}
-                                        {booking.status === 'pending' && <Timer size={14} />}
-                                        {booking.status === 'cancelled' && <XCircle size={14} />}
-                                        {booking.status === 'completed' && <CheckCircle size={14} />}
-                                        {t[`status${booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}` as keyof typeof t]}
-                                    </div>
+                        {/* 1. Image & Status Section */}
+                        <div className="flex items-center gap-4 min-w-[200px]">
+                            <img 
+                                src={getTrainerImage(trainer)} 
+                                alt={trainer?.name || 'Trainer'} 
+                                className="w-16 h-16 rounded-xl object-cover grayscale group-hover:grayscale-0 transition-all duration-500 bg-dark" 
+                            />
+                            <div>
+                                <h3 className="font-black uppercase italic text-lg text-white leading-none mb-1">{trainer?.name || 'Unknown Trainer'}</h3>
+                                <div className={`inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded ${
+                                    isConfirmed ? 'bg-green-500/10 text-green-500' :
+                                    isPending ? 'bg-brand/10 text-brand' :
+                                    isCancelled ? 'bg-red-500/10 text-red-500' :
+                                    'bg-slate-700/50 text-slate-400'
+                                }`}>
+                                    {isConfirmed && <CheckCircle2 size={10} />}
+                                    {isPending && <Timer size={10} />}
+                                    {isCancelled && <XCircle size={10} />}
+                                    {isCompleted && <CheckCircle size={10} />}
+                                    {t[`status${booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}` as keyof typeof t]}
                                 </div>
-
-                                <div className="flex flex-wrap gap-4 my-6">
-                                    <div className="px-4 py-3 bg-white/5 rounded-xl border border-white/5 flex items-center gap-3">
-                                        <Calendar size={18} className="text-slate-400" />
-                                        <span className="text-sm font-bold text-white">{booking.date}</span>
-                                    </div>
-                                    <div className="px-4 py-3 bg-white/5 rounded-xl border border-white/5 flex items-center gap-3">
-                                        <Clock size={18} className="text-slate-400" />
-                                        <span className="text-sm font-bold text-white">{booking.time}</span>
-                                    </div>
-                                    <div className="px-4 py-3 bg-white/5 rounded-xl border border-white/5 flex items-center gap-3">
-                                        <MapPin size={18} className="text-slate-400" />
-                                        <span className="text-sm font-bold text-white">ClassFit Varna (Mir Stop)</span>
-                                    </div>
-                                </div>
-                                
-                                {isConfirmed && (
-                                  <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-white/5">
-                                    {/* Add to Calendar Button */}
-                                    <a 
-                                      href={getGoogleCalendarUrl(booking, trainer)}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="px-5 py-3 bg-brand text-dark rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-white transition-all flex items-center gap-2 shadow-lg shadow-brand/10"
-                                    >
-                                      <CalendarPlus size={14} /> {language === 'bg' ? 'Добави в Календар' : 'Add to Calendar'}
-                                    </a>
-
-                                    {/* Call Trainer Button */}
-                                    {trainer?.phone && (
-                                        <a href={`tel:${trainer.phone}`} className="px-5 py-3 bg-surface border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-300 hover:text-white hover:border-white/30 transition-all flex items-center gap-2">
-                                            <Phone size={14} /> {language === 'bg' ? 'Обади се на треньора' : 'Call Trainer'}
-                                        </a>
-                                    )}
-
-                                    {/* Call Gym Button */}
-                                    <a href={`tel:${t.gymPhone}`} className="px-5 py-3 bg-surface border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-300 hover:text-white hover:border-white/30 transition-all flex items-center gap-2">
-                                        <Phone size={14} /> {language === 'bg' ? 'Рецепция' : 'Call Reception'}
-                                    </a>
-                                  </div>
-                                )}
                             </div>
                         </div>
 
-                        {/* Cancel Button (Absolute Top Right for Layout) */}
-                        {(isPending || isConfirmed) && (
-                            <div className="absolute top-8 right-8 hidden md:block">
-                                {cancellingId === booking.id ? (
-                                     <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-2 bg-dark/50 p-2 rounded-xl backdrop-blur-sm">
-                                         <span className="text-xs text-red-500 font-bold mr-2">{t.sure}</span>
-                                         <button onClick={() => handleCancelRequest(booking.id)} className="p-2 bg-red-500/20 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-quick"><CheckCircle size={16}/></button>
-                                         <button onClick={() => setCancellingId(null)} className="p-2 bg-white/10 text-slate-400 rounded-lg hover:bg-white/20 hover:text-white transition-quick"><XCircle size={16}/></button>
-                                     </div>
-                                 ) : (
+                        {/* 2. Details Section */}
+                        <div className="flex-1 flex flex-wrap items-center gap-y-2 gap-x-6 text-sm md:border-l md:border-white/5 md:pl-6">
+                            <div className="flex items-center gap-2 text-slate-300">
+                                <Calendar size={14} className="text-brand" />
+                                <span className="font-bold">{booking.date}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-slate-300">
+                                <Clock size={14} className="text-brand" />
+                                <span className="font-bold">{booking.time}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-slate-300">
+                                <MapPin size={14} className="text-brand" />
+                                <span className="font-bold">ClassFit Varna (Mir)</span>
+                            </div>
+                        </div>
+
+                        {/* 3. Actions Section */}
+                        <div className="flex items-center justify-end gap-2 md:border-l md:border-white/5 md:pl-6">
+                             {isConfirmed && (
+                                <>
+                                    <a 
+                                        href={getGoogleCalendarUrl(booking, trainer)}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-slate-300 hover:text-brand transition-colors"
+                                        title={language === 'bg' ? 'Добави в Календар' : 'Add to Calendar'}
+                                    >
+                                        <CalendarPlus size={18} />
+                                    </a>
+                                    {trainer?.phone && (
+                                        <a href={`tel:${trainer.phone}`} className="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-slate-300 hover:text-green-500 transition-colors" title="Call Trainer">
+                                            <Phone size={18} />
+                                        </a>
+                                    )}
+                                </>
+                             )}
+
+                             {(isPending || isConfirmed) && (
+                                cancellingId === booking.id ? (
+                                    <div className="flex items-center gap-2 bg-red-900/20 p-1 rounded-lg">
+                                        <button onClick={() => handleCancelRequest(booking.id)} className="px-3 py-1 bg-red-500 text-white rounded text-xs font-bold">Confirm</button>
+                                        <button onClick={() => setCancellingId(null)} className="px-3 py-1 bg-white/10 text-white rounded text-xs">No</button>
+                                    </div>
+                                ) : (
                                     <button 
                                         onClick={() => setCancellingId(booking.id)}
-                                        className="p-2 text-slate-600 hover:text-red-500 transition-all"
+                                        className="p-2 text-slate-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
                                         title={t.cancelReq}
                                     >
                                         <Trash2 size={18} />
                                     </button>
-                                 )}
-                            </div>
-                        )}
-                        
-                        {/* Mobile Cancel Button */}
-                        {(isPending || isConfirmed) && (
-                            <div className="mt-6 md:hidden flex justify-center border-t border-white/5 pt-4">
-                                {cancellingId === booking.id ? (
-                                     <div className="flex items-center gap-4 w-full justify-between bg-red-500/10 p-4 rounded-xl">
-                                         <span className="text-xs text-red-500 font-bold">{t.sure}</span>
-                                         <div className="flex gap-2">
-                                            <button onClick={() => handleCancelRequest(booking.id)} className="px-4 py-2 bg-red-500 text-white rounded-lg text-xs font-bold">Yes, Cancel</button>
-                                            <button onClick={() => setCancellingId(null)} className="px-4 py-2 bg-dark text-slate-400 rounded-lg text-xs font-bold">No</button>
-                                         </div>
-                                     </div>
-                                 ) : (
-                                    <button 
-                                        onClick={() => setCancellingId(booking.id)}
-                                        className="w-full py-3 text-slate-500 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2"
-                                    >
-                                        <Trash2 size={14} /> {t.cancelReq}
-                                    </button>
-                                 )}
-                            </div>
-                        )}
+                                )
+                             )}
+                        </div>
 
                     </div>
                 )

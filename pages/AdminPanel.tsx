@@ -327,13 +327,11 @@ const AdminPanel: React.FC = () => {
                         <tr key={booking.id} className="hover:bg-white/5">
                           <td className="px-8 py-6 flex items-center gap-3">
                             {/* User Avatar - Shows default if no image, via AppContext logic */}
-                            {bookingUser?.image ? (
-                                <img src={bookingUser.image} alt={booking.customerName} className="w-10 h-10 rounded-xl object-cover" />
-                            ) : (
-                                <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-slate-400">
-                                   <User size={18} />
-                                </div>
-                            )}
+                            <img 
+                                src={bookingUser?.image || DEFAULT_PROFILE_IMAGE} 
+                                alt={booking.customerName} 
+                                className="w-10 h-10 rounded-xl object-cover bg-dark" 
+                            />
                             <div>
                                 <span className="font-black italic uppercase text-xs text-white">{booking.customerName}</span>
                                 {booking.customerPhone && <span className="block text-[9px] text-slate-500">{booking.customerPhone}</span>}
@@ -450,13 +448,11 @@ const AdminPanel: React.FC = () => {
                    {users.map(u => (
                      <tr key={u.id} className="hover:bg-white/5">
                        <td className="px-8 py-6 flex items-center gap-3">
-                          {u.image ? (
-                             <img src={u.image} alt={u.name} className="w-10 h-10 rounded-xl object-cover" />
-                          ) : (
-                             <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-slate-500">
-                                <User size={18} />
-                             </div>
-                          )}
+                          <img 
+                            src={u.image || DEFAULT_PROFILE_IMAGE} 
+                            alt={u.name} 
+                            className="w-10 h-10 rounded-xl object-cover bg-dark" 
+                          />
                           <span className="font-black uppercase italic text-xs text-white">{u.name}</span>
                        </td>
                        <td className="px-8 py-6 text-xs text-slate-400">{u.email}</td>
