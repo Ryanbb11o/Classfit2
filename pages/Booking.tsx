@@ -1,22 +1,59 @@
-
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, Calendar as CalendarIcon, Clock, Info, User, Phone, X, LogIn, Mail, Loader2 } from 'lucide-react';
+import { Check, Calendar as CalendarIcon, Clock, Info, User, Phone, X, LogIn, Mail, Loader2, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { getTrainers, TRANSLATIONS } from '../constants';
 import { Trainer, Booking } from '../types';
 
 const BookingPage: React.FC = () => {
-  const { language, addBooking, currentUser } = useAppContext();
+  const { language, addBooking, currentUser, users } = useAppContext();
   const navigate = useNavigate();
   const t = TRANSLATIONS[language];
-  const trainers = getTrainers(language);
-  const [selectedTrainer, setSelectedTrainer] = useState<Trainer | null>(null);
   
-  // Date and Time State
-  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  // --- 1. Data Preparation ---
+  const trainers = useMemo(() => {
+    const staticTrainers = getTrainers(language);
+    
+    const getPlaceholderImage = (id: string) => {
+      const images = [
+        'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=400&auto=format&fit=crop', 
+        'https://images.unsplash.com/photo-1518310383802-640c2de311b2?q=80&w=400&auto=format&fit=crop',
+        'https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?q=80&w=400&auto=format&fit=crop',
+        'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=400&auto=format&fit=crop'
+      ];
+      const charCodeSum = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      return images[charCodeSum % images.length];
+    };
+
+    const dynamicTrainers: Trainer[] = users
+      .filter(u => u.role === 'trainer')
+      .map(u => {
+        const match = u.name.match(/^(.*)\s\((.*)\)$/);
+        const displayName = match ? match[1] : u.name;
+        const displaySpecialty = match ? match[2] : (language === 'bg' ? 'Персонален треньор' : 'Personal Trainer');
+
+        return {
+          id: u.id,
+          name: displayName,
+          specialty: displaySpecialty,
+          price: 20, 
+          image: u.image || getPlaceholderImage(u.id), 
+          phone: u.phone || '',
+          availability: ['08:00', '09:00', '10:00', '14:00', '15:00', '16:00', '17:00']
+        };
+      });
+
+    return [...staticTrainers, ...dynamicTrainers];
+  }, [language, users]);
+
+  // --- 2. State Management ---
+  const [selectedTrainer, setSelectedTrainer] = useState<Trainer | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   
+  // Calendar State
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+
   const [isSuccess, setIsSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [customerEmail, setCustomerEmail] = useState<string | undefined>(undefined);
@@ -28,14 +65,109 @@ const BookingPage: React.FC = () => {
   const [guestPhone, setGuestPhone] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
 
+  // Scroll to calendar when trainer selected
+  useEffect(() => {
+    if (selectedTrainer) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [selectedTrainer]);
+
+  // --- 3. Calendar Logic ---
+  const getDaysInMonth = (date: Date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    return new Date(year, month + 1, 0).getDate();
+  };
+
+  const getFirstDayOfMonth = (date: Date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    // 0 = Sunday, 1 = Monday. We want Monday start? Let's stick to standard 0-6 Sun-Sat for simplicity in grid
+    return new Date(year, month, 1).getDay();
+  };
+
+  const handlePrevMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
+  };
+
+  const handleNextMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
+  };
+
+  const handleDateClick = (day: number) => {
+    const newDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (newDate >= today) {
+        setSelectedDate(newDate);
+        setSelectedTime(null); // Reset time when date changes
+    }
+  };
+
+  const renderCalendar = () => {
+    const daysInMonth = getDaysInMonth(currentMonth);
+    const firstDay = getFirstDayOfMonth(currentMonth); // 0 (Sun) - 6 (Sat)
+    
+    // Adjust for Monday start if desired, but let's do standard Sun-Sat for international compatibility
+    // Actually, Bulgaria uses Monday start usually. Let's do Monday start logic.
+    // Monday = 1, Sunday = 0.
+    // Shift: Mon(1)->0, Tue(2)->1 ... Sun(0)->6
+    const startDayIndex = firstDay === 0 ? 6 : firstDay - 1; 
+
+    const days = [];
+    // Padding
+    for (let i = 0; i < startDayIndex; i++) {
+        days.push(<div key={`empty-${i}`} className="h-10 w-10"></div>);
+    }
+
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    for (let i = 1; i <= daysInMonth; i++) {
+        const currentDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), i);
+        const isSelected = selectedDate.toDateString() === currentDate.toDateString();
+        const isToday = today.toDateString() === currentDate.toDateString();
+        const isPast = currentDate < today;
+
+        days.push(
+            <button
+                key={i}
+                onClick={() => handleDateClick(i)}
+                disabled={isPast}
+                className={`h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-200
+                    ${isSelected 
+                        ? 'bg-brand text-dark shadow-lg shadow-brand/20 scale-110' 
+                        : isPast 
+                            ? 'text-slate-600 cursor-not-allowed' 
+                            : 'text-white hover:bg-white/10 hover:text-brand'
+                    }
+                    ${isToday && !isSelected ? 'border border-brand text-brand' : ''}
+                `}
+            >
+                {i}
+            </button>
+        );
+    }
+    return days;
+  };
+
+  const monthNames = language === 'bg' 
+    ? ['Януари', 'Февруари', 'Март', 'Април', 'Май', 'Юни', 'Юли', 'Август', 'Септември', 'Октомври', 'Ноември', 'Декември']
+    : ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+  const weekDays = language === 'bg'
+    ? ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд']
+    : ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+
+  // --- 4. Booking Logic ---
+
   const initiateBooking = async () => {
     if (!selectedTrainer || !selectedTime || !selectedDate) return;
 
     if (currentUser) {
-      // If logged in, book immediately using account email
       await finalizeBooking(currentUser.name, undefined, currentUser.id, currentUser.email);
     } else {
-      // If not logged in, show guest form
       setShowGuestForm(true);
     }
   };
@@ -51,6 +183,11 @@ const BookingPage: React.FC = () => {
     if (!selectedTrainer || !selectedTime || !selectedDate) return;
 
     setIsSubmitting(true);
+    
+    // Format date as YYYY-MM-DD local time to avoid timezone shifts
+    const offset = selectedDate.getTimezoneOffset();
+    const localDate = new Date(selectedDate.getTime() - (offset*60*1000));
+    const formattedDate = localDate.toISOString().split('T')[0];
 
     const newBooking: Booking = {
       id: Math.random().toString(36).substr(2, 9),
@@ -60,7 +197,7 @@ const BookingPage: React.FC = () => {
       customerPhone: phone,
       customerEmail: email,
       language: language,
-      date: selectedDate,
+      date: formattedDate,
       time: selectedTime,
       price: selectedTrainer.price,
       status: 'pending',
@@ -82,6 +219,7 @@ const BookingPage: React.FC = () => {
     }
   };
 
+  // --- 5. Render Success Screen ---
   if (isSuccess && lastBooking) {
     return (
       <div className="max-w-xl mx-auto py-32 px-4 text-center animate-in zoom-in-95 duration-300">
@@ -101,13 +239,6 @@ const BookingPage: React.FC = () => {
             </span>
           </div>
         )}
-
-        <div className="mb-8 p-4 bg-brand/5 rounded-2xl border border-brand/10">
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">{t.lateOrCancel}</p>
-            <a href={`tel:${t.gymPhone}`} className="text-xl font-black text-brand italic hover:text-white transition-colors flex items-center justify-center gap-2">
-                <Phone size={18} /> {t.gymPhone}
-            </a>
-        </div>
         
         <div className="flex flex-col gap-4 max-w-xs mx-auto mt-6">
           {currentUser && (
@@ -139,121 +270,170 @@ const BookingPage: React.FC = () => {
     );
   }
 
+  // --- 6. Render Selection Flow ---
   return (
-    <div className="max-w-7xl mx-auto px-4 py-16 animate-in fade-in slide-in-from-bottom-2 duration-500 relative">
-      <div className="text-center mb-16">
-        <h1 className="text-5xl font-black uppercase italic mb-4 tracking-tight leading-none text-white">{t.booking}</h1>
-        <p className="text-slate-400 font-medium uppercase tracking-[0.2em] text-xs">{t.selectTrainer}</p>
-      </div>
+    <div className="min-h-screen py-24 animate-in fade-in duration-500">
+      
+      {/* SECTION 1: TRAINER SELECTION */}
+      {!selectedTrainer ? (
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h1 className="text-6xl md:text-7xl font-black uppercase italic mb-6 tracking-tight leading-none text-white">{t.booking}</h1>
+            <p className="text-slate-400 font-medium uppercase tracking-[0.2em] text-sm max-w-2xl mx-auto">
+              {language === 'bg' ? 'Изберете вашия персонален треньор' : 'Select Your Personal Trainer'}
+            </p>
+          </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-        {/* Trainer Selection */}
-        <div className="lg:col-span-1 space-y-6">
-          <h3 className="text-[10px] uppercase tracking-[0.3em] font-black text-slate-500 mb-6">{t.team}</h3>
-          {trainers.map(trainer => (
-            <div 
-              key={trainer.id}
-              onClick={() => !isSubmitting && setSelectedTrainer(trainer)}
-              className={`p-5 rounded-3xl border-2 transition-quick cursor-pointer flex items-center gap-5 ${
-                selectedTrainer?.id === trainer.id ? 'border-brand bg-brand/10 shadow-lg shadow-brand/5' : 'border-white/5 hover:border-brand/30 bg-surface'
-              } ${isSubmitting ? 'opacity-50 pointer-events-none' : ''}`}
-            >
-              <img src={trainer.image} alt={trainer.name} className="w-16 h-16 rounded-2xl object-cover grayscale brightness-90 group-hover:grayscale-0" />
-              <div>
-                <h4 className="font-black uppercase italic text-lg text-white">{trainer.name}</h4>
-                <p className="text-[10px] uppercase tracking-widest text-slate-500 mb-1 font-bold">{trainer.specialty}</p>
-                <p className="text-white font-black text-sm">{trainer.price} {t.perSession}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            {trainers.map((trainer) => (
+              <div 
+                key={trainer.id}
+                onClick={() => setSelectedTrainer(trainer)}
+                className="group relative bg-surface rounded-[2.5rem] overflow-hidden border-2 border-white/5 hover:border-brand cursor-pointer transition-all duration-300 hover:shadow-2xl hover:shadow-brand/10 hover:-translate-y-2"
+              >
+                <div className="aspect-[4/5] relative">
+                   <img 
+                      src={trainer.image} 
+                      alt={trainer.name} 
+                      className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                   />
+                   <div className="absolute inset-0 bg-gradient-to-t from-dark via-transparent to-transparent opacity-90"></div>
+                   
+                   <div className="absolute bottom-0 left-0 p-6 w-full">
+                      <div className="inline-block px-3 py-1 bg-brand text-dark text-[10px] font-black uppercase tracking-widest rounded-full mb-3">
+                         {trainer.specialty}
+                      </div>
+                      <h3 className="text-2xl font-black uppercase italic text-white leading-none mb-1">{trainer.name}</h3>
+                      <p className="text-slate-400 font-bold text-sm">{trainer.price} {t.perSession}</p>
+                   </div>
+                   
+                   {/* Overlay Action */}
+                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-dark/40 backdrop-blur-[2px]">
+                      <div className="w-16 h-16 rounded-full bg-brand text-dark flex items-center justify-center transform scale-50 group-hover:scale-100 transition-transform duration-300">
+                         <CalendarIcon size={28} />
+                      </div>
+                   </div>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
+      ) : (
+        /* SECTION 2: CALENDAR & TIME SELECTION */
+        <div className="max-w-6xl mx-auto px-6 animate-in slide-in-from-bottom-8 fade-in duration-500">
+          
+          <button 
+            onClick={() => { setSelectedTrainer(null); setSelectedTime(null); }}
+            className="mb-8 flex items-center gap-2 text-slate-400 hover:text-white font-black uppercase tracking-widest text-xs transition-colors group"
+          >
+            <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+            {language === 'bg' ? 'Назад към Треньори' : 'Back to Trainers'}
+          </button>
 
-        {/* Calendar / Timeslots */}
-        <div className="lg:col-span-2">
-          {selectedTrainer ? (
-            <div className="bg-surface rounded-[2.5rem] border-2 border-white/5 p-10 shadow-xl relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-8 opacity-5">
-                 <CalendarIcon size={120} className="text-white" />
-              </div>
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-10 relative z-10 gap-6">
-                <div>
-                  <h3 className="text-3xl font-black uppercase italic text-white">{selectedTrainer.name}</h3>
-                  <p className="text-brand text-xs font-bold uppercase tracking-[0.2em]">{t.trainerCalendar}</p>
-                </div>
-                
-                {/* Date Picker Input */}
-                <div className="flex items-center gap-3 bg-dark p-1.5 pl-4 pr-3 rounded-2xl shadow-xl shadow-black/20 w-full sm:w-auto border border-white/10">
-                  <CalendarIcon size={16} className="text-brand shrink-0" />
-                  <input 
-                    type="date"
-                    value={selectedDate}
-                    min={new Date().toISOString().split('T')[0]}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    disabled={isSubmitting}
-                    className="bg-transparent text-white text-xs font-black uppercase tracking-widest outline-none border-none cursor-pointer w-full sm:w-auto [&::-webkit-calendar-picker-indicator]:invert"
-                  />
-                </div>
-              </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            {/* Left Column: Trainer Info & Custom Calendar */}
+            <div className="lg:col-span-1 space-y-6">
+               {/* Trainer Card Mini */}
+               <div className="bg-surface p-6 rounded-[2rem] border border-white/5 flex items-center gap-5">
+                  <img src={selectedTrainer.image} alt={selectedTrainer.name} className="w-20 h-20 rounded-2xl object-cover" />
+                  <div>
+                    <h3 className="text-xl font-black uppercase italic text-white leading-none mb-1">{selectedTrainer.name}</h3>
+                    <p className="text-xs text-brand font-black uppercase tracking-wider">{selectedTrainer.specialty}</p>
+                  </div>
+               </div>
 
-              <div className="mb-10 relative z-10">
-                <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-6">{t.availableSlots}</h4>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                  {selectedTrainer.availability.map(time => (
-                    <button
-                      key={time}
-                      onClick={() => setSelectedTime(time)}
-                      disabled={isSubmitting}
-                      className={`py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-quick border-2 ${
-                        selectedTime === time 
-                        ? 'bg-brand text-dark border-brand shadow-lg shadow-brand/20' 
-                        : 'bg-dark/50 text-slate-400 border-white/5 hover:border-brand/40'
-                      } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    >
-                      {time}
-                    </button>
-                  ))}
-                </div>
-              </div>
+               {/* CUSTOM CALENDAR */}
+               <div className="bg-surface p-6 rounded-[2.5rem] border border-white/10 shadow-2xl">
+                  <div className="flex items-center justify-between mb-6 px-2">
+                     <button onClick={handlePrevMonth} className="p-2 hover:bg-white/5 rounded-full text-slate-400 hover:text-white transition-colors">
+                        <ChevronLeft size={20} />
+                     </button>
+                     <div className="text-center">
+                        <span className="block text-lg font-black uppercase italic text-white">
+                           {monthNames[currentMonth.getMonth()]}
+                        </span>
+                        <span className="text-xs font-bold text-slate-500">
+                           {currentMonth.getFullYear()}
+                        </span>
+                     </div>
+                     <button onClick={handleNextMonth} className="p-2 hover:bg-white/5 rounded-full text-slate-400 hover:text-white transition-colors">
+                        <ChevronRight size={20} />
+                     </button>
+                  </div>
 
-              <div className="p-6 bg-brand/5 rounded-3xl flex items-start gap-4 mb-10 border border-brand/10">
-                <Info size={20} className="text-brand mt-0.5 shrink-0" />
-                <p className="text-sm text-slate-300 font-medium leading-relaxed italic">{t.confirmText}</p>
-              </div>
+                  <div className="grid grid-cols-7 gap-1 mb-2 text-center">
+                     {weekDays.map(day => (
+                        <div key={day} className="text-[10px] font-black text-slate-600 uppercase py-2">
+                           {day}
+                        </div>
+                     ))}
+                  </div>
 
-              <div className="flex flex-col sm:flex-row items-center justify-between pt-10 border-t-2 border-white/5 gap-6 relative z-10">
-                <div className="text-center sm:text-left">
-                    <span className="text-[10px] text-slate-500 uppercase tracking-[0.3em] font-black">{t.total}</span>
-                    <div className="text-3xl font-black uppercase italic text-white">{selectedTrainer.price} <span className="text-sm font-bold text-slate-500">BGN</span></div>
-                </div>
-                
-                <button 
-                  disabled={!selectedTime || isSubmitting}
-                  onClick={initiateBooking}
-                  className={`w-full sm:w-auto px-16 py-5 rounded-full font-black uppercase italic tracking-[0.2em] transition-quick shadow-2xl flex items-center justify-center gap-2 ${
-                    selectedTime && !isSubmitting
-                    ? 'bg-brand text-dark hover:bg-white hover:text-dark shadow-brand/20 active:scale-95' 
-                    : 'bg-white/10 text-slate-500 cursor-not-allowed shadow-none'
-                  }`}
-                >
-                  {isSubmitting ? (
-                    <span className="flex items-center gap-2"><Loader2 className="animate-spin" size={18}/> {language === 'bg' ? 'ОБРАБОТКА...' : 'PROCESSING...'}</span>
-                  ) : t.bookNow}
-                </button>
-              </div>
+                  <div className="grid grid-cols-7 gap-1 place-items-center">
+                     {renderCalendar()}
+                  </div>
+               </div>
             </div>
-          ) : (
-            <div className="h-full flex flex-col items-center justify-center text-center p-20 border-4 border-dashed border-white/10 rounded-[3rem] bg-surface/50">
-              <Clock className="text-white/10 mb-6" size={64} />
-              <h3 className="text-slate-400 font-black uppercase italic text-xl">{t.chooseTrainer}</h3>
-              <p className="text-slate-500 text-sm font-medium mt-2">{t.seeCalendar}</p>
+
+            {/* Right Column: Time Selection & Confirmation */}
+            <div className="lg:col-span-2">
+               <div className="bg-surface rounded-[2.5rem] border border-white/5 p-8 md:p-10 h-full flex flex-col">
+                  <div className="mb-8">
+                     <h2 className="text-3xl font-black uppercase italic text-white mb-2">
+                        {language === 'bg' ? 'Изберете Час' : 'Select Time'}
+                     </h2>
+                     <p className="text-slate-400 text-sm font-medium">
+                        {selectedDate.toLocaleDateString(language === 'bg' ? 'bg-BG' : 'en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                     </p>
+                  </div>
+
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 mb-10">
+                     {selectedTrainer.availability.map(time => (
+                        <button
+                           key={time}
+                           onClick={() => setSelectedTime(time)}
+                           className={`py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all border-2 ${
+                              selectedTime === time
+                                 ? 'bg-brand text-dark border-brand shadow-lg shadow-brand/20 scale-105'
+                                 : 'bg-dark/50 text-slate-400 border-white/5 hover:border-brand/40 hover:text-white'
+                           }`}
+                        >
+                           {time}
+                        </button>
+                     ))}
+                  </div>
+
+                  <div className="mt-auto pt-8 border-t border-white/5">
+                     <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+                        <div>
+                           <div className="text-[10px] text-slate-500 uppercase tracking-[0.3em] font-black mb-1">{t.total}</div>
+                           <div className="text-4xl font-black uppercase italic text-white">{selectedTrainer.price} <span className="text-lg text-slate-500">BGN</span></div>
+                        </div>
+
+                        <button 
+                           onClick={initiateBooking}
+                           disabled={!selectedTime || isSubmitting}
+                           className={`w-full sm:w-auto px-12 py-5 rounded-full font-black uppercase italic tracking-[0.2em] transition-all flex items-center justify-center gap-3 shadow-xl ${
+                              selectedTime && !isSubmitting
+                                 ? 'bg-brand text-dark hover:bg-white hover:text-dark hover:scale-105 shadow-brand/20'
+                                 : 'bg-white/10 text-slate-500 cursor-not-allowed shadow-none'
+                           }`}
+                        >
+                           {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : (language === 'bg' ? 'Запиши Час' : 'Book Session')}
+                        </button>
+                     </div>
+                  </div>
+               </div>
             </div>
-          )}
+
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Guest Form Modal Overlay */}
+      {/* Guest Form Modal */}
       {showGuestForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-dark/80 backdrop-blur-sm animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-dark/90 backdrop-blur-md animate-in fade-in duration-300">
            <div className="bg-surface rounded-[2.5rem] p-8 md:p-10 max-w-md w-full shadow-2xl relative animate-in zoom-in-95 slide-in-from-bottom-4 duration-300 border border-white/10">
               <button 
                 onClick={() => setShowGuestForm(false)}
@@ -321,17 +501,6 @@ const BookingPage: React.FC = () => {
                    {isSubmitting ? <Loader2 className="animate-spin" /> : t.confirmBooking}
                 </button>
               </form>
-
-              <div className="mt-6 pt-6 border-t border-white/5 text-center">
-                 <p className="text-xs font-bold text-slate-500 mb-3 uppercase tracking-wide">{t.haveAccount}</p>
-                 <button 
-                   onClick={() => navigate('/login')}
-                   disabled={isSubmitting}
-                   className="flex items-center justify-center gap-2 w-full py-3 border-2 border-white/10 rounded-xl font-black uppercase tracking-widest text-white hover:border-brand transition-all text-xs disabled:opacity-50"
-                 >
-                   <LogIn size={14} /> {t.loginProfile}
-                 </button>
-              </div>
            </div>
         </div>
       )}

@@ -49,12 +49,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           if (localUsers) setUsers(JSON.parse(localUsers));
         }
         
-        // Note: refreshData logic below now handles validation, but we still load initially for demo mode or offline
         const savedUser = localStorage.getItem('classfit_user');
         if (savedUser) {
            const parsedUser = JSON.parse(savedUser);
-           // Only set if we haven't been logged out by refreshData validation logic
-           if (localStorage.getItem('classfit_user')) {
+           // Simple check to keep session alive in demo mode or if user exists
+           if (parsedUser) {
              setCurrentUser(parsedUser);
            }
         }
@@ -67,6 +66,23 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     init();
   }, [isDemoMode]);
 
+  // Sync across tabs in Demo Mode
+  useEffect(() => {
+    if (!isDemoMode) return;
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'classfit_bookings' && e.newValue) {
+         setBookings(JSON.parse(e.newValue));
+      }
+      if (e.key === 'classfit_users' && e.newValue) {
+         setUsers(JSON.parse(e.newValue));
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [isDemoMode]);
+
   const logout = () => {
     setCurrentUser(null);
     localStorage.removeItem('classfit_user');
@@ -74,7 +90,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const refreshData = async () => {
     if (isDemoMode) {
-      // Refresh local state from storage in case other tabs updated it
+      // Force refresh from local storage
       const localBookings = localStorage.getItem('classfit_bookings');
       const localUsers = localStorage.getItem('classfit_users');
       if (localBookings) setBookings(JSON.parse(localBookings));
@@ -117,18 +133,24 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           password: u.password,
           role: u.role,
           phone: u.phone,
+          image: u.image, // Map image
+          bio: u.bio,     // Map bio
           joinedDate: u.joined_date
         }));
         setUsers(mappedUsers);
       }
 
-      // 3. Security Check: Validate Session
+      // 3. Security Check: Validate Session and Update Current User Data
       const storedUserStr = localStorage.getItem('classfit_user');
       if (storedUserStr) {
         const storedUser = JSON.parse(storedUserStr);
-        const userExistsInDb = mappedUsers.some(u => u.id === storedUser.id);
+        const latestUserData = mappedUsers.find(u => u.id === storedUser.id);
         
-        if (!userExistsInDb && !isDemoMode) { // Only force logout in real mode if user gone
+        if (latestUserData) {
+          // Update session with latest data (e.g. if image changed)
+          setCurrentUser(latestUserData);
+          localStorage.setItem('classfit_user', JSON.stringify(latestUserData));
+        } else if (!isDemoMode) { 
           console.warn(`User session invalid: User ${storedUser.email} deleted from database. Logging out.`);
           logout();
         }
@@ -234,6 +256,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       password: data.password,
       role: data.role,
       phone: data.phone,
+      image: data.image,
+      bio: data.bio,
       joinedDate: data.joined_date
     };
 
@@ -254,8 +278,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         joinedDate: new Date().toISOString() 
        };
        
-       // Update "DB" in demo mode
-       const currentUsers = JSON.parse(localStorage.getItem('classfit_users') || '[]');
+       const currentUsersStr = localStorage.getItem('classfit_users');
+       let currentUsers: User[] = [];
+       try { currentUsers = currentUsersStr ? JSON.parse(currentUsersStr) : []; } catch(e) {}
+       
        const newUsers = [...currentUsers, mockUser];
        localStorage.setItem('classfit_users', JSON.stringify(newUsers));
        setUsers(newUsers);
@@ -301,8 +327,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         joinedDate: new Date().toISOString()
        };
 
-       // Update "DB" in demo mode
-       const currentUsers = JSON.parse(localStorage.getItem('classfit_users') || '[]');
+       // Robust read from localStorage
+       const currentUsersStr = localStorage.getItem('classfit_users');
+       let currentUsers: User[] = [];
+       try {
+         currentUsers = currentUsersStr ? JSON.parse(currentUsersStr) : [];
+       } catch (e) {
+         currentUsers = [];
+       }
+       
        const newUsers = [...currentUsers, newUser];
        localStorage.setItem('classfit_users', JSON.stringify(newUsers));
        setUsers(newUsers);
@@ -336,14 +369,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         const newUsers = users.map(u => u.id === id ? { ...u, ...updates } : u);
         setUsers(newUsers);
         localStorage.setItem('classfit_users', JSON.stringify(newUsers));
+        
+        // Update current session if it's the current user
+        if (currentUser && currentUser.id === id) {
+           const updatedUser = { ...currentUser, ...updates };
+           setCurrentUser(updatedUser);
+           localStorage.setItem('classfit_user', JSON.stringify(updatedUser));
+        }
         return;
     }
 
-    // Map frontend User type to DB columns if needed
     const dbUpdates: any = {};
     if (updates.role) dbUpdates.role = updates.role;
     if (updates.name) dbUpdates.name = updates.name;
     if (updates.phone) dbUpdates.phone = updates.phone;
+    if (updates.image) dbUpdates.image = updates.image;
+    if (updates.bio) dbUpdates.bio = updates.bio;
 
     const { error } = await supabase.from('users').update(dbUpdates).eq('id', id);
     if (error) throw error;

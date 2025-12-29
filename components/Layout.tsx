@@ -1,19 +1,43 @@
-
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Menu, X, ShieldCheck, User as UserIcon, Home, Info, Calendar, Dumbbell, ShoppingBag, LogIn, LogOut, Phone } from 'lucide-react';
+import { Menu, X, ShieldCheck, User as UserIcon, Home, Info, Calendar, Dumbbell, ShoppingBag, LogIn, LogOut, Phone, Briefcase, Bell, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS } from '../constants';
 import LanguageSwitcher from './LanguageSwitcher';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { language, isAdmin, currentUser, logout, users } = useAppContext();
+  const { language, isAdmin, currentUser, logout, users, bookings } = useAppContext();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const notifRef = useRef<HTMLDivElement>(null);
+
   const t = TRANSLATIONS[language];
   const navigate = useNavigate();
 
-  // Calculate pending applications to show badge
-  const pendingApplicationsCount = users.filter(u => u.role === 'trainer_pending').length;
+  // Close notifications if clicked outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
+        setShowNotifications(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // --- Notification Logic ---
+  // Get pending trainer applications
+  const pendingApplications = users.filter(u => u.role === 'trainer_pending');
+  // Get pending bookings
+  const pendingBookings = bookings.filter(b => b.status === 'pending');
+  
+  const totalNotifications = pendingApplications.length + pendingBookings.length;
+
+  // Trainer specific notifications (only their own pending bookings)
+  const isTrainer = currentUser?.role === 'trainer';
+  const trainerPendingCount = isTrainer 
+    ? bookings.filter(b => b.trainerId === currentUser.id && b.status === 'pending').length
+    : 0;
 
   const closeMenu = () => setIsMenuOpen(false);
 
@@ -21,6 +45,11 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     logout();
     navigate('/');
     closeMenu();
+  };
+
+  const handleNotificationClick = (type: 'application' | 'booking') => {
+    setShowNotifications(false);
+    navigate('/admin'); 
   };
 
   return (
@@ -44,15 +73,106 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             <div className="hidden md:flex items-center gap-6 mr-4">
                {currentUser ? (
                  <div className="flex items-center gap-4">
+                   
+                   {/* ADMIN NOTIFICATION BELL */}
+                   {isAdmin && (
+                     <div className="relative" ref={notifRef}>
+                        <button 
+                          onClick={() => setShowNotifications(!showNotifications)}
+                          className={`relative p-2 rounded-full transition-all duration-200 ${showNotifications ? 'bg-white text-dark' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
+                        >
+                          <Bell size={18} />
+                          {totalNotifications > 0 && (
+                            <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border border-dark animate-pulse"></span>
+                          )}
+                        </button>
+
+                        {/* Dropdown */}
+                        {showNotifications && (
+                          <div className="absolute top-full right-0 mt-4 w-80 bg-surface rounded-2xl border border-white/10 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                             <div className="p-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Notifications</span>
+                                <span className="bg-brand text-dark text-[10px] font-bold px-1.5 py-0.5 rounded">{totalNotifications}</span>
+                             </div>
+                             <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+                                {totalNotifications === 0 ? (
+                                   <div className="p-8 text-center text-slate-500 text-xs font-medium italic">
+                                      All caught up! No new activity.
+                                   </div>
+                                ) : (
+                                  <>
+                                    {/* Trainer Applications */}
+                                    {pendingApplications.map(u => (
+                                      <div 
+                                        key={u.id}
+                                        onClick={() => handleNotificationClick('application')}
+                                        className="p-4 border-b border-white/5 hover:bg-white/5 cursor-pointer transition-colors group"
+                                      >
+                                        <div className="flex items-start gap-3">
+                                           <div className="p-2 bg-brand/10 text-brand rounded-full shrink-0 group-hover:bg-brand group-hover:text-dark transition-colors">
+                                              <Briefcase size={14} />
+                                           </div>
+                                           <div>
+                                              <p className="text-xs font-bold text-white mb-1">New Trainer Application</p>
+                                              <p className="text-[10px] text-brand font-black uppercase italic tracking-wider">({u.name})</p>
+                                              <p className="text-[9px] text-slate-500 mt-1">{new Date(u.joinedDate).toLocaleDateString()}</p>
+                                           </div>
+                                        </div>
+                                      </div>
+                                    ))}
+
+                                    {/* Bookings */}
+                                    {pendingBookings.map(b => (
+                                      <div 
+                                        key={b.id}
+                                        onClick={() => handleNotificationClick('booking')}
+                                        className="p-4 border-b border-white/5 hover:bg-white/5 cursor-pointer transition-colors group"
+                                      >
+                                        <div className="flex items-start gap-3">
+                                           <div className="p-2 bg-blue-500/10 text-blue-500 rounded-full shrink-0 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                                              <Calendar size={14} />
+                                           </div>
+                                           <div>
+                                              <p className="text-xs font-bold text-white mb-1">New Booking Request</p>
+                                              <p className="text-[10px] text-slate-300 uppercase italic">{b.customerName}</p>
+                                              <p className="text-[9px] text-slate-500 mt-1">{b.date} @ {b.time}</p>
+                                           </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </>
+                                )}
+                             </div>
+                             <div className="p-3 bg-dark/50 text-center border-t border-white/5">
+                                <button 
+                                  onClick={() => handleNotificationClick('application')}
+                                  className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors"
+                                >
+                                  View Admin Panel
+                                </button>
+                             </div>
+                          </div>
+                        )}
+                     </div>
+                   )}
+
                    {isAdmin && (
                      <NavLink 
                        to="/admin" 
                        className="text-xs font-black uppercase tracking-widest hover:text-brand transition-all duration-200 flex items-center gap-2 text-white relative"
                      >
                        <ShieldCheck size={14} /> {t.admin}
-                       {pendingApplicationsCount > 0 && (
-                         <span className="absolute -top-2 -right-3 bg-brand text-dark text-[9px] font-black px-1.5 py-0.5 rounded-full flex items-center justify-center min-w-[18px] h-[18px]">
-                           {pendingApplicationsCount}
+                     </NavLink>
+                   )}
+                   {isTrainer && (
+                     <NavLink 
+                       to="/trainer" 
+                       className="text-xs font-black uppercase tracking-widest hover:text-brand transition-all duration-200 flex items-center gap-2 text-white relative"
+                     >
+                       <Briefcase size={14} /> Trainer
+                       {trainerPendingCount > 0 && (
+                         <span className="absolute -top-2 -right-3 bg-white text-dark text-[9px] font-black px-1.5 py-0.5 rounded-full flex items-center justify-center min-w-[18px] h-[18px]">
+                           {trainerPendingCount}
                          </span>
                        )}
                      </NavLink>
@@ -84,8 +204,11 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               aria-label="Toggle Menu"
             >
               {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-              {isAdmin && pendingApplicationsCount > 0 && !isMenuOpen && (
-                 <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-brand rounded-full border border-dark"></span>
+              {isAdmin && totalNotifications > 0 && !isMenuOpen && (
+                 <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-dark"></span>
+              )}
+               {isTrainer && trainerPendingCount > 0 && !isMenuOpen && (
+                 <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-white rounded-full border border-dark"></span>
               )}
             </button>
           </div>
@@ -133,6 +256,14 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                  <NavLink onClick={closeMenu} to="/profile" className="flex items-center gap-4 text-xl font-bold uppercase tracking-widest text-white hover:text-brand transition-all duration-200">
                    <UserIcon size={20}/> {t.myBookings}
                  </NavLink>
+                 {isTrainer && (
+                   <NavLink onClick={closeMenu} to="/trainer" className="flex items-center gap-4 text-xl font-bold uppercase tracking-widest text-white hover:text-brand transition-all duration-200">
+                     <Briefcase size={20}/> Trainer Menu
+                      {trainerPendingCount > 0 && (
+                        <span className="bg-white text-dark text-xs px-2 py-0.5 rounded-full ml-auto">{trainerPendingCount}</span>
+                      )}
+                   </NavLink>
+                 )}
                  <button onClick={handleLogout} className="flex items-center gap-4 text-xl font-bold uppercase tracking-widest text-slate-400 hover:text-red-500 transition-all duration-200 text-left">
                    <LogOut size={20}/> {t.logout}
                  </button>
@@ -152,8 +283,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                <NavLink onClick={closeMenu} to="/admin" className="flex items-center gap-4 text-xl font-bold uppercase tracking-widest text-red-500 mt-4">
                  <ShieldCheck size={20}/> 
                  {t.admin}
-                 {pendingApplicationsCount > 0 && (
-                   <span className="bg-brand text-dark text-xs px-2 py-0.5 rounded-full ml-auto">{pendingApplicationsCount}</span>
+                 {totalNotifications > 0 && (
+                   <span className="bg-brand text-dark text-xs px-2 py-0.5 rounded-full ml-auto">{totalNotifications}</span>
                  )}
                </NavLink>
             )}

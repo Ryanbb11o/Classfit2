@@ -7,6 +7,8 @@ export interface User {
   email: string;
   password: string; // Note: In a real app, never store passwords in plain text/frontend
   phone?: string; // Added phone field
+  image?: string; // New: Profile picture URL
+  bio?: string;   // New: Short biography for trainers
   joinedDate: string;
   role: 'user' | 'admin' | 'trainer_pending' | 'trainer';
 }
