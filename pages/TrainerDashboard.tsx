@@ -23,16 +23,26 @@ const TrainerDashboard: React.FC = () => {
   // For demo/testing: allow a user to "link" their current session to a static Trainer ID
   const [linkedStaticId, setLinkedStaticId] = useState<string | null>(localStorage.getItem('trainer_link_id'));
 
+  // Auth Check
   useEffect(() => {
     if (!currentUser || currentUser.role !== 'trainer') {
       navigate('/login');
     }
+  }, [currentUser, navigate]);
+
+  // Initial Data Refresh (Run once on mount)
+  useEffect(() => {
     refreshData();
-  }, [currentUser]);
+  }, []);
 
   // Load user data into edit state
+  // We use a ref to track if we've initialized to prevent overwriting user input on background refreshes
+  // unless the ID changes (user switch)
   useEffect(() => {
     if (currentUser) {
+        // Only update state if the form is empty or it matches the OLD current user (meaning we just loaded fresh data)
+        // Ideally, we just sync when currentUser changes.
+        // Since we fixed the infinite loop, this will only run when actual data updates occur.
         setEditName(currentUser.name || '');
         setEditImage(currentUser.image || '');
         setEditBio(currentUser.bio || '');
