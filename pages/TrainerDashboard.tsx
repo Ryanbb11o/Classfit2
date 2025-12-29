@@ -16,6 +16,7 @@ const TrainerDashboard: React.FC = () => {
 
   // Profile Edit State
   const [editName, setEditName] = useState('');
+  const [editSpecialty, setEditSpecialty] = useState('');
   const [editImage, setEditImage] = useState('');
   const [editBio, setEditBio] = useState('');
   const [editPhone, setEditPhone] = useState('');
@@ -40,7 +41,16 @@ const TrainerDashboard: React.FC = () => {
   // 3. Load user data into edit state (Run once when user data is available)
   useEffect(() => {
     if (currentUser && !initializedRef.current) {
-        setEditName(currentUser.name || '');
+        // Parse name and specialty from stored "Name (Specialty)" format
+        const match = currentUser.name.match(/^(.*)\s\((.*)\)$/);
+        if (match) {
+            setEditName(match[1]);
+            setEditSpecialty(match[2]);
+        } else {
+            setEditName(currentUser.name);
+            setEditSpecialty('');
+        }
+
         setEditImage(currentUser.image || '');
         setEditBio(currentUser.bio || '');
         setEditPhone(currentUser.phone || '');
@@ -73,9 +83,12 @@ const TrainerDashboard: React.FC = () => {
       
       setIsSaving(true);
       try {
+          // Re-combine name and specialty for backend storage
+          const fullName = editSpecialty ? `${editName} (${editSpecialty})` : editName;
+
           await updateUser(currentUser.id, {
-              name: editName,
-              image: editImage || '', // Allow saving empty to trigger default in UI, or save default string? Let's keep it empty in DB if they want, we handle display.
+              name: fullName,
+              image: editImage || '', 
               bio: editBio,
               phone: editPhone
           });
@@ -132,7 +145,7 @@ const TrainerDashboard: React.FC = () => {
               <Briefcase size={14} /> Trainer Portal
            </div>
            <h1 className="text-4xl md:text-5xl font-black uppercase italic tracking-tighter text-white mb-2 leading-none">
-             {currentUser.name.split('(')[0]}
+             {currentUser.name.split('(')[0].trim()}
            </h1>
            <p className="text-slate-400 font-medium italic">Manage your schedule and requests.</p>
         </div>
@@ -145,7 +158,7 @@ const TrainerDashboard: React.FC = () => {
         </button>
       </div>
 
-      {/* ALERT: Missing Profile Picture - Now modified to only show if they haven't explicitly set one, but we use a default */}
+      {/* ALERT: Missing Profile Picture */}
       {!currentUser.image && (
           <div className="mb-12 p-6 bg-blue-500/10 border border-blue-500/20 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="flex items-center gap-4">
@@ -258,7 +271,7 @@ const TrainerDashboard: React.FC = () => {
                                     </div>
                                  </td>
                                  <td className="px-8 py-6">
-                                    <div className="text-white font-bold text-sm uppercase italic">{booking.customerName}</div>
+                                    <div className="text-white font-bold text-sm uppercase italic">{booking.customerName.split('(')[0].trim()}</div>
                                     <div className="text-slate-500 text-xs">{booking.customerPhone || booking.customerEmail || 'No contact info'}</div>
                                  </td>
                                  <td className="px-8 py-6">
@@ -311,7 +324,7 @@ const TrainerDashboard: React.FC = () => {
                                     </div>
                                  </td>
                                  <td className="px-8 py-6">
-                                    <div className="text-white font-bold text-sm uppercase italic">{booking.customerName}</div>
+                                    <div className="text-white font-bold text-sm uppercase italic">{booking.customerName.split('(')[0].trim()}</div>
                                     <div className="text-slate-500 text-xs">{booking.customerPhone}</div>
                                  </td>
                                  <td className="px-8 py-6">
@@ -363,9 +376,9 @@ const TrainerDashboard: React.FC = () => {
                                         </div>
                                     )}
                                 </div>
-                                <h4 className="font-black uppercase italic text-xl text-white">{editName.split('(')[0]}</h4>
+                                <h4 className="font-black uppercase italic text-xl text-white">{editName}</h4>
                                 <p className="text-[10px] uppercase tracking-widest text-brand font-bold mb-2">
-                                    {editName.match(/\((.*)\)/)?.[1] || 'Specialty'}
+                                    {editSpecialty || 'Specialty'}
                                 </p>
                                 <p className="text-slate-400 text-sm italic line-clamp-3">{editBio || 'No bio yet.'}</p>
                             </div>
@@ -375,16 +388,27 @@ const TrainerDashboard: React.FC = () => {
                         <div className="w-full lg:w-2/3">
                             <h3 className="text-xl font-black uppercase italic text-white mb-6">Edit Profile Details</h3>
                             <form onSubmit={handleSaveProfile} className="space-y-6">
-                                <div>
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Display Name & Specialty</label>
-                                    <input 
-                                        type="text" 
-                                        className="w-full bg-dark/50 border border-white/10 rounded-xl px-5 py-4 text-white font-bold outline-none focus:border-brand"
-                                        value={editName}
-                                        onChange={(e) => setEditName(e.target.value)}
-                                        placeholder="Name (Specialty) - e.g. John Doe (CrossFit)"
-                                    />
-                                    <p className="text-[10px] text-slate-600 mt-1 ml-2">Format: Name (Specialty)</p>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Display Name</label>
+                                        <input 
+                                            type="text" 
+                                            className="w-full bg-dark/50 border border-white/10 rounded-xl px-5 py-4 text-white font-bold outline-none focus:border-brand"
+                                            value={editName}
+                                            onChange={(e) => setEditName(e.target.value)}
+                                            placeholder="John Doe"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Specialty</label>
+                                        <input 
+                                            type="text" 
+                                            className="w-full bg-dark/50 border border-white/10 rounded-xl px-5 py-4 text-white font-bold outline-none focus:border-brand"
+                                            value={editSpecialty}
+                                            onChange={(e) => setEditSpecialty(e.target.value)}
+                                            placeholder="e.g. CrossFit"
+                                        />
+                                    </div>
                                 </div>
                                 
                                 <div>

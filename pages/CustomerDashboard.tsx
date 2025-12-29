@@ -93,6 +93,9 @@ const CustomerDashboard: React.FC = () => {
       return trainer.image;
   };
 
+  // Helper to clean display name
+  const displayName = currentUser.name.split('(')[0].trim();
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-24 animate-in fade-in slide-in-from-bottom-2 duration-500">
       
@@ -108,7 +111,7 @@ const CustomerDashboard: React.FC = () => {
             </div>
             <div className="text-center md:text-left">
                 <h1 className="text-3xl font-black uppercase italic text-white leading-none mb-2">
-                    {currentUser.name}
+                    {displayName}
                 </h1>
                 <div className="flex flex-col md:flex-row gap-2 items-center justify-center md:justify-start">
                     <span className="text-brand text-[10px] font-black uppercase tracking-widest bg-brand/10 px-3 py-1 rounded-full">

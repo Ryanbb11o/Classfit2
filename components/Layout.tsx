@@ -58,6 +58,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     }
   };
 
+  // Helper to clean name (remove specialty in parens)
+  const getDisplayName = (name: string) => name.split('(')[0].trim();
+
   return (
     <div className="min-h-screen flex flex-col bg-dark text-white font-sans selection:bg-brand selection:text-dark">
       {/* Navigation Header */}
@@ -98,7 +101,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                      </NavLink>
                    )}
                    <NavLink to="/profile" className="text-xs font-black uppercase tracking-widest hover:text-brand transition-all duration-200 flex items-center gap-2 text-white">
-                     <UserIcon size={14} /> {currentUser.name}
+                     <UserIcon size={14} /> {getDisplayName(currentUser.name)}
                    </NavLink>
                  </div>
                ) : (
@@ -156,7 +159,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                                        </div>
                                        <div>
                                           <p className="text-xs font-bold text-white mb-1">New Trainer Application</p>
-                                          <p className="text-[10px] text-brand font-black uppercase italic tracking-wider">({u.name})</p>
+                                          <p className="text-[10px] text-brand font-black uppercase italic tracking-wider">({getDisplayName(u.name)})</p>
                                           <p className="text-[9px] text-slate-500 mt-1">{new Date(u.joinedDate).toLocaleDateString()}</p>
                                        </div>
                                     </div>
@@ -176,7 +179,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                                        </div>
                                        <div>
                                           <p className="text-xs font-bold text-white mb-1">New Booking Request</p>
-                                          <p className="text-[10px] text-slate-300 uppercase italic">{b.customerName}</p>
+                                          <p className="text-[10px] text-slate-300 uppercase italic">{getDisplayName(b.customerName)}</p>
                                           <p className="text-[9px] text-slate-500 mt-1">{b.date} @ {b.time}</p>
                                        </div>
                                     </div>

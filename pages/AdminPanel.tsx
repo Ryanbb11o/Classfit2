@@ -190,6 +190,9 @@ const AdminPanel: React.FC = () => {
     if (window.confirm(t.sure)) deleteUser(id);
   };
 
+  // HELPER: Clean name display
+  const cleanName = (name: string) => name.split('(')[0].trim();
+
   if (!isAdmin) {
     return (
       <div className="max-w-xl mx-auto py-40 px-4 text-center">
@@ -275,7 +278,7 @@ const AdminPanel: React.FC = () => {
                      <div className="bg-white/5 px-3 py-1 rounded-lg text-[10px] font-black text-slate-400">{trainer.count}</div>
                    </div>
                    <div>
-                      <h4 className="text-sm font-black uppercase italic leading-none mb-2 text-white">{trainer.name}</h4>
+                      <h4 className="text-sm font-black uppercase italic leading-none mb-2 text-white">{cleanName(trainer.name)}</h4>
                       <p className="text-2xl font-black italic text-brand">{trainer.income} <span className="text-xs text-slate-500">BGN</span></p>
                    </div>
                 </div>
@@ -305,7 +308,7 @@ const AdminPanel: React.FC = () => {
                      <tr key={idx} className="hover:bg-white/5">
                        <td className="px-8 py-5 flex items-center gap-3">
                          <img src={row.image || DEFAULT_PROFILE_IMAGE} alt={row.name} className="w-8 h-8 rounded-lg object-cover bg-dark" />
-                         <span className="font-black italic text-xs text-white">{row.name}</span>
+                         <span className="font-black italic text-xs text-white">{cleanName(row.name)}</span>
                        </td>
                        <td className="px-8 py-5 text-center text-slate-300 font-bold">{row.totalCount}</td>
                        <td className="px-8 py-5 text-right text-slate-400">{row.cashIncome} BGN</td>
@@ -359,11 +362,11 @@ const AdminPanel: React.FC = () => {
                                 className="w-10 h-10 rounded-xl object-cover bg-dark" 
                             />
                             <div>
-                                <span className="font-black italic uppercase text-xs text-white">{booking.customerName}</span>
+                                <span className="font-black italic uppercase text-xs text-white">{cleanName(booking.customerName)}</span>
                                 {booking.customerPhone && <span className="block text-[9px] text-slate-500">{booking.customerPhone}</span>}
                             </div>
                           </td>
-                          <td className="px-8 py-6 text-slate-400 font-bold uppercase text-[10px]">{trainer?.name || 'Unknown'}</td>
+                          <td className="px-8 py-6 text-slate-400 font-bold uppercase text-[10px]">{trainer?.name ? cleanName(trainer.name) : 'Unknown'}</td>
                           <td className="px-8 py-6 text-[10px] font-black uppercase text-white">{booking.date} | {booking.time}</td>
                           <td className="px-8 py-6">
                              <span className={`text-[9px] font-black uppercase px-3 py-1.5 rounded-lg ${isConfirmed ? 'bg-green-500/10 text-green-400' : 'bg-brand text-dark'}`}>
@@ -432,7 +435,7 @@ const AdminPanel: React.FC = () => {
                        pendingApplications.map(u => (
                          <tr key={u.id} className="hover:bg-white/5">
                            <td className="px-8 py-6 font-black uppercase italic text-xs text-white">
-                                {u.name}
+                                {cleanName(u.name)}
                            </td>
                            <td className="px-8 py-6 text-xs text-slate-400">{u.email}</td>
                            <td className="px-8 py-6 text-xs text-brand font-bold">{u.phone || 'N/A'}</td>
@@ -483,7 +486,7 @@ const AdminPanel: React.FC = () => {
                             alt={u.name} 
                             className="w-10 h-10 rounded-xl object-cover bg-dark" 
                           />
-                          <span className="font-black uppercase italic text-xs text-white">{u.name}</span>
+                          <span className="font-black uppercase italic text-xs text-white">{cleanName(u.name)}</span>
                        </td>
                        <td className="px-8 py-6 text-xs text-slate-400">{u.email}</td>
                        <td className="px-8 py-6">
