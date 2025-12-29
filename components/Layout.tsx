@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { Menu, X, ShieldCheck, User as UserIcon, Home, Info, Calendar, Dumbbell, ShoppingBag, LogIn, LogOut, Phone, Briefcase, Bell, AlertCircle, CheckCircle } from 'lucide-react';
@@ -76,8 +77,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           {/* Far Right: Auth + Menu */}
           <div className="flex items-center gap-6">
             
-            {/* Desktop Auth Links */}
-            <div className="hidden md:flex items-center gap-6 mr-4">
+            {/* Desktop Auth Links + Language */}
+            <div className="hidden md:flex items-center gap-6">
                {currentUser ? (
                  <div className="flex items-center gap-4">
                    {isAdmin && (
@@ -101,7 +102,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                    </NavLink>
                  </div>
                ) : (
-                 <div className="flex items-center gap-4">
+                 <div className="flex items-center gap-6">
                    <NavLink to="/login" className="text-xs font-black uppercase tracking-widest hover:text-brand transition-all duration-200 text-white">
                      {t.login}
                    </NavLink>
@@ -110,6 +111,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                    </NavLink>
                  </div>
                )}
+               
+               <div className="h-6 w-px bg-white/10"></div>
+               <LanguageSwitcher />
             </div>
 
             {/* NOTIFICATIONS (Admin + Trainer) - Visible on Mobile & Desktop */}
@@ -193,10 +197,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                     )}
                  </div>
                )}
-
-            <div className="h-6 w-px bg-white/10 hidden md:block"></div>
-            
-            <LanguageSwitcher />
 
             {/* Hamburger Menu Icon */}
             <button 

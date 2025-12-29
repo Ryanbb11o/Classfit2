@@ -1,14 +1,42 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Calendar, Clock, User, Check, X, ShieldAlert, CheckCircle2, DollarSign, CreditCard, Banknote, LayoutDashboard, ListFilter, FileSpreadsheet, TrendingUp, Phone, Loader2, Trash2, Users, Shield, RefreshCw, History, Briefcase, CheckCircle, ArrowRight, AlertTriangle } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, getTrainers, DEFAULT_PROFILE_IMAGE } from '../constants';
 import emailjs from '@emailjs/browser';
+import { Trainer } from '../types';
 
 const AdminPanel: React.FC = () => {
   const { language, bookings, updateBooking, deleteBooking, isAdmin, users, deleteUser, updateUser, currentUser, refreshData } = useAppContext();
   const t = TRANSLATIONS[language];
-  const trainers = getTrainers(language);
+  
+  // MERGE STATIC AND DYNAMIC TRAINERS TO FIX "BLANK NAME" ISSUE
+  const trainers = useMemo(() => {
+    const staticTrainers = getTrainers(language);
+    
+    // Convert users with role 'trainer' into Trainer objects
+    const dynamicTrainers: Trainer[] = users
+      .filter(u => u.role === 'trainer')
+      .map(u => {
+        // STRICT PARSING: Separate Name from Specialty
+        const match = u.name.match(/^(.*)\s\((.*)\)$/);
+        const displayName = match ? match[1] : u.name;
+        const displaySpecialty = match ? match[2] : (language === 'bg' ? 'Фитнес инструктор' : 'Fitness Instructor');
+
+        return {
+          id: u.id,
+          name: displayName,
+          specialty: displaySpecialty,
+          price: 20, 
+          image: u.image || DEFAULT_PROFILE_IMAGE, 
+          phone: u.phone || '',
+          availability: []
+        };
+      });
+
+    return [...staticTrainers, ...dynamicTrainers];
+  }, [language, users]);
+
   const [completingId, setCompletingId] = useState<string | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -195,7 +223,6 @@ const AdminPanel: React.FC = () => {
           <button onClick={() => setActiveTab('bookings')} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'bookings' ? 'bg-brand text-dark' : 'text-slate-400'}`}>
             <ListFilter size={14} className="inline mr-2" />{t.tabBookings} {pendingCount > 0 && <span className="ml-1 px-1.5 py-0.5 bg-brand text-dark rounded text-[8px]">{pendingCount}</span>}
           </button>
-          {/* Renamed for clarity */}
           <button onClick={() => setActiveTab('applications')} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'applications' ? 'bg-brand text-dark' : 'text-slate-400'}`}>
             <Briefcase size={14} className="inline mr-2" /> Trainer Requests {appCount > 0 && <span className="ml-1 px-1.5 py-0.5 bg-white text-dark rounded text-[8px]">{appCount}</span>}
           </button>
@@ -326,7 +353,6 @@ const AdminPanel: React.FC = () => {
                       return (
                         <tr key={booking.id} className="hover:bg-white/5">
                           <td className="px-8 py-6 flex items-center gap-3">
-                            {/* User Avatar - Shows default if no image, via AppContext logic */}
                             <img 
                                 src={bookingUser?.image || DEFAULT_PROFILE_IMAGE} 
                                 alt={booking.customerName} 
@@ -337,33 +363,37 @@ const AdminPanel: React.FC = () => {
                                 {booking.customerPhone && <span className="block text-[9px] text-slate-500">{booking.customerPhone}</span>}
                             </div>
                           </td>
-                          <td className="px-8 py-6 text-slate-400 font-bold uppercase text-[10px]">{trainer?.name}</td>
+                          <td className="px-8 py-6 text-slate-400 font-bold uppercase text-[10px]">{trainer?.name || 'Unknown'}</td>
                           <td className="px-8 py-6 text-[10px] font-black uppercase text-white">{booking.date} | {booking.time}</td>
                           <td className="px-8 py-6">
                              <span className={`text-[9px] font-black uppercase px-3 py-1.5 rounded-lg ${isConfirmed ? 'bg-green-500/10 text-green-400' : 'bg-brand text-dark'}`}>
                                 {t[`status${booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}` as keyof typeof t]}
                              </span>
                           </td>
-                          <td className="px-8 py-6 text-right flex items-center justify-end gap-2">
-                            {isPending && (
-                              <>
-                                <button onClick={() => handleConfirm(booking.id)} disabled={isProcessing} className="p-2 bg-green-500/10 text-green-500 rounded-lg hover:bg-green-500 hover:text-white transition-all">
-                                  {isProcessing ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
-                                </button>
-                                <button onClick={() => updateBooking(booking.id, { status: 'cancelled' })} className="p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all"><X size={16} /></button>
-                              </>
-                            )}
-                            {isConfirmed && (
-                              completingId === booking.id ? (
-                                <div className="flex items-center gap-2">
-                                  <button onClick={() => handleFinish(booking.id, 'cash')} className="px-3 py-2 bg-green-500/10 text-green-500 rounded-lg text-[9px] font-black uppercase hover:bg-green-500 hover:text-white transition-all"><Banknote size={12} className="inline mr-1" /> {t.cash}</button>
-                                  <button onClick={() => handleFinish(booking.id, 'card')} className="px-3 py-2 bg-blue-500/10 text-blue-500 rounded-lg text-[9px] font-black uppercase hover:bg-blue-500 hover:text-white transition-all"><CreditCard size={12} className="inline mr-1" /> {t.card}</button>
-                                  <button onClick={() => setCompletingId(null)} className="p-2 text-slate-500"><X size={14}/></button>
-                                </div>
-                              ) : (
-                                <button onClick={() => setCompletingId(booking.id)} className="px-4 py-2 bg-brand text-dark rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-white transition-all"><CheckCircle2 size={14} className="inline mr-2" /> {t.finish}</button>
-                              )
-                            )}
+                          <td className="px-8 py-6 text-right">
+                             <div className="flex items-center justify-end gap-2">
+                                {isPending && (
+                                  <>
+                                    <button onClick={() => handleConfirm(booking.id)} disabled={isProcessing} className="p-2 bg-green-500/10 text-green-500 rounded-lg hover:bg-green-500 hover:text-white transition-all">
+                                      {isProcessing ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
+                                    </button>
+                                    <button onClick={() => updateBooking(booking.id, { status: 'cancelled' })} className="p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all"><X size={16} /></button>
+                                  </>
+                                )}
+                                {isConfirmed && (
+                                  completingId === booking.id ? (
+                                    <div className="flex items-center gap-2">
+                                      <button onClick={() => handleFinish(booking.id, 'cash')} className="px-3 py-2 bg-green-500/10 text-green-500 rounded-lg text-[9px] font-black uppercase hover:bg-green-500 hover:text-white transition-all"><Banknote size={12} className="inline mr-1" /> {t.cash}</button>
+                                      <button onClick={() => handleFinish(booking.id, 'card')} className="px-3 py-2 bg-blue-500/10 text-blue-500 rounded-lg text-[9px] font-black uppercase hover:bg-blue-500 hover:text-white transition-all"><CreditCard size={12} className="inline mr-1" /> {t.card}</button>
+                                      <button onClick={() => setCompletingId(null)} className="p-2 text-slate-500"><X size={14}/></button>
+                                    </div>
+                                  ) : (
+                                    <button onClick={() => setCompletingId(booking.id)} className="px-4 py-2 bg-brand text-dark rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-white transition-all flex items-center gap-1">
+                                        <CheckCircle2 size={14} /> {t.finish}
+                                    </button>
+                                  )
+                                )}
+                            </div>
                           </td>
                         </tr>
                       );

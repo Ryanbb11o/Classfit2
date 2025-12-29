@@ -32,71 +32,71 @@ const Login: React.FC = () => {
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 animate-in fade-in duration-500 relative">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-brand rounded-2xl mb-6 shadow-xl shadow-brand/20">
-             <LogIn size={28} className="text-dark" />
+      <div className="w-full max-w-sm">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-12 h-12 bg-brand rounded-xl mb-4 shadow-xl shadow-brand/20">
+             <LogIn size={20} className="text-dark" />
           </div>
-          <h1 className="text-4xl font-black uppercase italic tracking-tighter mb-2 text-white">{t.login}</h1>
-          <p className="text-slate-400 font-medium text-sm">{t.welcomeBack}</p>
+          <h1 className="text-3xl font-black uppercase italic tracking-tighter mb-1 text-white">{t.login}</h1>
+          <p className="text-slate-400 font-medium text-xs">{t.welcomeBack}</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-surface p-10 rounded-[2.5rem] border border-white/5 shadow-2xl shadow-black/50 space-y-6">
+        <form onSubmit={handleSubmit} className="bg-surface/50 backdrop-blur-md p-8 rounded-[2rem] border border-white/5 shadow-2xl space-y-5">
           {error && (
-            <div className="bg-red-500/10 text-red-500 p-4 rounded-xl flex items-center gap-3 text-xs font-bold uppercase tracking-wide border border-red-500/20">
-               <AlertCircle size={16} /> {error}
+            <div className="bg-red-500/10 text-red-500 p-3 rounded-xl flex items-center gap-2 text-[10px] font-bold uppercase tracking-wide border border-red-500/20">
+               <AlertCircle size={14} /> {error}
             </div>
           )}
           
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">{t.email}</label>
+          <div className="space-y-1.5">
+            <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-2">{t.email}</label>
             <input 
               type="email" 
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-dark/50 border-2 border-transparent focus:border-brand focus:bg-dark rounded-xl px-5 py-4 font-bold outline-none transition-all text-white placeholder-slate-600"
+              className="w-full bg-dark/50 border border-white/5 focus:border-brand focus:bg-dark rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all text-white placeholder-slate-600"
               placeholder="name@example.com"
             />
           </div>
           
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">{t.password}</label>
+          <div className="space-y-1.5">
+            <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-2">{t.password}</label>
             <input 
               type="password" 
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-dark/50 border-2 border-transparent focus:border-brand focus:bg-dark rounded-xl px-5 py-4 font-bold outline-none transition-all text-white placeholder-slate-600"
+              className="w-full bg-dark/50 border border-white/5 focus:border-brand focus:bg-dark rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all text-white placeholder-slate-600"
               placeholder="••••••••"
             />
           </div>
 
           <button 
             type="submit"
-            className="w-full bg-brand text-dark py-4 rounded-xl font-black uppercase tracking-widest hover:bg-white hover:text-dark transition-all duration-300 shadow-xl"
+            className="w-full bg-brand text-dark py-3.5 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-white hover:text-dark transition-all duration-300 shadow-lg mt-2"
           >
             {t.loginBtn}
           </button>
         </form>
 
-        <p className="text-center mt-8 text-sm font-medium text-slate-400">
+        <p className="text-center mt-6 text-xs font-medium text-slate-400">
           {t.noAccount} <Link to="/signup" className="text-brand font-bold hover:text-white transition-colors">{t.registerHere}</Link>
         </p>
         
-        <div className="mt-8 pt-8 border-t border-white/5 text-center">
-             <Link to="/trainer-signup" className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors">
-                <Briefcase size={14} /> Are you a trainer?
+        <div className="mt-6 pt-6 border-t border-white/5 text-center">
+             <Link to="/trainer-signup" className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors">
+                <Briefcase size={12} /> Are you a trainer?
              </Link>
         </div>
 
         {/* Developer Tool: Hard Reset */}
-        <div className="mt-12 text-center">
+        <div className="mt-8 text-center opacity-30 hover:opacity-100 transition-opacity">
             <button 
               onClick={handleHardReset}
-              className="text-[10px] uppercase font-black tracking-widest text-slate-600 hover:text-red-500 transition-colors flex items-center justify-center gap-2 mx-auto"
+              className="text-[9px] uppercase font-black tracking-widest text-slate-600 hover:text-red-500 transition-colors flex items-center justify-center gap-2 mx-auto"
             >
-              <RefreshCw size={12} /> Reset App Data (Dev)
+              <RefreshCw size={10} /> Reset App Data (Dev)
             </button>
         </div>
       </div>
