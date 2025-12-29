@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { Calendar, Clock, CheckCircle, Timer, XCircle, Trash2, CheckCircle2, User as UserIcon, Mail, CalendarPlus, Phone, MapPin, ChevronRight } from 'lucide-react';
+import { Calendar, Clock, CheckCircle, Timer, XCircle, Trash2, CheckCircle2, User as UserIcon, Mail, CalendarPlus, Phone, MapPin, ChevronRight, LogOut, Dumbbell, Activity } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, getTrainers, DEFAULT_PROFILE_IMAGE } from '../constants';
 import { useNavigate } from 'react-router-dom';
@@ -20,14 +20,15 @@ const CustomerDashboard: React.FC = () => {
     const dynamicTrainers: Trainer[] = users
       .filter(u => u.role === 'trainer')
       .map(u => {
+        // STRICT PARSING: Separate Name from Specialty
         const match = u.name.match(/^(.*)\s\((.*)\)$/);
         const displayName = match ? match[1] : u.name;
-        const displaySpecialty = match ? match[2] : (language === 'bg' ? 'Персонален треньор' : 'Personal Trainer');
+        const displaySpecialty = match ? match[2] : (language === 'bg' ? 'Фитнес инструктор' : 'Fitness Instructor');
 
         return {
           id: u.id,
-          name: displayName,
-          specialty: displaySpecialty,
+          name: displayName, // Clean name
+          specialty: displaySpecialty, // Extracted specialty
           price: 20, 
           image: u.image || DEFAULT_PROFILE_IMAGE, 
           phone: u.phone || '',
@@ -35,13 +36,13 @@ const CustomerDashboard: React.FC = () => {
         };
       });
 
-    // Merge arrays, preferring dynamic if ID conflicts (unlikely with UUIDs)
+    // Merge arrays, preferring dynamic if ID conflicts
     return [...staticTrainers, ...dynamicTrainers];
   }, [language, users]);
 
   if (!currentUser) {
     return (
-        <div className="min-h-screen flex items-center justify-center">
+        <div className="min-h-screen flex items-center justify-center bg-dark">
             <div className="text-center">
                 <p className="mb-4 text-slate-400 font-bold">Please log in to view your dashboard.</p>
                 <button onClick={() => navigate('/login')} className="px-6 py-3 bg-brand text-dark font-black uppercase rounded-xl hover:bg-white transition-all">{t.login}</button>
@@ -58,9 +59,9 @@ const CustomerDashboard: React.FC = () => {
     const endHour = (parseInt(hour) + 1).toString().padStart(2, '0');
     const endDate = `${year}${month}${day}T${endHour}${minute}00`;
     
-    const text = encodeURIComponent(`Training with ${trainer?.name} @ ClassFit`);
-    const details = encodeURIComponent(`Your training session at ClassFit Varna has been confirmed.\n\nTrainer: ${trainer?.name}\nSpecialty: ${trainer?.specialty}\n\nThank you for choosing ClassFit!`);
-    const location = encodeURIComponent(`ClassFit Varna, Levski District, Mir Bus Stop, Varna, Bulgaria`);
+    const text = encodeURIComponent(`Training: ${trainer?.specialty || 'Fitness'} with ${trainer?.name}`);
+    const details = encodeURIComponent(`Activity: ${trainer?.specialty}\nTrainer: ${trainer?.name}\nLocation: ClassFit Varna (MIR)`);
+    const location = encodeURIComponent(`ClassFit Varna, Levski District, MIR, Varna, Bulgaria`);
     
     return `https://www.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${startDate}/${endDate}&details=${details}&location=${location}`;
   };
@@ -89,50 +90,50 @@ const CustomerDashboard: React.FC = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-24 animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="max-w-4xl mx-auto px-4 py-24 animate-in fade-in slide-in-from-bottom-2 duration-500">
       
-      {/* Profile Header - Compact Version */}
-      <div className="bg-surface rounded-[2rem] p-8 border border-white/5 flex flex-col md:flex-row items-center justify-between gap-6 mb-12 shadow-2xl">
+      {/* Profile Header */}
+      <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-16 bg-surface p-8 rounded-[2.5rem] border border-white/5 shadow-2xl">
          <div className="flex items-center gap-6">
-            <div className="w-20 h-20 rounded-full border-2 border-brand p-1">
+            <div className="w-24 h-24 rounded-full p-1 border-2 border-brand/50">
                 <img 
                     src={currentUser.image || DEFAULT_PROFILE_IMAGE} 
                     alt="Profile" 
-                    className="w-full h-full object-cover rounded-full"
+                    className="w-full h-full object-cover rounded-full bg-dark"
                 />
             </div>
-            <div>
-                <h1 className="text-2xl md:text-3xl font-black uppercase italic text-white leading-none mb-1">
+            <div className="text-center md:text-left">
+                <h1 className="text-3xl font-black uppercase italic text-white leading-none mb-2">
                     {currentUser.name}
                 </h1>
-                <div className="flex flex-wrap gap-2">
-                    <span className="text-brand text-xs font-black uppercase tracking-widest bg-brand/10 px-2 py-1 rounded">
+                <div className="flex flex-col md:flex-row gap-2 items-center">
+                    <span className="text-brand text-[10px] font-black uppercase tracking-widest bg-brand/10 px-3 py-1 rounded-full">
                         {t.clubMember}
                     </span>
-                    <span className="text-slate-400 text-xs font-bold px-2 py-1 bg-white/5 rounded flex items-center gap-1">
-                        <Mail size={10} /> {currentUser.email}
+                    <span className="text-slate-500 text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1">
+                        <Mail size={12} /> {currentUser.email}
                     </span>
                 </div>
             </div>
          </div>
          <button 
            onClick={handleLogout}
-           className="px-6 py-2 border border-white/10 rounded-full text-xs font-black uppercase tracking-widest text-slate-400 hover:bg-white hover:text-dark transition-all whitespace-nowrap"
+           className="flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 hover:text-white text-slate-400 rounded-xl text-xs font-black uppercase tracking-widest transition-all"
          >
-           {t.logout}
+           <LogOut size={16} /> {t.logout}
          </button>
       </div>
 
-      <div className="mb-6 flex items-center gap-3">
-          <h2 className="text-xl font-black uppercase italic tracking-tight text-white">{t.myBookings}</h2>
-          <span className="bg-brand text-dark text-xs font-black px-2 py-1 rounded-md">{myBookings.length}</span>
+      <div className="flex items-center justify-between mb-8 px-2">
+          <h2 className="text-2xl font-black uppercase italic tracking-tighter text-white">{t.myBookings}</h2>
+          <span className="bg-brand text-dark text-xs font-black px-3 py-1 rounded-full">{myBookings.length}</span>
       </div>
 
-      <div className="grid grid-cols-1 gap-4">
+      <div className="space-y-4">
         {myBookings.length === 0 ? (
-            <div className="text-center py-20 bg-surface rounded-3xl border border-white/5 border-dashed">
-                <p className="text-slate-500 font-medium mb-4">{t.noBookings}</p>
-                <button onClick={() => navigate('/booking')} className="px-6 py-3 bg-brand text-dark rounded-full font-black uppercase text-xs tracking-widest hover:bg-white transition-colors shadow-lg shadow-brand/20">
+            <div className="text-center py-24 bg-surface rounded-[2rem] border border-white/5 border-dashed">
+                <p className="text-slate-500 font-medium mb-6">{t.noBookings}</p>
+                <button onClick={() => navigate('/booking')} className="px-8 py-4 bg-brand text-dark rounded-full font-black uppercase text-xs tracking-widest hover:bg-white transition-all shadow-xl shadow-brand/20">
                     {t.makeFirst}
                 </button>
             </div>
@@ -145,63 +146,61 @@ const CustomerDashboard: React.FC = () => {
                 const isCompleted = booking.status === 'completed';
 
                 return (
-                    <div key={booking.id} className="bg-surface border border-white/5 rounded-2xl p-5 hover:border-brand/30 transition-all group relative overflow-hidden flex flex-col md:flex-row gap-6">
+                    <div key={booking.id} className="bg-surface border border-white/5 rounded-2xl p-6 hover:border-brand/30 transition-all group flex flex-col md:flex-row items-center gap-6 relative overflow-hidden">
                         
-                        {/* 1. Image & Status Section */}
-                        <div className="flex items-center gap-4 min-w-[200px]">
+                        {/* 1. Trainer Avatar */}
+                        <div className="shrink-0 relative">
                             <img 
                                 src={getTrainerImage(trainer)} 
                                 alt={trainer?.name || 'Trainer'} 
-                                className="w-16 h-16 rounded-xl object-cover grayscale group-hover:grayscale-0 transition-all duration-500 bg-dark" 
+                                className="w-16 h-16 rounded-2xl object-cover bg-dark" 
                             />
-                            <div>
-                                <h3 className="font-black uppercase italic text-lg text-white leading-none mb-1">{trainer?.name || 'Unknown Trainer'}</h3>
-                                <div className={`inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded ${
-                                    isConfirmed ? 'bg-green-500/10 text-green-500' :
-                                    isPending ? 'bg-brand/10 text-brand' :
-                                    isCancelled ? 'bg-red-500/10 text-red-500' :
-                                    'bg-slate-700/50 text-slate-400'
-                                }`}>
-                                    {isConfirmed && <CheckCircle2 size={10} />}
-                                    {isPending && <Timer size={10} />}
-                                    {isCancelled && <XCircle size={10} />}
-                                    {isCompleted && <CheckCircle size={10} />}
-                                    {t[`status${booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}` as keyof typeof t]}
+                            <div className={`absolute -bottom-2 -right-2 p-1.5 rounded-lg border-2 border-surface ${
+                                isConfirmed ? 'bg-green-500 text-dark' :
+                                isPending ? 'bg-brand text-dark' :
+                                isCancelled ? 'bg-red-500 text-white' :
+                                'bg-slate-600 text-white'
+                            }`}>
+                                {isConfirmed && <CheckCircle2 size={12} />}
+                                {isPending && <Timer size={12} />}
+                                {isCancelled && <XCircle size={12} />}
+                                {isCompleted && <CheckCircle size={12} />}
+                            </div>
+                        </div>
+
+                        {/* 2. Main Info */}
+                        <div className="flex-1 text-center md:text-left min-w-0 w-full">
+                            <h3 className="font-black uppercase italic text-lg text-white leading-tight mb-3 truncate">{trainer?.name || 'Unknown Trainer'}</h3>
+                            
+                            {/* Updated Metadata Section: Focus on Activity instead of Location */}
+                            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-xs font-medium text-slate-400">
+                                
+                                {/* Activity Type (Specialty) - Highlighted */}
+                                <div className="flex items-center gap-2 bg-brand/10 text-brand px-3 py-1 rounded-lg">
+                                    <Activity size={14} />
+                                    <span className="font-black uppercase tracking-wider">{trainer?.specialty || 'Training'}</span>
                                 </div>
+
+                                <span className="flex items-center gap-1.5"><Calendar size={12} className="text-slate-500" /> {booking.date}</span>
+                                <span className="flex items-center gap-1.5"><Clock size={12} className="text-slate-500" /> {booking.time}</span>
                             </div>
                         </div>
 
-                        {/* 2. Details Section */}
-                        <div className="flex-1 flex flex-wrap items-center gap-y-2 gap-x-6 text-sm md:border-l md:border-white/5 md:pl-6">
-                            <div className="flex items-center gap-2 text-slate-300">
-                                <Calendar size={14} className="text-brand" />
-                                <span className="font-bold">{booking.date}</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-slate-300">
-                                <Clock size={14} className="text-brand" />
-                                <span className="font-bold">{booking.time}</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-slate-300">
-                                <MapPin size={14} className="text-brand" />
-                                <span className="font-bold">ClassFit Varna (Mir)</span>
-                            </div>
-                        </div>
-
-                        {/* 3. Actions Section */}
-                        <div className="flex items-center justify-end gap-2 md:border-l md:border-white/5 md:pl-6">
+                        {/* 3. Actions */}
+                        <div className="flex items-center gap-2 w-full md:w-auto justify-center md:justify-end border-t md:border-t-0 border-white/5 pt-4 md:pt-0 mt-2 md:mt-0">
                              {isConfirmed && (
                                 <>
                                     <a 
                                         href={getGoogleCalendarUrl(booking, trainer)}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-slate-300 hover:text-brand transition-colors"
+                                        className="p-3 bg-white/5 hover:bg-white text-slate-400 hover:text-dark rounded-xl transition-all"
                                         title={language === 'bg' ? 'Добави в Календар' : 'Add to Calendar'}
                                     >
                                         <CalendarPlus size={18} />
                                     </a>
                                     {trainer?.phone && (
-                                        <a href={`tel:${trainer.phone}`} className="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-slate-300 hover:text-green-500 transition-colors" title="Call Trainer">
+                                        <a href={`tel:${trainer.phone}`} className="p-3 bg-white/5 hover:bg-green-500 text-slate-400 hover:text-white rounded-xl transition-all" title="Call Trainer">
                                             <Phone size={18} />
                                         </a>
                                     )}
@@ -210,14 +209,14 @@ const CustomerDashboard: React.FC = () => {
 
                              {(isPending || isConfirmed) && (
                                 cancellingId === booking.id ? (
-                                    <div className="flex items-center gap-2 bg-red-900/20 p-1 rounded-lg">
-                                        <button onClick={() => handleCancelRequest(booking.id)} className="px-3 py-1 bg-red-500 text-white rounded text-xs font-bold">Confirm</button>
-                                        <button onClick={() => setCancellingId(null)} className="px-3 py-1 bg-white/10 text-white rounded text-xs">No</button>
+                                    <div className="flex items-center gap-2 bg-red-500/10 p-1 rounded-xl">
+                                        <button onClick={() => handleCancelRequest(booking.id)} className="px-4 py-2 bg-red-500 text-white rounded-lg text-xs font-bold hover:bg-red-600 transition-colors">Confirm</button>
+                                        <button onClick={() => setCancellingId(null)} className="px-4 py-2 bg-white/10 text-white rounded-lg text-xs hover:bg-white/20 transition-colors">Back</button>
                                     </div>
                                 ) : (
                                     <button 
                                         onClick={() => setCancellingId(booking.id)}
-                                        className="p-2 text-slate-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+                                        className="p-3 bg-white/5 hover:bg-red-500 text-slate-400 hover:text-white rounded-xl transition-all"
                                         title={t.cancelReq}
                                     >
                                         <Trash2 size={18} />
@@ -225,7 +224,6 @@ const CustomerDashboard: React.FC = () => {
                                 )
                              )}
                         </div>
-
                     </div>
                 )
             })

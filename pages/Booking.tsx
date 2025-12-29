@@ -19,13 +19,14 @@ const BookingPage: React.FC = () => {
     const dynamicTrainers: Trainer[] = users
       .filter(u => u.role === 'trainer')
       .map(u => {
+        // CLEAN NAME PARSING: Separate "Name (Specialty)" logic
         const match = u.name.match(/^(.*)\s\((.*)\)$/);
         const displayName = match ? match[1] : u.name;
         const displaySpecialty = match ? match[2] : (language === 'bg' ? 'Персонален треньор' : 'Personal Trainer');
 
         return {
           id: u.id,
-          name: displayName,
+          name: displayName, // Ensure clean name here
           specialty: displaySpecialty,
           price: 20, 
           image: u.image || DEFAULT_PROFILE_IMAGE, 
@@ -286,7 +287,7 @@ const BookingPage: React.FC = () => {
                    <img 
                       src={trainer.image} 
                       alt={trainer.name} 
-                      className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                      className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500 bg-dark"
                    />
                    <div className="absolute inset-0 bg-gradient-to-t from-dark via-transparent to-transparent opacity-90"></div>
                    

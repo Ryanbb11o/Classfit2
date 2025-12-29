@@ -122,9 +122,6 @@ const TrainerDashboard: React.FC = () => {
   
   const totalEarnings = completedBookings.reduce((sum, b) => sum + b.price, 0);
 
-  // Helper for displaying profile image
-  const displayImage = currentUser.image || DEFAULT_PROFILE_IMAGE;
-
   return (
     <div className="max-w-6xl mx-auto px-4 py-24 animate-in fade-in slide-in-from-bottom-2 duration-500">
       
@@ -149,8 +146,6 @@ const TrainerDashboard: React.FC = () => {
       </div>
 
       {/* ALERT: Missing Profile Picture - Now modified to only show if they haven't explicitly set one, but we use a default */}
-      {/* Actually, if we have a default, we don't necessarily need to force them, but it's good practice. 
-          Let's hide the red alert now that we have a default fallback, or change it to a suggestion. */}
       {!currentUser.image && (
           <div className="mb-12 p-6 bg-blue-500/10 border border-blue-500/20 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="flex items-center gap-4">

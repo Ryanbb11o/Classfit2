@@ -105,7 +105,7 @@ const AdminPanel: React.FC = () => {
       const endIso = `${year}${month}${day}T${endHour}${minute}00`;
       
       const calText = encodeURIComponent(bookingLang === 'bg' ? `Тренировка с ${trainer.name} @ ClassFit` : `Training with ${trainer.name} @ ClassFit`);
-      const calLoc = encodeURIComponent(`ClassFit Varna, Stop Mir, ${currentT.address}`);
+      const calLoc = encodeURIComponent(`ClassFit Varna, MIR, ${currentT.address}`);
       const calendarUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=${calText}&dates=${startIso}/${endIso}&location=${calLoc}`;
 
       // 3. Параметри за имейл шаблона
@@ -118,7 +118,7 @@ const AdminPanel: React.FC = () => {
         start_datetime_human: humanReadableDateTime,
         duration_minutes: "60",
         coach_name: trainer.name,
-        location_name: "ClassFit Varna (Stop Mir)",
+        location_name: "ClassFit Varna (MIR)",
         address_line: currentT.address,
         price: booking.price.toFixed(2),
         currency: bookingLang === 'bg' ? 'лв.' : 'BGN',
@@ -244,7 +244,7 @@ const AdminPanel: React.FC = () => {
               {incomeByTrainer.map(trainer => (
                 <div key={trainer.id} className="p-8 bg-surface border border-white/5 rounded-[2.5rem] flex flex-col justify-between">
                    <div className="flex items-start justify-between mb-6">
-                     <img src={trainer.image} alt={trainer.name} className="w-14 h-14 rounded-2xl object-cover grayscale" />
+                     <img src={trainer.image || DEFAULT_PROFILE_IMAGE} alt={trainer.name} className="w-14 h-14 rounded-2xl object-cover bg-dark" />
                      <div className="bg-white/5 px-3 py-1 rounded-lg text-[10px] font-black text-slate-400">{trainer.count}</div>
                    </div>
                    <div>
@@ -277,7 +277,7 @@ const AdminPanel: React.FC = () => {
                    {analyticsSheet.map((row, idx) => (
                      <tr key={idx} className="hover:bg-white/5">
                        <td className="px-8 py-5 flex items-center gap-3">
-                         <img src={row.image} alt={row.name} className="w-8 h-8 rounded-lg object-cover grayscale" />
+                         <img src={row.image || DEFAULT_PROFILE_IMAGE} alt={row.name} className="w-8 h-8 rounded-lg object-cover bg-dark" />
                          <span className="font-black italic text-xs text-white">{row.name}</span>
                        </td>
                        <td className="px-8 py-5 text-center text-slate-300 font-bold">{row.totalCount}</td>
