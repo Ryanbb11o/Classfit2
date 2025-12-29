@@ -1,22 +1,23 @@
 
 import React, { useState } from 'react';
-import { Calendar, Clock, User, Check, X, ShieldAlert, CheckCircle2, DollarSign, CreditCard, Banknote, LayoutDashboard, ListFilter, FileSpreadsheet, TrendingUp, Phone, Loader2, Trash2, Users, Shield, RefreshCw, History } from 'lucide-react';
+import { Calendar, Clock, User, Check, X, ShieldAlert, CheckCircle2, DollarSign, CreditCard, Banknote, LayoutDashboard, ListFilter, FileSpreadsheet, TrendingUp, Phone, Loader2, Trash2, Users, Shield, RefreshCw, History, Briefcase, CheckCircle } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, getTrainers } from '../constants';
 import emailjs from '@emailjs/browser';
 
 const AdminPanel: React.FC = () => {
-  const { language, bookings, updateBooking, deleteBooking, isAdmin, users, deleteUser, currentUser, refreshData } = useAppContext();
+  const { language, bookings, updateBooking, deleteBooking, isAdmin, users, deleteUser, updateUser, currentUser, refreshData } = useAppContext();
   const t = TRANSLATIONS[language];
   const trainers = getTrainers(language);
   const [completingId, setCompletingId] = useState<string | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'history' | 'finance' | 'users'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'history' | 'finance' | 'users' | 'applications'>('overview');
 
   const activeBookingsList = bookings.filter(b => b.status === 'pending' || b.status === 'confirmed');
   const historyBookingsList = bookings.filter(b => b.status === 'completed' || b.status === 'cancelled');
   const completedBookings = bookings.filter(b => b.status === 'completed');
+  const pendingApplications = users.filter(u => u.role === 'trainer_pending');
   
   const totalIncome = completedBookings.reduce((sum, b) => sum + b.price, 0);
 
@@ -44,6 +45,7 @@ const AdminPanel: React.FC = () => {
   });
 
   const pendingCount = bookings.filter(b => b.status === 'pending').length;
+  const appCount = pendingApplications.length;
 
   const handleManualRefresh = () => {
     setIsRefreshing(true);
@@ -54,6 +56,18 @@ const AdminPanel: React.FC = () => {
   const handleFinish = async (id: string, method: 'card' | 'cash') => {
     await updateBooking(id, { status: 'completed', paymentMethod: method });
     setCompletingId(null);
+  };
+
+  const handleApproveTrainer = async (id: string) => {
+    if (window.confirm("Approve this user as a Trainer? They will gain Trainer access.")) {
+        await updateUser(id, { role: 'trainer' });
+    }
+  };
+
+  const handleRejectTrainer = async (id: string) => {
+    if (window.confirm("Reject and DELETE this application?")) {
+        await deleteUser(id);
+    }
   };
 
   const handleConfirm = async (bookingId: string) => {
@@ -175,8 +189,8 @@ const AdminPanel: React.FC = () => {
           <button onClick={() => setActiveTab('bookings')} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'bookings' ? 'bg-brand text-dark' : 'text-slate-400'}`}>
             <ListFilter size={14} className="inline mr-2" />{t.tabBookings} {pendingCount > 0 && <span className="ml-1 px-1.5 py-0.5 bg-brand text-dark rounded text-[8px]">{pendingCount}</span>}
           </button>
-          <button onClick={() => setActiveTab('history')} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'history' ? 'bg-brand text-dark' : 'text-slate-400'}`}>
-            <History size={14} className="inline mr-2" />{t.tabHistory}
+          <button onClick={() => setActiveTab('applications')} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'applications' ? 'bg-brand text-dark' : 'text-slate-400'}`}>
+            <Briefcase size={14} className="inline mr-2" />Apps {appCount > 0 && <span className="ml-1 px-1.5 py-0.5 bg-white text-dark rounded text-[8px]">{appCount}</span>}
           </button>
           <button onClick={() => setActiveTab('users')} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'users' ? 'bg-brand text-dark' : 'text-slate-400'}`}>
             <Users size={14} className="inline mr-2" />{t.tabUsers}
@@ -326,6 +340,99 @@ const AdminPanel: React.FC = () => {
           </div>
         )}
 
+        {activeTab === 'applications' && (
+          <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-hidden animate-in fade-in">
+             <div className="p-8 border-b border-white/5 bg-white/5 flex items-center justify-between">
+                <h3 className="text-lg font-black uppercase italic text-white flex items-center gap-3">
+                   <Briefcase className="text-brand" size={20} /> Trainer Applications
+                </h3>
+             </div>
+             <div className="overflow-x-auto">
+               <table className="w-full text-left">
+                 <thead>
+                   <tr className="border-b border-white/5 text-[10px] font-black text-slate-500 uppercase">
+                     <th className="px-8 py-6">{t.name}</th>
+                     <th className="px-8 py-6">{t.email}</th>
+                     <th className="px-8 py-6">{t.phone}</th>
+                     <th className="px-8 py-6 text-right">{t.action}</th>
+                   </tr>
+                 </thead>
+                 <tbody className="divide-y divide-white/5">
+                   {pendingApplications.length === 0 ? (
+                      <tr><td colSpan={4} className="px-8 py-32 text-center text-slate-500 uppercase font-black italic">No pending applications</td></tr>
+                   ) : (
+                       pendingApplications.map(u => (
+                         <tr key={u.id} className="hover:bg-white/5">
+                           <td className="px-8 py-6 font-black uppercase italic text-xs text-white">
+                                {u.name}
+                           </td>
+                           <td className="px-8 py-6 text-xs text-slate-400">{u.email}</td>
+                           <td className="px-8 py-6 text-xs text-brand font-bold">{u.phone || 'N/A'}</td>
+                           <td className="px-8 py-6 text-right flex justify-end gap-2">
+                             <button 
+                                onClick={() => handleApproveTrainer(u.id)} 
+                                className="px-4 py-2 bg-green-500/10 text-green-500 rounded-lg text-[9px] font-black uppercase hover:bg-green-500 hover:text-white transition-all flex items-center gap-1"
+                             >
+                                <CheckCircle size={12} /> Approve
+                             </button>
+                             <button 
+                                onClick={() => handleRejectTrainer(u.id)}
+                                className="px-4 py-2 bg-red-500/10 text-red-500 rounded-lg text-[9px] font-black uppercase hover:bg-red-500 hover:text-white transition-all flex items-center gap-1"
+                             >
+                                <Trash2 size={12} /> Reject
+                             </button>
+                           </td>
+                         </tr>
+                       ))
+                   )}
+                 </tbody>
+               </table>
+             </div>
+          </div>
+        )}
+
+        {activeTab === 'users' && (
+          <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-hidden animate-in fade-in">
+             <div className="p-8 border-b border-white/5 bg-white/5">
+                <h3 className="text-lg font-black uppercase italic text-white">{t.allUsers} <span className="bg-brand text-dark px-2 py-0.5 rounded ml-2">{users.length}</span></h3>
+             </div>
+             <div className="overflow-x-auto">
+               <table className="w-full text-left">
+                 <thead>
+                   <tr className="border-b border-white/5 text-[10px] font-black text-slate-500 uppercase">
+                     <th className="px-8 py-6">{t.name}</th>
+                     <th className="px-8 py-6">{t.email}</th>
+                     <th className="px-8 py-6">{t.role}</th>
+                     <th className="px-8 py-6 text-right">{t.action}</th>
+                   </tr>
+                 </thead>
+                 <tbody className="divide-y divide-white/5">
+                   {users.map(u => (
+                     <tr key={u.id} className="hover:bg-white/5">
+                       <td className="px-8 py-6 font-black uppercase italic text-xs text-white">{u.name}</td>
+                       <td className="px-8 py-6 text-xs text-slate-400">{u.email}</td>
+                       <td className="px-8 py-6">
+                            <span className={`px-3 py-1 rounded text-[9px] font-black uppercase ${
+                                u.role === 'admin' ? 'bg-red-500/10 text-red-500' : 
+                                u.role === 'trainer' ? 'bg-brand text-dark' :
+                                u.role === 'trainer_pending' ? 'bg-yellow-500/10 text-yellow-500' :
+                                'bg-white/5 text-slate-500'
+                            }`}>
+                                {u.role}
+                            </span>
+                       </td>
+                       <td className="px-8 py-6 text-right">
+                         {u.id !== currentUser?.id && <button onClick={() => handleDeleteUser(u.id)} className="p-2 text-slate-600 hover:text-red-500 transition-all"><Trash2 size={16} /></button>}
+                       </td>
+                     </tr>
+                   ))}
+                 </tbody>
+               </table>
+             </div>
+          </div>
+        )}
+
+        {/* Removed redundant history tab to keep it clean, or keep if user wants logs */}
         {activeTab === 'history' && (
           <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-hidden animate-in fade-in">
             <div className="p-8 border-b border-white/5 bg-white/5"><h3 className="text-lg font-black uppercase italic text-white">{t.historyBookings}</h3></div>
@@ -365,38 +472,6 @@ const AdminPanel: React.FC = () => {
                 </tbody>
               </table>
             </div>
-          </div>
-        )}
-
-        {activeTab === 'users' && (
-          <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-hidden animate-in fade-in">
-             <div className="p-8 border-b border-white/5 bg-white/5">
-                <h3 className="text-lg font-black uppercase italic text-white">{t.allUsers} <span className="bg-brand text-dark px-2 py-0.5 rounded ml-2">{users.length}</span></h3>
-             </div>
-             <div className="overflow-x-auto">
-               <table className="w-full text-left">
-                 <thead>
-                   <tr className="border-b border-white/5 text-[10px] font-black text-slate-500 uppercase">
-                     <th className="px-8 py-6">{t.name}</th>
-                     <th className="px-8 py-6">{t.email}</th>
-                     <th className="px-8 py-6">{t.role}</th>
-                     <th className="px-8 py-6 text-right">{t.action}</th>
-                   </tr>
-                 </thead>
-                 <tbody className="divide-y divide-white/5">
-                   {users.map(u => (
-                     <tr key={u.id} className="hover:bg-white/5">
-                       <td className="px-8 py-6 font-black uppercase italic text-xs text-white">{u.name}</td>
-                       <td className="px-8 py-6 text-xs text-slate-400">{u.email}</td>
-                       <td className="px-8 py-6"><span className={`px-3 py-1 rounded text-[9px] font-black uppercase ${u.role === 'admin' ? 'bg-red-500/10 text-red-500' : 'bg-white/5 text-slate-500'}`}>{u.role}</span></td>
-                       <td className="px-8 py-6 text-right">
-                         {u.id !== currentUser?.id && <button onClick={() => handleDeleteUser(u.id)} className="p-2 text-slate-600 hover:text-red-500 transition-all"><Trash2 size={16} /></button>}
-                       </td>
-                     </tr>
-                   ))}
-                 </tbody>
-               </table>
-             </div>
           </div>
         )}
       </div>

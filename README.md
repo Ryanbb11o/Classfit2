@@ -14,8 +14,11 @@ CREATE TABLE users (
   name TEXT NOT NULL,
   email TEXT UNIQUE NOT NULL,
   password TEXT NOT NULL,
-  role TEXT DEFAULT 'user' CHECK (role IN ('user', 'admin')),
-  joined_date TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  phone TEXT,
+  role TEXT DEFAULT 'user',
+  joined_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  -- Explicitly naming the constraint prevents "does not exist" errors later
+  CONSTRAINT users_role_check CHECK (role IN ('user', 'admin', 'trainer_pending', 'trainer'))
 );
 
 -- 2. Create Bookings Table
@@ -43,20 +46,20 @@ CREATE POLICY "Allow public access" ON users FOR ALL USING (true) WITH CHECK (tr
 CREATE POLICY "Allow public access" ON bookings FOR ALL USING (true) WITH CHECK (true);
 ```
 
-### ⚠️ Enabling Trainer Sign Up (SQL Update)
+### ⚠️ Troubleshooting: "Constraint does not exist" Error
 
-If you see an error about `constraint "users_role_check" does not exist`, it means your table doesn't have the named rule yet. Run this command to add the new roles:
-
-```sql
--- Run this in Supabase SQL Editor to allow Trainers to sign up
-ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('user', 'admin', 'trainer_pending', 'trainer'));
-```
-
-*Note: If you get an error that `users_role_check` ALREADY exists, run this pair of commands instead:*
+If you are updating an existing table and get an error like `ERROR: 42704: constraint "users_role_check" does not exist`, it means the rule wasn't named correctly before. Run this **Safe Update Block**:
 
 ```sql
-ALTER TABLE users DROP CONSTRAINT users_role_check;
-ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('user', 'admin', 'trainer_pending', 'trainer'));
+-- 1. Safely remove old constraint if it exists
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+
+-- 2. Add the new constraint allowing Trainer roles
+ALTER TABLE users ADD CONSTRAINT users_role_check 
+CHECK (role IN ('user', 'admin', 'trainer_pending', 'trainer'));
+
+-- 3. Add phone column if missing
+ALTER TABLE users ADD COLUMN IF NOT EXISTS phone TEXT;
 ```
 
 ## 🚀 Vercel Deployment

@@ -6,8 +6,9 @@ export interface User {
   name: string;
   email: string;
   password: string; // Note: In a real app, never store passwords in plain text/frontend
+  phone?: string; // Added phone field
   joinedDate: string;
-  role: 'user' | 'admin' | 'trainer_pending' | 'trainer'; // <--- Updated roles
+  role: 'user' | 'admin' | 'trainer_pending' | 'trainer';
 }
 
 export interface Trainer {

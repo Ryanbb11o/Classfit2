@@ -7,10 +7,13 @@ import { TRANSLATIONS } from '../constants';
 import LanguageSwitcher from './LanguageSwitcher';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { language, isAdmin, currentUser, logout } = useAppContext();
+  const { language, isAdmin, currentUser, logout, users } = useAppContext();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const t = TRANSLATIONS[language];
   const navigate = useNavigate();
+
+  // Calculate pending applications to show badge
+  const pendingApplicationsCount = users.filter(u => u.role === 'trainer_pending').length;
 
   const closeMenu = () => setIsMenuOpen(false);
 
@@ -41,6 +44,19 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             <div className="hidden md:flex items-center gap-6 mr-4">
                {currentUser ? (
                  <div className="flex items-center gap-4">
+                   {isAdmin && (
+                     <NavLink 
+                       to="/admin" 
+                       className="text-xs font-black uppercase tracking-widest hover:text-brand transition-all duration-200 flex items-center gap-2 text-white relative"
+                     >
+                       <ShieldCheck size={14} /> {t.admin}
+                       {pendingApplicationsCount > 0 && (
+                         <span className="absolute -top-2 -right-3 bg-brand text-dark text-[9px] font-black px-1.5 py-0.5 rounded-full flex items-center justify-center min-w-[18px] h-[18px]">
+                           {pendingApplicationsCount}
+                         </span>
+                       )}
+                     </NavLink>
+                   )}
                    <NavLink to="/profile" className="text-xs font-black uppercase tracking-widest hover:text-brand transition-all duration-200 flex items-center gap-2 text-white">
                      <UserIcon size={14} /> {currentUser.name}
                    </NavLink>
@@ -64,10 +80,13 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             {/* Hamburger Menu Icon */}
             <button 
               onClick={() => setIsMenuOpen(!isMenuOpen)} 
-              className="p-2 text-white hover:bg-white/10 rounded-full transition-all duration-200"
+              className="p-2 text-white hover:bg-white/10 rounded-full transition-all duration-200 relative"
               aria-label="Toggle Menu"
             >
               {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              {isAdmin && pendingApplicationsCount > 0 && !isMenuOpen && (
+                 <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-brand rounded-full border border-dark"></span>
+              )}
             </button>
           </div>
         </div>
@@ -131,7 +150,11 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
             {isAdmin && (
                <NavLink onClick={closeMenu} to="/admin" className="flex items-center gap-4 text-xl font-bold uppercase tracking-widest text-red-500 mt-4">
-                 <ShieldCheck size={20}/> {t.admin}
+                 <ShieldCheck size={20}/> 
+                 {t.admin}
+                 {pendingApplicationsCount > 0 && (
+                   <span className="bg-brand text-dark text-xs px-2 py-0.5 rounded-full ml-auto">{pendingApplicationsCount}</span>
+                 )}
                </NavLink>
             )}
           </nav>

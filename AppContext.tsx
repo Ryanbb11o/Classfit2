@@ -16,6 +16,7 @@ interface AppContextType {
   login: (email: string, pass: string) => Promise<boolean>;
   register: (name: string, email: string, pass: string) => Promise<boolean>;
   registerTrainer: (name: string, email: string, pass: string, phone: string, specialty: string) => Promise<{ success: boolean; msg?: string }>;
+  updateUser: (id: string, updates: Partial<User>) => Promise<void>;
   deleteUser: (id: string) => Promise<void>;
   logout: () => void;
   refreshData: () => Promise<void>;
@@ -108,22 +109,21 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           email: u.email,
           password: u.password,
           role: u.role,
+          phone: u.phone,
           joinedDate: u.joined_date
         }));
         setUsers(mappedUsers);
       }
 
       // 3. Security Check: Validate Session
-      // If a user is stored in local storage, check if they still exist in the database.
       const storedUserStr = localStorage.getItem('classfit_user');
       if (storedUserStr) {
         const storedUser = JSON.parse(storedUserStr);
-        // We check if the stored user ID exists in the freshly fetched users list
         const userExistsInDb = mappedUsers.some(u => u.id === storedUser.id);
         
         if (!userExistsInDb) {
           console.warn(`User session invalid: User ${storedUser.email} deleted from database. Logging out.`);
-          logout(); // This clears localStorage and currentUser state
+          logout();
         }
       }
 
@@ -216,6 +216,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       email: data.email,
       password: data.password,
       role: data.role,
+      phone: data.phone,
       joinedDate: data.joined_date
     };
 
@@ -247,6 +248,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       email: data.email,
       password: data.password,
       role: data.role,
+      phone: data.phone,
       joinedDate: data.joined_date
     };
 
@@ -258,17 +260,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const registerTrainer = async (name: string, email: string, pass: string, phone: string, specialty: string): Promise<{ success: boolean; msg?: string }> => {
     if (isDemoMode) {
-       // Mock trainer application
        return { success: true };
     }
 
-    // Combine name with specialty for simple storage in MVP without schema migration
-    // Or just store basic info. The Role is key.
     const { data, error } = await supabase
       .from('users')
       .insert([{ 
         name: `${name} (${specialty})`, 
         email, 
+        phone,
         password: pass, 
         role: 'trainer_pending' 
       }])
@@ -280,9 +280,27 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         return { success: false, msg: error.message };
     }
     
-    // We do NOT auto-login pending trainers
     await refreshData();
     return { success: true };
+  };
+
+  const updateUser = async (id: string, updates: Partial<User>) => {
+    if (isDemoMode) {
+        const newUsers = users.map(u => u.id === id ? { ...u, ...updates } : u);
+        setUsers(newUsers);
+        localStorage.setItem('classfit_users', JSON.stringify(newUsers));
+        return;
+    }
+
+    // Map frontend User type to DB columns if needed
+    const dbUpdates: any = {};
+    if (updates.role) dbUpdates.role = updates.role;
+    if (updates.name) dbUpdates.name = updates.name;
+    if (updates.phone) dbUpdates.phone = updates.phone;
+
+    const { error } = await supabase.from('users').update(dbUpdates).eq('id', id);
+    if (error) throw error;
+    await refreshData();
   };
 
   const deleteUser = async (id: string) => {
@@ -302,7 +320,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       language, setLanguage, 
       bookings, addBooking, updateBooking, deleteBooking,
       isAdmin,
-      currentUser, users, login, register, registerTrainer, deleteUser, logout, refreshData,
+      currentUser, users, login, register, registerTrainer, updateUser, deleteUser, logout, refreshData,
       isLoading,
       isDemoMode
     }}>
