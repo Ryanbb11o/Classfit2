@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { Trainer, Booking } from '../types';
 
 const CustomerDashboard: React.FC = () => {
-  const { language, bookings, updateBooking, currentUser, logout, users } = useAppContext();
+  const { language, bookings, updateBooking, deleteBooking, currentUser, logout, users } = useAppContext();
   const t = TRANSLATIONS[language];
   const navigate = useNavigate();
   const [cancellingId, setCancellingId] = useState<string | null>(null);
@@ -75,6 +75,12 @@ const CustomerDashboard: React.FC = () => {
       console.error(e);
       alert(language === 'bg' ? 'Неуспешна отмяна.' : 'Failed to cancel.');
     }
+  };
+
+  const handleDelete = async (id: string) => {
+      if (window.confirm(language === 'bg' ? 'Сигурни ли сте, че искате да премахнете този запис?' : 'Are you sure you want to remove this session from your history?')) {
+          await deleteBooking(id);
+      }
   };
 
   const handleLogout = () => {
@@ -150,7 +156,7 @@ const CustomerDashboard: React.FC = () => {
                             
                             {/* 1. Left Side: Trainer Image & Big Status */}
                             <div className="flex flex-col items-center md:items-start gap-4 md:w-48 shrink-0">
-                                <div className="w-32 h-32 rounded-2xl overflow-hidden bg-slate-700 shadow-lg">
+                                <div className="w-32 h-32 rounded-2xl overflow-hidden bg-slate-700 shadow-lg border border-white/5">
                                     <img 
                                         src={getTrainerImage(trainer)} 
                                         alt={trainer?.name || 'Trainer'} 
@@ -246,10 +252,13 @@ const CustomerDashboard: React.FC = () => {
                                     )
                                 )}
                                 
-                                {isCancelled && (
-                                    <div className="text-center p-4 rounded-xl bg-white/5 border border-white/5">
-                                        <p className="text-xs text-slate-500 font-medium italic">Session Cancelled</p>
-                                    </div>
+                                {(isCompleted || isCancelled) && (
+                                     <button 
+                                        onClick={() => handleDelete(booking.id)}
+                                        className="w-full py-3 bg-white/5 hover:bg-red-500/10 text-slate-500 hover:text-red-500 rounded-xl transition-all flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest border border-transparent hover:border-red-500/20"
+                                     >
+                                         <Trash2 size={16} /> {language === 'bg' ? 'Изчисти' : 'Clear'}
+                                     </button>
                                 )}
                             </div>
                         </div>
