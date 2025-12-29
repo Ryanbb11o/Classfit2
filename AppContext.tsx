@@ -1,6 +1,8 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Language, Booking, User } from './types';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
+import { DEFAULT_PROFILE_IMAGE } from './constants';
 
 interface AppContextType {
   language: Language;
@@ -46,13 +48,23 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           const localBookings = localStorage.getItem('classfit_bookings');
           const localUsers = localStorage.getItem('classfit_users');
           if (localBookings) setBookings(JSON.parse(localBookings));
-          if (localUsers) setUsers(JSON.parse(localUsers));
+          if (localUsers) {
+            const parsedUsers = JSON.parse(localUsers);
+            // Apply default image to demo users as well
+            const mappedDemoUsers = parsedUsers.map((u: User) => ({
+                ...u,
+                image: u.image || (u.role !== 'admin' ? DEFAULT_PROFILE_IMAGE : '')
+            }));
+            setUsers(mappedDemoUsers);
+          }
         }
         
         const savedUser = localStorage.getItem('classfit_user');
         if (savedUser) {
            const parsedUser = JSON.parse(savedUser);
            if (parsedUser) {
+             // Ensure current user has image if applicable
+             parsedUser.image = parsedUser.image || (parsedUser.role !== 'admin' ? DEFAULT_PROFILE_IMAGE : '');
              setCurrentUser(parsedUser);
            }
         }
@@ -93,7 +105,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const localBookings = localStorage.getItem('classfit_bookings');
       const localUsers = localStorage.getItem('classfit_users');
       if (localBookings) setBookings(JSON.parse(localBookings));
-      if (localUsers) setUsers(JSON.parse(localUsers));
+      if (localUsers) {
+          const parsed = JSON.parse(localUsers);
+          setUsers(parsed.map((u: User) => ({
+             ...u,
+             image: u.image || (u.role !== 'admin' ? DEFAULT_PROFILE_IMAGE : '')
+          })));
+      }
       return;
     }
 
@@ -132,8 +150,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           password: u.password,
           role: u.role,
           phone: u.phone,
-          image: u.image, // Map image
-          bio: u.bio,     // Map bio
+          // Apply Default Image Logic for non-admins
+          image: u.image || (u.role !== 'admin' ? DEFAULT_PROFILE_IMAGE : ''), 
+          bio: u.bio,     
           joinedDate: u.joined_date
         }));
         setUsers(mappedUsers);
@@ -237,7 +256,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             joinedDate: new Date().toISOString()
           };
       }
-      
+      // Apply default image logic on login if missing
+      mockUser.image = mockUser.image || (mockUser.role !== 'admin' ? DEFAULT_PROFILE_IMAGE : '');
+
       setCurrentUser(mockUser);
       localStorage.setItem('classfit_user', JSON.stringify(mockUser));
       return true;
@@ -259,7 +280,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       password: data.password,
       role: data.role,
       phone: data.phone,
-      image: data.image,
+      image: data.image || (data.role !== 'admin' ? DEFAULT_PROFILE_IMAGE : ''),
       bio: data.bio,
       joinedDate: data.joined_date
     };
@@ -278,7 +299,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         email, 
         password: pass, 
         role: 'user', 
-        joinedDate: new Date().toISOString() 
+        joinedDate: new Date().toISOString(),
+        image: DEFAULT_PROFILE_IMAGE
        };
        
        const currentUsersStr = localStorage.getItem('classfit_users');
@@ -309,7 +331,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       password: data.password,
       role: data.role,
       phone: data.phone,
-      joinedDate: data.joined_date
+      joinedDate: data.joined_date,
+      image: DEFAULT_PROFILE_IMAGE
     };
 
     setCurrentUser(user);
@@ -327,7 +350,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         password: pass, 
         phone,
         role: 'trainer_pending',
-        joinedDate: new Date().toISOString()
+        joinedDate: new Date().toISOString(),
+        image: DEFAULT_PROFILE_IMAGE
        };
 
        // Robust read from localStorage
@@ -376,6 +400,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         // Update current session if it's the current user
         if (currentUser && currentUser.id === id) {
            const updatedUser = { ...currentUser, ...updates };
+           // Re-apply default logic for session
+           updatedUser.image = updatedUser.image || (updatedUser.role !== 'admin' ? DEFAULT_PROFILE_IMAGE : '');
            setCurrentUser(updatedUser);
            localStorage.setItem('classfit_user', JSON.stringify(updatedUser));
         }

@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, User, Check, X, ShieldAlert, CheckCircle2, DollarSign, CreditCard, Banknote, LayoutDashboard, ListFilter, FileSpreadsheet, TrendingUp, Phone, Loader2, Trash2, Users, Shield, RefreshCw, History, Briefcase, CheckCircle, ArrowRight, AlertTriangle } from 'lucide-react';
 import { useAppContext } from '../AppContext';
-import { TRANSLATIONS, getTrainers } from '../constants';
+import { TRANSLATIONS, getTrainers, DEFAULT_PROFILE_IMAGE } from '../constants';
 import emailjs from '@emailjs/browser';
 
 const AdminPanel: React.FC = () => {
@@ -318,13 +319,21 @@ const AdminPanel: React.FC = () => {
                   ) : (
                     activeBookingsList.map(booking => {
                       const trainer = trainers.find(tr => tr.id === booking.trainerId);
+                      const bookingUser = users.find(u => u.id === booking.userId);
                       const isPending = booking.status === 'pending';
                       const isConfirmed = booking.status === 'confirmed';
                       const isProcessing = processingId === booking.id;
                       return (
                         <tr key={booking.id} className="hover:bg-white/5">
                           <td className="px-8 py-6 flex items-center gap-3">
-                            <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-slate-400"><User size={18} /></div>
+                            {/* User Avatar - Shows default if no image, via AppContext logic */}
+                            {bookingUser?.image ? (
+                                <img src={bookingUser.image} alt={booking.customerName} className="w-10 h-10 rounded-xl object-cover" />
+                            ) : (
+                                <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-slate-400">
+                                   <User size={18} />
+                                </div>
+                            )}
                             <div>
                                 <span className="font-black italic uppercase text-xs text-white">{booking.customerName}</span>
                                 {booking.customerPhone && <span className="block text-[9px] text-slate-500">{booking.customerPhone}</span>}
@@ -431,7 +440,7 @@ const AdminPanel: React.FC = () => {
                <table className="w-full text-left">
                  <thead>
                    <tr className="border-b border-white/5 text-[10px] font-black text-slate-500 uppercase">
-                     <th className="px-8 py-6">{t.name}</th>
+                     <th className="px-8 py-6">User</th>
                      <th className="px-8 py-6">{t.email}</th>
                      <th className="px-8 py-6">{t.role}</th>
                      <th className="px-8 py-6 text-right">{t.action}</th>
@@ -440,7 +449,16 @@ const AdminPanel: React.FC = () => {
                  <tbody className="divide-y divide-white/5">
                    {users.map(u => (
                      <tr key={u.id} className="hover:bg-white/5">
-                       <td className="px-8 py-6 font-black uppercase italic text-xs text-white">{u.name}</td>
+                       <td className="px-8 py-6 flex items-center gap-3">
+                          {u.image ? (
+                             <img src={u.image} alt={u.name} className="w-10 h-10 rounded-xl object-cover" />
+                          ) : (
+                             <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-slate-500">
+                                <User size={18} />
+                             </div>
+                          )}
+                          <span className="font-black uppercase italic text-xs text-white">{u.name}</span>
+                       </td>
                        <td className="px-8 py-6 text-xs text-slate-400">{u.email}</td>
                        <td className="px-8 py-6">
                             <span className={`px-3 py-1 rounded text-[9px] font-black uppercase ${
