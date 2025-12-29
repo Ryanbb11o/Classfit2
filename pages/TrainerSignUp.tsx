@@ -24,12 +24,19 @@ const TrainerSignUp: React.FC = () => {
     setStatus('loading');
     
     try {
-        const success = await registerTrainer(name, email, password, phone, specialty);
+        const { success, msg } = await registerTrainer(name, email, password, phone, specialty);
         if (success) {
             setStatus('success');
         } else {
             setStatus('error');
-            setErrorMsg(language === 'bg' ? 'Имейлът вече е регистриран.' : 'Email already in use.');
+            // Check for DB constraint error vs just duplicate email
+            if (msg?.includes('check constraint')) {
+                setErrorMsg('Database Update Required. Please contact Admin to run SQL migration.');
+            } else if (msg?.includes('unique constraint')) {
+                setErrorMsg(language === 'bg' ? 'Имейлът вече е регистриран.' : 'Email already in use.');
+            } else {
+                setErrorMsg(msg || 'Registration failed.');
+            }
         }
     } catch (err) {
         setStatus('error');

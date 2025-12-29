@@ -1,4 +1,4 @@
-import React, { useState, ReactNode, Component } from 'react';
+import React, { useState, ReactNode } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AppProvider, useAppContext } from './AppContext';
 import Layout from './components/Layout';
@@ -22,11 +22,8 @@ interface ErrorBoundaryState {
   hasError: boolean;
 }
 
-class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  constructor(props: ErrorBoundaryProps) {
-    super(props);
-    this.state = { hasError: false };
-  }
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  state: ErrorBoundaryState = { hasError: false };
 
   static getDerivedStateFromError(_error: any): ErrorBoundaryState { 
     return { hasError: true }; 

@@ -43,6 +43,22 @@ CREATE POLICY "Allow public access" ON users FOR ALL USING (true) WITH CHECK (tr
 CREATE POLICY "Allow public access" ON bookings FOR ALL USING (true) WITH CHECK (true);
 ```
 
+### ⚠️ Enabling Trainer Sign Up (SQL Update)
+
+If you see an error about `constraint "users_role_check" does not exist`, it means your table doesn't have the named rule yet. Run this command to add the new roles:
+
+```sql
+-- Run this in Supabase SQL Editor to allow Trainers to sign up
+ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('user', 'admin', 'trainer_pending', 'trainer'));
+```
+
+*Note: If you get an error that `users_role_check` ALREADY exists, run this pair of commands instead:*
+
+```sql
+ALTER TABLE users DROP CONSTRAINT users_role_check;
+ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('user', 'admin', 'trainer_pending', 'trainer'));
+```
+
 ## 🚀 Vercel Deployment
 
 1.  Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to your Vercel Project Environment Variables.

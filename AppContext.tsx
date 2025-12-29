@@ -15,7 +15,7 @@ interface AppContextType {
   users: User[];
   login: (email: string, pass: string) => Promise<boolean>;
   register: (name: string, email: string, pass: string) => Promise<boolean>;
-  registerTrainer: (name: string, email: string, pass: string, phone: string, specialty: string) => Promise<boolean>;
+  registerTrainer: (name: string, email: string, pass: string, phone: string, specialty: string) => Promise<{ success: boolean; msg?: string }>;
   deleteUser: (id: string) => Promise<void>;
   logout: () => void;
   refreshData: () => Promise<void>;
@@ -256,10 +256,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return true;
   };
 
-  const registerTrainer = async (name: string, email: string, pass: string, phone: string, specialty: string): Promise<boolean> => {
+  const registerTrainer = async (name: string, email: string, pass: string, phone: string, specialty: string): Promise<{ success: boolean; msg?: string }> => {
     if (isDemoMode) {
        // Mock trainer application
-       return true;
+       return { success: true };
     }
 
     // Combine name with specialty for simple storage in MVP without schema migration
@@ -275,14 +275,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       .select()
       .single();
 
-    if (error || !data) {
+    if (error) {
         console.error("Trainer Reg Error", error);
-        return false;
+        return { success: false, msg: error.message };
     }
     
     // We do NOT auto-login pending trainers
     await refreshData();
-    return true;
+    return { success: true };
   };
 
   const deleteUser = async (id: string) => {
