@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Clock, CheckCircle, XCircle, User, Briefcase, RefreshCw, AlertCircle, Link as LinkIcon, Check, DollarSign, ListFilter, LayoutDashboard, Settings, Camera, Save } from 'lucide-react';
+import { Calendar, Clock, CheckCircle, XCircle, User, Briefcase, RefreshCw, AlertCircle, Link as LinkIcon, Check, DollarSign, ListFilter, LayoutDashboard, Settings, Camera, Save, Loader2 } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, getTrainers } from '../constants';
-import { Booking } from '../types';
 
 const TrainerDashboard: React.FC = () => {
-  const { currentUser, bookings, updateBooking, updateUser, language, refreshData, isDemoMode } = useAppContext();
+  const { currentUser, bookings, updateBooking, updateUser, language, refreshData, isLoading } = useAppContext();
   const navigate = useNavigate();
   const t = TRANSLATIONS[language];
   
@@ -20,38 +19,37 @@ const TrainerDashboard: React.FC = () => {
   const [editBio, setEditBio] = useState('');
   const [editPhone, setEditPhone] = useState('');
   
+  // Track initialization to prevent overwriting user input on background refreshes
+  const initializedRef = useRef(false);
+  
   // For demo/testing: allow a user to "link" their current session to a static Trainer ID
   const [linkedStaticId, setLinkedStaticId] = useState<string | null>(localStorage.getItem('trainer_link_id'));
 
-  // Auth Check
+  // 1. Auth Guard
   useEffect(() => {
-    if (!currentUser || currentUser.role !== 'trainer') {
+    // Only redirect if we are done loading and there is no valid trainer user
+    if (!isLoading && (!currentUser || currentUser.role !== 'trainer')) {
       navigate('/login');
     }
-  }, [currentUser, navigate]);
+  }, [currentUser, isLoading, navigate]);
 
-  // Initial Data Refresh (Run once on mount)
-  useEffect(() => {
-    refreshData();
-  }, []);
+  // Removed automatic refreshData() on mount to prevent infinite re-renders and form resets.
+  // Data is already loaded by AppContext.
 
-  // Load user data into edit state
-  // We use a ref to track if we've initialized to prevent overwriting user input on background refreshes
-  // unless the ID changes (user switch)
+  // 3. Load user data into edit state (Run once when user data is available)
   useEffect(() => {
-    if (currentUser) {
-        // Only update state if the form is empty or it matches the OLD current user (meaning we just loaded fresh data)
-        // Ideally, we just sync when currentUser changes.
-        // Since we fixed the infinite loop, this will only run when actual data updates occur.
+    if (currentUser && !initializedRef.current) {
         setEditName(currentUser.name || '');
         setEditImage(currentUser.image || '');
         setEditBio(currentUser.bio || '');
         setEditPhone(currentUser.phone || '');
         
-        // If profile is incomplete (no image), default to profile tab
+        // If profile is incomplete (no image), default to profile tab on first load
         if (!currentUser.image) {
             setActiveTab('profile');
         }
+        
+        initializedRef.current = true;
     }
   }, [currentUser]);
 
@@ -59,6 +57,7 @@ const TrainerDashboard: React.FC = () => {
     setLinkedStaticId(id);
     localStorage.setItem('trainer_link_id', id);
     alert("Profile linked! You will now see bookings for this demo trainer in addition to your own.");
+    refreshData();
   };
 
   const handleRefresh = async () => {
@@ -94,16 +93,32 @@ const TrainerDashboard: React.FC = () => {
     }
   };
 
+  const handleFixProfileClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setActiveTab('profile');
+    // Force scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  if (isLoading) {
+    return (
+        <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-dark">
+            <Loader2 className="animate-spin text-brand" size={40} />
+            <p className="text-slate-500 text-xs font-black uppercase tracking-widest">Loading Trainer Portal...</p>
+        </div>
+    );
+  }
+
+  if (!currentUser) return null;
+
   // Filter logic: Match currentUser.id OR the linked demo ID
-  const myBookings = bookings.filter(b => b.trainerId === currentUser?.id || b.trainerId === linkedStaticId);
+  const myBookings = bookings.filter(b => b.trainerId === currentUser.id || b.trainerId === linkedStaticId);
   
   const activeBookings = myBookings.filter(b => b.status === 'confirmed');
   const pendingRequests = myBookings.filter(b => b.status === 'pending');
   const completedBookings = myBookings.filter(b => b.status === 'completed');
   
   const totalEarnings = completedBookings.reduce((sum, b) => sum + b.price, 0);
-
-  if (!currentUser) return null;
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-24 animate-in fade-in slide-in-from-bottom-2 duration-500">
@@ -141,7 +156,7 @@ const TrainerDashboard: React.FC = () => {
                   </div>
               </div>
               <button 
-                onClick={() => setActiveTab('profile')}
+                onClick={handleFixProfileClick}
                 className="px-8 py-3 bg-red-500 text-white rounded-xl font-black uppercase tracking-widest hover:bg-white hover:text-red-500 transition-all whitespace-nowrap"
               >
                   Fix Now
@@ -213,7 +228,7 @@ const TrainerDashboard: React.FC = () => {
 
          <div className="p-0">
             {activeTab === 'schedule' && (
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto animate-in fade-in">
                    <table className="w-full text-left">
                      <thead className="bg-dark/30">
                         <tr className="text-[10px] font-black uppercase text-slate-500">
@@ -266,7 +281,7 @@ const TrainerDashboard: React.FC = () => {
             )}
 
             {activeTab === 'requests' && (
-               <div className="overflow-x-auto">
+               <div className="overflow-x-auto animate-in fade-in">
                   <table className="w-full text-left">
                      <thead className="bg-dark/30">
                         <tr className="text-[10px] font-black uppercase text-slate-500">
@@ -418,7 +433,7 @@ const TrainerDashboard: React.FC = () => {
                                         disabled={isSaving}
                                         className="px-8 py-4 bg-brand text-dark rounded-xl font-black uppercase tracking-widest hover:bg-white transition-all flex items-center gap-2"
                                     >
-                                        {isSaving ? <RefreshCw className="animate-spin" /> : <Save size={18} />}
+                                        {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
                                         Save Changes
                                     </button>
                                 </div>

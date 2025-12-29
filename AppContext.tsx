@@ -52,7 +52,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         const savedUser = localStorage.getItem('classfit_user');
         if (savedUser) {
            const parsedUser = JSON.parse(savedUser);
-           // Simple check to keep session alive in demo mode or if user exists
            if (parsedUser) {
              setCurrentUser(parsedUser);
            }
@@ -144,15 +143,19 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const storedUserStr = localStorage.getItem('classfit_user');
       if (storedUserStr) {
         const storedUser = JSON.parse(storedUserStr);
-        const latestUserData = mappedUsers.find(u => u.id === storedUser.id);
-        
-        if (latestUserData) {
-          // Update session with latest data (e.g. if image changed)
-          setCurrentUser(latestUserData);
-          localStorage.setItem('classfit_user', JSON.stringify(latestUserData));
-        } else if (!isDemoMode) { 
-          console.warn(`User session invalid: User ${storedUser.email} deleted from database. Logging out.`);
-          logout();
+        // Only update if we successfully fetched users
+        if (mappedUsers.length > 0) {
+            const latestUserData = mappedUsers.find(u => u.id === storedUser.id);
+            
+            if (latestUserData) {
+              // Update session with latest data
+              setCurrentUser(latestUserData);
+              localStorage.setItem('classfit_user', JSON.stringify(latestUserData));
+            } else {
+              // Only logout if we are sure the user list is complete and this user is missing
+              // For now, we avoid auto-logout to prevent flickering if RLS hides users
+              console.warn("User not found in latest refresh, but keeping session active to prevent flicker.");
+            }
         }
       }
 
