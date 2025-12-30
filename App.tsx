@@ -1,4 +1,4 @@
-import React, { useState, ReactNode, Component } from 'react';
+import React, { useState, ReactNode } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AppProvider, useAppContext } from './AppContext';
 import Layout from './components/Layout';
@@ -13,6 +13,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import TrainerSignUp from './pages/TrainerSignUp';
 import TrainerDashboard from './pages/TrainerDashboard';
+import Contact from './pages/Contact';
 import { Loader2, AlertTriangle, X, Copy, ExternalLink, RefreshCw, Database } from 'lucide-react';
 
 interface ErrorBoundaryProps {
@@ -23,11 +24,8 @@ interface ErrorBoundaryState {
   hasError: boolean;
 }
 
-class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  constructor(props: ErrorBoundaryProps) {
-    super(props);
-    this.state = { hasError: false };
-  }
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  state: ErrorBoundaryState = { hasError: false };
 
   static getDerivedStateFromError(_error: any): ErrorBoundaryState { 
     return { hasError: true }; 
@@ -121,6 +119,7 @@ const AppContent: React.FC = () => {
           <Route path="/booking" element={<Booking />} />
           <Route path="/memberships" element={<Memberships />} />
           <Route path="/shop" element={<Shop />} />
+          <Route path="/contact" element={<Contact />} />
           <Route path="/admin" element={<AdminPanel />} />
           <Route path="/profile" element={<CustomerDashboard />} />
           <Route path="/login" element={<Login />} />

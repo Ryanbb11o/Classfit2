@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Menu, X, ShieldCheck, User as UserIcon, Home, Info, Calendar, Dumbbell, ShoppingBag, LogIn, LogOut, Phone, Briefcase, Bell, AlertCircle, CheckCircle } from 'lucide-react';
+import { Menu, X, ShieldCheck, User as UserIcon, Home, Info, Calendar, Dumbbell, ShoppingBag, LogIn, LogOut, Phone, Briefcase, Bell, AlertCircle, CheckCircle, Mail } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS } from '../constants';
 import LanguageSwitcher from './LanguageSwitcher';
@@ -245,6 +245,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             <NavLink onClick={closeMenu} to="/shop" className="flex items-center gap-4 text-2xl font-black italic uppercase tracking-tighter text-white hover:text-brand transition-all duration-200">
               <ShoppingBag size={24} /> {t.shop}
             </NavLink>
+            <NavLink onClick={closeMenu} to="/contact" className="flex items-center gap-4 text-2xl font-black italic uppercase tracking-tighter text-white hover:text-brand transition-all duration-200">
+              <Mail size={24} /> {t.contact}
+            </NavLink>
             
             <div className="h-px bg-white/10 my-4"></div>
 
@@ -314,7 +317,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             <div className="flex flex-col gap-3 text-sm text-slate-400 font-bold uppercase tracking-widest">
               <a href="#" className="hover:text-brand transition-all duration-200">Instagram</a>
               <a href="#" className="hover:text-brand transition-all duration-200">Facebook</a>
-              <a href="#" className="hover:text-brand transition-all duration-200">LinkedIn</a>
+              <NavLink to="/contact" className="hover:text-brand transition-all duration-200 text-white">
+                {t.contact}
+              </NavLink>
               <NavLink to="/trainer-signup" className="text-brand hover:text-white transition-all duration-200 mt-4 block">
                  Join Team (Trainers)
               </NavLink>
