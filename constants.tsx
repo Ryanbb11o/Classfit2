@@ -89,7 +89,7 @@ export const getProducts = (lang: Language): Product[] => {
       name: 'ON Gold Standard Whey 2.27kg', 
       price: 135.00, 
       category: isBg ? 'Добавки' : 'Supplements', 
-      image: 'https://m.media-amazon.com/images/I/71Y87f7mSGL._AC_SL1500_.jpg',
+      image: 'https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?auto=format&fit=crop&q=80&w=800',
       description: isBg ? 'Най-продаваният протеин в света.' : 'The world\'s best-selling whey protein.'
     },
     { 
@@ -97,8 +97,7 @@ export const getProducts = (lang: Language): Product[] => {
       name: 'Creatine Monohydrate 500g', 
       price: 45.00, 
       category: isBg ? 'Добавки' : 'Supplements', 
-      // Updated image to Optimum Nutrition Micronized Creatine
-      image: 'https://m.media-amazon.com/images/I/61y+4Kq8+lL._AC_SL1500_.jpg',
+      image: 'https://images.unsplash.com/photo-1593095948071-474c5cc2989d?auto=format&fit=crop&q=80&w=800',
       description: isBg ? 'За сила и издръжливост.' : 'For strength and endurance.'
     },
   ];
