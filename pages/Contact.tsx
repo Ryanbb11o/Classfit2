@@ -26,15 +26,12 @@ const Contact: React.FC = () => {
     setError('');
     
     try {
-        console.log("Attempting to send message...", formData);
         const { success, error: sendError } = await sendMessage(formData);
         
         if (success) {
-            console.log("Message sent successfully!");
             setIsSubmitted(true);
             setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
         } else {
-            console.error("Failed to send message:", sendError);
             // Detailed error mapping for the user
             let msg = '';
             if (sendError?.includes('row-level security')) {
@@ -49,7 +46,6 @@ const Contact: React.FC = () => {
             setError(msg);
         }
     } catch (e: any) {
-        console.error("Unexpected error:", e);
         setError(e.message || 'An unexpected error occurred.');
     } finally {
         setIsSubmitting(false);

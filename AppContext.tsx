@@ -16,7 +16,7 @@ interface AppContextType {
   users: User[];
   messages: ContactMessage[];
   deleteMessage: (id: string) => Promise<void>;
-  markMessageRead: (id: string) => Promise<void>; // New function
+  markMessageRead: (id: string) => Promise<void>;
   login: (email: string, pass: string) => Promise<boolean>;
   register: (name: string, email: string, pass: string) => Promise<boolean>;
   registerTrainer: (name: string, email: string, pass: string, phone: string, specialty: string) => Promise<{ success: boolean; msg?: string }>;
@@ -110,15 +110,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     // Subscribe to changes in public tables to update Admin UI instantly
     const channel = supabase.channel('public:db_changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
-         console.log('Realtime update: Messages');
          refreshData();
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => {
-         console.log('Realtime update: Bookings');
          refreshData();
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, () => {
-         console.log('Realtime update: Users');
          refreshData();
       })
       .subscribe();
@@ -135,6 +132,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const refreshData = async () => {
     if (isDemoMode) {
+      // ... (keep demo logic same for development safety) ...
       const localBookings = localStorage.getItem('classfit_bookings');
       const localUsers = localStorage.getItem('classfit_users');
       const localMsgs = localStorage.getItem('classfit_messages'); 
@@ -197,7 +195,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const { data: mData, error: mError } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
       
       if (mError) {
-        console.error("Error fetching messages (check if 'messages' table exists in Supabase):", mError);
+        console.error("Supabase Error (Messages):", mError.message);
       } else if (mData) {
         setMessages(mData.map((m: any) => ({
             id: m.id,
@@ -305,25 +303,62 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return true;
     }
 
+    // 1. Try normal login against DB
     const { data, error } = await supabase.from('users').select('*').eq('email', email).eq('password', pass).single();
-    if (error || !data) return false;
 
-    const user: User = {
-      id: data.id,
-      name: data.name,
-      email: data.email,
-      password: data.password,
-      role: data.role,
-      phone: data.phone,
-      image: data.image || (data.role !== 'admin' ? DEFAULT_PROFILE_IMAGE : ''),
-      bio: data.bio,
-      joinedDate: data.joined_date
-    };
+    if (data) {
+        const user: User = {
+          id: data.id,
+          name: data.name,
+          email: data.email,
+          password: data.password,
+          role: data.role,
+          phone: data.phone,
+          image: data.image || (data.role !== 'admin' ? DEFAULT_PROFILE_IMAGE : ''),
+          bio: data.bio,
+          joinedDate: data.joined_date
+        };
+        setCurrentUser(user);
+        localStorage.setItem('classfit_user', JSON.stringify(user));
+        await refreshData();
+        return true;
+    }
 
-    setCurrentUser(user);
-    localStorage.setItem('classfit_user', JSON.stringify(user));
-    await refreshData();
-    return true;
+    // 2. BOOTSTRAP: If login failed, check if this is the "Bootstrap Admin" credentials
+    // AND if the database currently has NO admins.
+    if (email === 'admin@classfit.bg' && pass === 'admin123') {
+        const { data: admins } = await supabase.from('users').select('id').eq('role', 'admin');
+        
+        // If no admins exist, create the first one automatically
+        if (!admins || admins.length === 0) {
+            const { data: newAdmin, error: createError } = await supabase.from('users').insert([{
+                name: 'Master Admin',
+                email: email,
+                password: pass,
+                role: 'admin',
+                image: DEFAULT_PROFILE_IMAGE
+            }]).select().single();
+
+            if (newAdmin && !createError) {
+                const user: User = {
+                    id: newAdmin.id,
+                    name: newAdmin.name,
+                    email: newAdmin.email,
+                    password: newAdmin.password,
+                    role: newAdmin.role,
+                    phone: newAdmin.phone,
+                    image: newAdmin.image || DEFAULT_PROFILE_IMAGE,
+                    joinedDate: newAdmin.joined_date
+                };
+                setCurrentUser(user);
+                localStorage.setItem('classfit_user', JSON.stringify(user));
+                await refreshData();
+                return true;
+            }
+        }
+    }
+
+    return false;
   };
 
   const register = async (name: string, email: string, pass: string): Promise<boolean> => {
@@ -415,22 +450,34 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     await refreshData();
   };
 
+  // FIXED: STRICT DATABASE USAGE (No Local Storage Fallback for Production)
   const sendMessage = async (msg: Omit<ContactMessage, 'id' | 'date' | 'status'>): Promise<{ success: boolean; error?: string }> => {
-    try {
-        if (isDemoMode) {
-            const newMessage: ContactMessage = {
-                ...msg,
-                id: Math.random().toString(36).substr(2, 9),
-                date: new Date().toISOString(),
-                status: 'new'
-            };
-            const newMsgs = [newMessage, ...messages];
-            setMessages(newMsgs);
-            localStorage.setItem('classfit_messages', JSON.stringify(newMsgs));
+    // 1. If in Demo Mode (Environment variables missing), save locally
+    if (isDemoMode) {
+        const localMessage: ContactMessage = {
+            id: Math.random().toString(36).substr(2, 9),
+            name: msg.name,
+            email: msg.email,
+            phone: msg.phone,
+            subject: msg.subject,
+            message: msg.message,
+            date: new Date().toISOString(),
+            status: 'new'
+        };
+        try {
+            setMessages(prev => {
+                const newMsgs = [localMessage, ...prev];
+                localStorage.setItem('classfit_messages', JSON.stringify(newMsgs));
+                return newMsgs;
+            });
             return { success: true };
+        } catch (e: any) {
+            return { success: false, error: "Failed to save locally in Demo Mode." };
         }
-        
-        // Ensure table exists implicitly by handling error 
+    }
+
+    // 2. LIVE MODE: Try Supabase
+    try {
         const { error } = await supabase.from('messages').insert([{
             name: msg.name,
             email: msg.email,
@@ -440,17 +487,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             status: 'new'
         }]);
         
-        if (error) { 
-            console.error("Supabase Insert Error:", error); 
+        if (error) {
+            console.error("Supabase Database Error:", error);
+            // Return the specific error so the UI can warn the admin
             return { success: false, error: error.message }; 
         }
         
-        // Manual refresh for the sender
-        await refreshData(); 
+        await refreshData();
         return { success: true };
-    } catch (e: any) {
-        console.error("Unknown Error:", e);
-        return { success: false, error: e.message || 'Unknown error' };
+    } catch (err: any) {
+        console.error("Network/Supabase Exception:", err);
+        return { success: false, error: err.message || "Network error" };
     }
   };
 
