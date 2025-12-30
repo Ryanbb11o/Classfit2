@@ -11,7 +11,7 @@ const GoogleReviews: React.FC = () => {
   const reviews = getReviews(language);
 
   // Link to a search for the gym in Varna
-  const googleMapsUrl = "https://www.google.com/maps/search/?api=1&query=ClassFit+Varna+Levski+Mir";
+  const googleMapsUrl = "https://www.google.com/maps/search/?api=1&query=ClassFit+Varna+Studentska+1A";
 
   return (
     <section className="py-24 bg-dark border-y border-white/5 relative overflow-hidden">

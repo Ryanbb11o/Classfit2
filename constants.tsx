@@ -89,7 +89,8 @@ export const getProducts = (lang: Language): Product[] => {
       name: 'ON Gold Standard Whey 2.27kg', 
       price: 135.00, 
       category: isBg ? 'Добавки' : 'Supplements', 
-      image: 'https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?auto=format&fit=crop&q=80&w=800',
+      // Updated to official ON Gold Standard Image
+      image: 'https://content.optimumnutrition.com/i/on/on-gold-standard-100-whey_Image_01?locale=en-us,en-gb,*&layer0=$MAIN$',
       description: isBg ? 'Най-продаваният протеин в света.' : 'The world\'s best-selling whey protein.'
     },
     { 
@@ -106,7 +107,7 @@ export const getProducts = (lang: Language): Product[] => {
 export const getReviews = (lang: Language): Review[] => {
   const isBg = lang === 'bg';
   return [
-    { id: 'r1', author: isBg ? 'Георги Димитров' : 'Georgi Dimitrov', rating: 5, text: isBg ? 'Най-добрата зала във Варна! Близо до МИР.' : 'Best gym in Varna! Close to MIR.', time: isBg ? 'преди 2 седмици' : '2 weeks ago', avatar: 'G' },
+    { id: 'r1', author: isBg ? 'Георги Димитров' : 'Georgi Dimitrov', rating: 5, text: isBg ? 'Най-добрата зала във Варна! Локацията е супер.' : 'Best gym in Varna! Great location.', time: isBg ? 'преди 2 седмици' : '2 weeks ago', avatar: 'G' },
     { id: 'r2', author: isBg ? 'Александра Н.' : 'Aleksandra N.', rating: 5, text: isBg ? 'Много чиста и подредена зала.' : 'Very clean and tidy gym.', time: isBg ? 'преди 1 месец' : '1 month ago', avatar: 'A' },
   ];
 };
@@ -125,8 +126,8 @@ export const TRANSLATIONS = {
     logout: 'Изход',
     myBookings: 'Моите часове',
     location: 'Локация',
-    address: 'бул. „Осми приморски полк“ 128',
-    stop: 'Варна, до МИР',
+    address: 'ул. „Студентска“ 1А',
+    stop: 'Варна, до Лидл',
     connect: 'Свържи се',
     rights: '© 2024 CLASSFIT VARNA',
     nav: 'Навигация',
@@ -142,7 +143,7 @@ export const TRANSLATIONS = {
     expertiseDesc: 'Треньори, фокусирани върху вашия прогрес.',
     community: 'Общност',
     communityDesc: 'Среда от мотивирани хора.',
-    locationDesc: 'Намираме се във Варна, до МИР.',
+    locationDesc: 'Намираме се във Варна, до Лидл.',
     pushBoundaries: 'ПРЕМИНЕТЕ ГРАНИЦИТЕ СИ',
     pushDesc: 'В ClassFit всяка тренировка е инвестиция в бъдещото ти аз. Базата ни е оборудвана с висок клас уреди.',
     readyLevel: 'ГОТОВИ ЛИ СТЕ ЗА СЛЕДВАЩОТО НИВО?',
@@ -287,8 +288,8 @@ export const TRANSLATIONS = {
     logout: 'Logout',
     myBookings: 'My Sessions',
     location: 'Location',
-    address: '128 Osmi Primorski Polk Blvd',
-    stop: 'Varna, near MIR',
+    address: '1A Studentska Str.',
+    stop: 'Varna, next to Lidl',
     connect: 'Connect',
     rights: '© 2024 CLASSFIT VARNA',
     nav: 'Navigation',
@@ -304,7 +305,7 @@ export const TRANSLATIONS = {
     expertiseDesc: 'Coaches focused on your growth.',
     community: 'Community',
     communityDesc: 'Motivated environment.',
-    locationDesc: 'Located in Varna, Levski District.',
+    locationDesc: 'Located in Varna, next to Lidl.',
     pushBoundaries: 'PUSH YOUR BOUNDARIES',
     pushDesc: 'Every workout is an investment. Our facility is top-tier.',
     readyLevel: 'READY FOR THE NEXT LEVEL?',

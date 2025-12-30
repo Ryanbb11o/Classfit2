@@ -68,7 +68,8 @@ const Home: React.FC = () => {
              <Reveal delay={700}>
                <div className="relative aspect-[4/5] rounded-[3rem] overflow-hidden shadow-2xl z-10 border-4 border-white/5 bg-surface group">
                   <img 
-                    src="https://images.unsplash.com/photo-1540497077202-7c8a3999166f?q=80&w=2070&auto=format&fit=crop" 
+                    // Updated to a gym interior that matches the user's description (dark, neon green vibes)
+                    src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop" 
                     alt="Lifting" 
                     className="w-full h-full object-cover grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:scale-105"
                   />
@@ -128,18 +129,18 @@ const Home: React.FC = () => {
                   В СЪРЦЕТО НА <span className="text-brand">ВАРНА</span>
                 </h2>
                 <p className="text-slate-400 font-medium italic mb-8 leading-relaxed">
-                  Намираме се на удобна и комуникативна локация в кв. Левски, в непосредствена близост до <span className="text-white font-bold">"МИР"</span>. Лесен достъп с градски транспорт и паркоместа в района.
+                  Намираме се на удобна локация на <span className="text-white font-bold">ул. "Студентска" 1А</span>, непосредствено до Лидл. Лесен достъп с автомобил и градски транспорт.
                 </p>
                 <div className="space-y-4">
                   <div className="flex items-center gap-4 text-white font-black uppercase italic tracking-widest text-xs">
-                    <Navigation className="text-brand" size={20} /> бул. "Осми приморски полк"
+                    <Navigation className="text-brand" size={20} /> ул. "Студентска" 1А
                   </div>
                   <div className="flex items-center gap-4 text-white font-black uppercase italic tracking-widest text-xs">
-                    <MapPin className="text-brand" size={20} /> МИР, кв. Левски
+                    <MapPin className="text-brand" size={20} /> Варна, до Лидл
                   </div>
                 </div>
                 <a 
-                  href="https://www.google.com/maps/search/?api=1&query=ClassFit+Varna+Levski+Mir"
+                  href="https://www.google.com/maps/search/?api=1&query=ClassFit+Varna+Studentska+1A"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 mt-10 px-8 py-4 bg-white text-dark rounded-full font-black uppercase italic tracking-widest text-xs hover:bg-brand transition-colors"

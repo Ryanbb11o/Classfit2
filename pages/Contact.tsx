@@ -83,7 +83,7 @@ const Contact: React.FC = () => {
          <Reveal delay={600} width="100%">
             <div className="relative rounded-[2.5rem] overflow-hidden h-[400px] border-2 border-white/10 group">
                <iframe 
-                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2907.4878370938634!2d27.93608127653775!3d43.21980317112595!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x40a4547285141e6b%3A0xc3b0922e92c10719!2z0LHRg9C7LiDigJ44LdC80Lgg0L_RgNC40LzQvtGA0YHQutC4INC_0L7Qu9C64oCcIDEyOCwgOTAwMyDQltC6LiDQm9C10LLRgdC60LgsINCS0LDRgNC90LA!5e0!3m2!1sbg!2sbg!4v1709210000000!5m2!1sbg!2sbg" 
+                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2907.3815338165036!2d27.933827576537873!3d43.22203117112613!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x40a4540a8775877f%3A0x629555c42022421!2z0YPQuy4g4oCe0KHRgtGD0LTQtdC90YLRgdC60LDigJwgMSwgOTA5MCDQktCw0YDQvdCw!5e0!3m2!1sbg!2sbg!4v1709210000000!5m2!1sbg!2sbg" 
                  width="100%" 
                  height="100%" 
                  style={{border:0, filter: 'grayscale(100%) invert(90%) contrast(80%)'}} 

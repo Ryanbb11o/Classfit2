@@ -59,8 +59,8 @@ const CustomerDashboard: React.FC = () => {
     const endDate = `${year}${month}${day}T${endHour}${minute}00`;
     
     const text = encodeURIComponent(`Training: ${trainer?.specialty || 'Fitness'} with ${trainer?.name}`);
-    const details = encodeURIComponent(`Activity: ${trainer?.specialty}\nTrainer: ${trainer?.name}\nLocation: ClassFit Varna (MIR)`);
-    const location = encodeURIComponent(`ClassFit Varna, Levski District, MIR, Varna, Bulgaria`);
+    const details = encodeURIComponent(`Activity: ${trainer?.specialty}\nTrainer: ${trainer?.name}\nLocation: ClassFit Varna`);
+    const location = encodeURIComponent(`ул. "Студентска" 1А, Varna, Bulgaria`);
     
     return `https://www.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${startDate}/${endDate}&details=${details}&location=${location}`;
   };
@@ -223,7 +223,7 @@ const CustomerDashboard: React.FC = () => {
                                         <div className="p-2 bg-dark rounded-lg text-brand"><MapPin size={18} /></div>
                                         <div>
                                             <p className="text-[10px] uppercase text-slate-500 font-bold tracking-wider">Location</p>
-                                            <p className="font-bold text-white">ClassFit Varna (MIR)</p>
+                                            <p className="font-bold text-white">ClassFit Varna (Studentska 1A)</p>
                                         </div>
                                     </div>
                                 </div>

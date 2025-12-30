@@ -147,7 +147,7 @@ const AdminPanel: React.FC = () => {
       const endIso = `${year}${month}${day}T${endHour}${minute}00`;
       
       const calText = encodeURIComponent(bookingLang === 'bg' ? `Тренировка с ${trainer.name} @ ClassFit` : `Training with ${trainer.name} @ ClassFit`);
-      const calLoc = encodeURIComponent(`ClassFit Varna, MIR, ${currentT.address}`);
+      const calLoc = encodeURIComponent(`ул. "Студентска" 1А, до Лидл, Varna`);
       const calendarUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=${calText}&dates=${startIso}/${endIso}&location=${calLoc}`;
 
       // 3. Параметри за имейл шаблона
@@ -160,7 +160,7 @@ const AdminPanel: React.FC = () => {
         start_datetime_human: humanReadableDateTime,
         duration_minutes: "60",
         coach_name: trainer.name,
-        location_name: "ClassFit Varna (MIR)",
+        location_name: "ClassFit Varna (Studentska 1A)",
         address_line: currentT.address,
         price: booking.price.toFixed(2),
         currency: bookingLang === 'bg' ? 'лв.' : 'BGN',
