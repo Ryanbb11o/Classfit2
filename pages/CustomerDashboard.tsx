@@ -96,6 +96,13 @@ const CustomerDashboard: React.FC = () => {
   // Helper to clean display name
   const displayName = currentUser.name.split('(')[0].trim();
 
+  // Determine Role Label
+  const getRoleLabel = () => {
+    if (currentUser.role === 'trainer') return t.trainer;
+    if (currentUser.role === 'admin') return t.admin;
+    return t.clubMember;
+  };
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-24 animate-in fade-in slide-in-from-bottom-2 duration-500">
       
@@ -115,7 +122,7 @@ const CustomerDashboard: React.FC = () => {
                 </h1>
                 <div className="flex flex-col md:flex-row gap-2 items-center justify-center md:justify-start">
                     <span className="text-brand text-[10px] font-black uppercase tracking-widest bg-brand/10 px-3 py-1 rounded-full">
-                        {t.clubMember}
+                        {getRoleLabel()}
                     </span>
                     <span className="text-slate-500 text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1">
                         <Mail size={12} /> {currentUser.email}
