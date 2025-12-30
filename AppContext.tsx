@@ -196,7 +196,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       // 3. Fetch Messages
       const { data: mData, error: mError } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
       
-      if (mData) {
+      if (mError) {
+        console.error("Error fetching messages (check if 'messages' table exists in Supabase):", mError);
+      } else if (mData) {
         setMessages(mData.map((m: any) => ({
             id: m.id,
             name: m.name,
