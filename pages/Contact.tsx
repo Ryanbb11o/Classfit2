@@ -26,20 +26,31 @@ const Contact: React.FC = () => {
     setError('');
     
     try {
+        console.log("Attempting to send message...", formData);
         const { success, error: sendError } = await sendMessage(formData);
         
         if (success) {
+            console.log("Message sent successfully!");
             setIsSubmitted(true);
             setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
         } else {
-            console.error(sendError);
-            const msg = sendError?.includes('relation "public.messages" does not exist') 
-                ? 'System Error: Database table missing. Please run SQL migration.'
-                : (language === 'bg' ? 'Възникна грешка. Моля опитайте отново.' : 'An error occurred. Please try again.');
+            console.error("Failed to send message:", sendError);
+            // Detailed error mapping for the user
+            let msg = '';
+            if (sendError?.includes('row-level security')) {
+                 msg = 'Database Permission Error: Please run the SQL Setup script in Supabase.';
+            } else if (sendError?.includes('relation "public.messages" does not exist')) {
+                 msg = 'Database Table Missing: Please run the SQL Setup script to create the "messages" table.';
+            } else {
+                 msg = language === 'bg' 
+                    ? `Грешка: ${sendError || 'Моля опитайте отново.'}` 
+                    : `Error: ${sendError || 'Please try again.'}`;
+            }
             setError(msg);
         }
-    } catch (e) {
-        setError(language === 'bg' ? 'Възникна грешка.' : 'An error occurred.');
+    } catch (e: any) {
+        console.error("Unexpected error:", e);
+        setError(e.message || 'An unexpected error occurred.');
     } finally {
         setIsSubmitting(false);
     }
