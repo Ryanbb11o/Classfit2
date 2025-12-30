@@ -103,6 +103,14 @@ const CustomerDashboard: React.FC = () => {
     return t.clubMember;
   };
 
+  // Determine Role Styles
+  const getRoleStyles = () => {
+    if (currentUser.role === 'admin') {
+        return 'text-red-500 bg-red-500/10 border border-red-500/20';
+    }
+    return 'text-brand bg-brand/10';
+  };
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-24 animate-in fade-in slide-in-from-bottom-2 duration-500">
       
@@ -121,7 +129,7 @@ const CustomerDashboard: React.FC = () => {
                     {displayName}
                 </h1>
                 <div className="flex flex-col md:flex-row gap-2 items-center justify-center md:justify-start">
-                    <span className="text-brand text-[10px] font-black uppercase tracking-widest bg-brand/10 px-3 py-1 rounded-full">
+                    <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${getRoleStyles()}`}>
                         {getRoleLabel()}
                     </span>
                     <span className="text-slate-500 text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1">

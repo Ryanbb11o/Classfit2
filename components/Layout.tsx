@@ -87,7 +87,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                    {isAdmin && (
                      <NavLink 
                        to="/admin" 
-                       className="text-xs font-black uppercase tracking-widest hover:text-brand transition-all duration-200 flex items-center gap-2 text-white relative"
+                       className="text-xs font-black uppercase tracking-widest text-red-500 hover:text-white transition-all duration-200 flex items-center gap-2 relative"
                      >
                        <ShieldCheck size={14} /> {t.admin}
                      </NavLink>
