@@ -97,7 +97,8 @@ export const getProducts = (lang: Language): Product[] => {
       name: 'Creatine Monohydrate 500g', 
       price: 45.00, 
       category: isBg ? 'Добавки' : 'Supplements', 
-      image: 'https://m.media-amazon.com/images/I/61Nf6tL4QCL._AC_SL1500_.jpg',
+      // Updated image to Optimum Nutrition Micronized Creatine
+      image: 'https://m.media-amazon.com/images/I/61y+4Kq8+lL._AC_SL1500_.jpg',
       description: isBg ? 'За сила и издръжливост.' : 'For strength and endurance.'
     },
   ];
