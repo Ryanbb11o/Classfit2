@@ -1,12 +1,12 @@
 
 import React, { useState } from 'react';
-import { Mail, Phone, MapPin, Clock, Send, CheckCircle, Navigation, User, FileText } from 'lucide-react';
+import { Mail, Phone, MapPin, Clock, Send, CheckCircle, Navigation, User, FileText, AlertCircle } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS } from '../constants';
 import Reveal from '../components/Reveal';
 
 const Contact: React.FC = () => {
-  const { language } = useAppContext();
+  const { language, sendMessage } = useAppContext();
   const t = TRANSLATIONS[language];
   
   const [formData, setFormData] = useState({
@@ -18,17 +18,27 @@ const Contact: React.FC = () => {
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError('');
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setIsSubmitted(true);
-      setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
-    }, 1500);
+    try {
+        const success = await sendMessage(formData);
+        
+        if (success) {
+            setIsSubmitted(true);
+            setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
+        } else {
+            setError(language === 'bg' ? 'Възникна грешка. Моля опитайте отново.' : 'An error occurred. Please try again.');
+        }
+    } catch (e) {
+        setError(language === 'bg' ? 'Възникна грешка.' : 'An error occurred.');
+    } finally {
+        setIsSubmitting(false);
+    }
   };
 
   return (
@@ -152,6 +162,12 @@ const Contact: React.FC = () => {
                </div>
 
                <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
+                  {error && (
+                    <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-3 rounded-xl flex items-center gap-2 text-xs font-bold">
+                        <AlertCircle size={16} /> {error}
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                      <div className="space-y-2">
                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">{t.name}</label>

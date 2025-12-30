@@ -66,3 +66,14 @@ export interface Review {
   time: string;
   avatar: string;
 }
+
+export interface ContactMessage {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  subject: string;
+  message: string;
+  date: string;
+  status: 'new' | 'read';
+}

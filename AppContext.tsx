@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Language, Booking, User } from './types';
+import { Language, Booking, User, ContactMessage } from './types';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 import { DEFAULT_PROFILE_IMAGE } from './constants';
 
@@ -14,6 +14,9 @@ interface AppContextType {
   isAdmin: boolean;
   currentUser: User | null;
   users: User[];
+  messages: ContactMessage[];
+  deleteMessage: (id: string) => Promise<void>;
+  markMessageRead: (id: string) => Promise<void>; // New function
   login: (email: string, pass: string) => Promise<boolean>;
   register: (name: string, email: string, pass: string) => Promise<boolean>;
   registerTrainer: (name: string, email: string, pass: string, phone: string, specialty: string) => Promise<{ success: boolean; msg?: string }>;
@@ -21,6 +24,7 @@ interface AppContextType {
   deleteUser: (id: string) => Promise<void>;
   logout: () => void;
   refreshData: () => Promise<void>;
+  sendMessage: (msg: Omit<ContactMessage, 'id' | 'date' | 'status'>) => Promise<boolean>;
   isLoading: boolean;
   isDemoMode: boolean;
 }
@@ -31,6 +35,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [language, setLanguage] = useState<Language>('bg');
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [messages, setMessages] = useState<ContactMessage[]>([]); 
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -47,23 +52,24 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         } else {
           const localBookings = localStorage.getItem('classfit_bookings');
           const localUsers = localStorage.getItem('classfit_users');
+          const localMsgs = localStorage.getItem('classfit_messages');
+          
           if (localBookings) setBookings(JSON.parse(localBookings));
           if (localUsers) {
             const parsedUsers = JSON.parse(localUsers);
-            // Apply default image to demo users as well
             const mappedDemoUsers = parsedUsers.map((u: User) => ({
                 ...u,
                 image: u.image || (u.role !== 'admin' ? DEFAULT_PROFILE_IMAGE : '')
             }));
             setUsers(mappedDemoUsers);
           }
+          if (localMsgs) setMessages(JSON.parse(localMsgs));
         }
         
         const savedUser = localStorage.getItem('classfit_user');
         if (savedUser) {
            const parsedUser = JSON.parse(savedUser);
            if (parsedUser) {
-             // Ensure current user has image if applicable
              parsedUser.image = parsedUser.image || (parsedUser.role !== 'admin' ? DEFAULT_PROFILE_IMAGE : '');
              setCurrentUser(parsedUser);
            }
@@ -88,6 +94,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       if (e.key === 'classfit_users' && e.newValue) {
          setUsers(JSON.parse(e.newValue));
       }
+      if (e.key === 'classfit_messages' && e.newValue) { 
+         setMessages(JSON.parse(e.newValue));
+      }
     };
 
     window.addEventListener('storage', handleStorageChange);
@@ -101,9 +110,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const refreshData = async () => {
     if (isDemoMode) {
-      // Force refresh from local storage
       const localBookings = localStorage.getItem('classfit_bookings');
       const localUsers = localStorage.getItem('classfit_users');
+      const localMsgs = localStorage.getItem('classfit_messages'); 
+      
       if (localBookings) setBookings(JSON.parse(localBookings));
       if (localUsers) {
           const parsed = JSON.parse(localUsers);
@@ -112,6 +122,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
              image: u.image || (u.role !== 'admin' ? DEFAULT_PROFILE_IMAGE : '')
           })));
       }
+      if (localMsgs) setMessages(JSON.parse(localMsgs)); 
       return;
     }
 
@@ -150,7 +161,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           password: u.password,
           role: u.role,
           phone: u.phone,
-          // Apply Default Image Logic for non-admins
           image: u.image || (u.role !== 'admin' ? DEFAULT_PROFILE_IMAGE : ''), 
           bio: u.bio,     
           joinedDate: u.joined_date
@@ -158,22 +168,30 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setUsers(mappedUsers);
       }
 
-      // 3. Security Check: Validate Session and Update Current User Data
+      // 3. Fetch Messages
+      const { data: mData } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
+      if (mData) {
+        setMessages(mData.map((m: any) => ({
+            id: m.id,
+            name: m.name,
+            email: m.email,
+            phone: m.phone,
+            subject: m.subject,
+            message: m.message,
+            date: m.created_at || m.date,
+            status: m.status
+        })));
+      }
+
+      // Security Check
       const storedUserStr = localStorage.getItem('classfit_user');
       if (storedUserStr) {
         const storedUser = JSON.parse(storedUserStr);
-        // Only update if we successfully fetched users
         if (mappedUsers.length > 0) {
             const latestUserData = mappedUsers.find(u => u.id === storedUser.id);
-            
             if (latestUserData) {
-              // Update session with latest data
               setCurrentUser(latestUserData);
               localStorage.setItem('classfit_user', JSON.stringify(latestUserData));
-            } else {
-              // Only logout if we are sure the user list is complete and this user is missing
-              // For now, we avoid auto-logout to prevent flickering if RLS hides users
-              console.warn("User not found in latest refresh, but keeping session active to prevent flicker.");
             }
         }
       }
@@ -239,14 +257,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const login = async (email: string, pass: string): Promise<boolean> => {
     if (isDemoMode) {
-      // Check if user exists in local 'db' first
       const existingUser = users.find(u => u.email === email && u.password === pass);
-      
       let mockUser: User;
       if (existingUser) {
           mockUser = existingUser;
       } else {
-          // Fallback for "admin" quick login in demo
           mockUser = { 
             id: 'demo-1', 
             name: 'Demo Admin', 
@@ -256,21 +271,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             joinedDate: new Date().toISOString()
           };
       }
-      // Apply default image logic on login if missing
       mockUser.image = mockUser.image || (mockUser.role !== 'admin' ? DEFAULT_PROFILE_IMAGE : '');
-
       setCurrentUser(mockUser);
       localStorage.setItem('classfit_user', JSON.stringify(mockUser));
       return true;
     }
 
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('email', email)
-      .eq('password', pass)
-      .single();
-
+    const { data, error } = await supabase.from('users').select('*').eq('email', email).eq('password', pass).single();
     if (error || !data) return false;
 
     const user: User = {
@@ -302,39 +309,19 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         joinedDate: new Date().toISOString(),
         image: DEFAULT_PROFILE_IMAGE
        };
-       
-       const currentUsersStr = localStorage.getItem('classfit_users');
-       let currentUsers: User[] = [];
-       try { currentUsers = currentUsersStr ? JSON.parse(currentUsersStr) : []; } catch(e) {}
-       
-       const newUsers = [...currentUsers, mockUser];
+       const newUsers = [...users, mockUser];
        localStorage.setItem('classfit_users', JSON.stringify(newUsers));
        setUsers(newUsers);
-
        setCurrentUser(mockUser);
        localStorage.setItem('classfit_user', JSON.stringify(mockUser));
        return true;
     }
 
-    const { data, error } = await supabase
-      .from('users')
-      .insert([{ name, email, password: pass, role: 'user' }])
-      .select()
-      .single();
-
+    const { data, error } = await supabase.from('users').insert([{ name, email, password: pass, role: 'user' }]).select().single();
     if (error || !data) return false;
-
     const user: User = {
-      id: data.id,
-      name: data.name,
-      email: data.email,
-      password: data.password,
-      role: data.role,
-      phone: data.phone,
-      joinedDate: data.joined_date,
-      image: DEFAULT_PROFILE_IMAGE
+      id: data.id, name: data.name, email: data.email, password: data.password, role: data.role, phone: data.phone, joinedDate: data.joined_date, image: DEFAULT_PROFILE_IMAGE
     };
-
     setCurrentUser(user);
     localStorage.setItem('classfit_user', JSON.stringify(user));
     await refreshData();
@@ -353,40 +340,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         joinedDate: new Date().toISOString(),
         image: DEFAULT_PROFILE_IMAGE
        };
-
-       // Robust read from localStorage
-       const currentUsersStr = localStorage.getItem('classfit_users');
-       let currentUsers: User[] = [];
-       try {
-         currentUsers = currentUsersStr ? JSON.parse(currentUsersStr) : [];
-       } catch (e) {
-         currentUsers = [];
-       }
-       
-       const newUsers = [...currentUsers, newUser];
+       const newUsers = [...users, newUser];
        localStorage.setItem('classfit_users', JSON.stringify(newUsers));
        setUsers(newUsers);
-
        return { success: true };
     }
-
-    const { data, error } = await supabase
-      .from('users')
-      .insert([{ 
-        name: `${name} (${specialty})`, 
-        email, 
-        phone,
-        password: pass, 
-        role: 'trainer_pending' 
-      }])
-      .select()
-      .single();
-
-    if (error) {
-        console.error("Trainer Reg Error", error);
-        return { success: false, msg: error.message };
-    }
-    
+    const { error } = await supabase.from('users').insert([{ name: `${name} (${specialty})`, email, phone, password: pass, role: 'trainer_pending' }]).select().single();
+    if (error) return { success: false, msg: error.message };
     await refreshData();
     return { success: true };
   };
@@ -396,25 +356,20 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         const newUsers = users.map(u => u.id === id ? { ...u, ...updates } : u);
         setUsers(newUsers);
         localStorage.setItem('classfit_users', JSON.stringify(newUsers));
-        
-        // Update current session if it's the current user
         if (currentUser && currentUser.id === id) {
            const updatedUser = { ...currentUser, ...updates };
-           // Re-apply default logic for session
            updatedUser.image = updatedUser.image || (updatedUser.role !== 'admin' ? DEFAULT_PROFILE_IMAGE : '');
            setCurrentUser(updatedUser);
            localStorage.setItem('classfit_user', JSON.stringify(updatedUser));
         }
         return;
     }
-
     const dbUpdates: any = {};
     if (updates.role !== undefined) dbUpdates.role = updates.role;
     if (updates.name !== undefined) dbUpdates.name = updates.name;
     if (updates.phone !== undefined) dbUpdates.phone = updates.phone;
     if (updates.image !== undefined) dbUpdates.image = updates.image;
     if (updates.bio !== undefined) dbUpdates.bio = updates.bio;
-
     const { error } = await supabase.from('users').update(dbUpdates).eq('id', id);
     if (error) throw error;
     await refreshData();
@@ -432,12 +387,67 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     await refreshData();
   };
 
+  const sendMessage = async (msg: Omit<ContactMessage, 'id' | 'date' | 'status'>): Promise<boolean> => {
+    try {
+        if (isDemoMode) {
+            const newMessage: ContactMessage = {
+                ...msg,
+                id: Math.random().toString(36).substr(2, 9),
+                date: new Date().toISOString(),
+                status: 'new'
+            };
+            const newMsgs = [newMessage, ...messages];
+            setMessages(newMsgs);
+            localStorage.setItem('classfit_messages', JSON.stringify(newMsgs));
+            return true;
+        }
+        const { error } = await supabase.from('messages').insert([{
+            name: msg.name,
+            email: msg.email,
+            phone: msg.phone,
+            subject: msg.subject,
+            message: msg.message,
+            status: 'new'
+        }]);
+        if (error) { console.error(error); return false; }
+        await refreshData(); 
+        return true;
+    } catch (e) {
+        return false;
+    }
+  };
+
+  const deleteMessage = async (id: string) => {
+      if (isDemoMode) {
+          const newMsgs = messages.filter(m => m.id !== id);
+          setMessages(newMsgs);
+          localStorage.setItem('classfit_messages', JSON.stringify(newMsgs));
+          return;
+      }
+      const { error } = await supabase.from('messages').delete().eq('id', id);
+      if (error) throw error;
+      await refreshData();
+  };
+
+  const markMessageRead = async (id: string) => {
+      if (isDemoMode) {
+          const newMsgs = messages.map(m => m.id === id ? { ...m, status: 'read' as const } : m);
+          setMessages(newMsgs);
+          localStorage.setItem('classfit_messages', JSON.stringify(newMsgs));
+          return;
+      }
+      const { error } = await supabase.from('messages').update({ status: 'read' }).eq('id', id);
+      if (error) throw error;
+      await refreshData();
+  };
+
   return (
     <AppContext.Provider value={{ 
       language, setLanguage, 
       bookings, addBooking, updateBooking, deleteBooking,
       isAdmin,
       currentUser, users, login, register, registerTrainer, updateUser, deleteUser, logout, refreshData,
+      messages, deleteMessage, sendMessage, markMessageRead,
       isLoading,
       isDemoMode
     }}>

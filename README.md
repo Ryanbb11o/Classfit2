@@ -1,3 +1,4 @@
+
 # ClassFit Varna - Supabase + Vercel
 
 Professional fitness management platform.
@@ -22,6 +23,30 @@ CHECK (role IN ('user', 'admin', 'trainer_pending', 'trainer'));
 -- 3. Ensure Row Level Security allows updates
 DROP POLICY IF EXISTS "Allow public access" ON users;
 CREATE POLICY "Allow public access" ON users FOR ALL USING (true) WITH CHECK (true);
+```
+
+### ✨ NEW: Messages Table (Contact Form)
+
+Run this to enable the Contact Form and Admin Inbox:
+
+```sql
+-- 1. Create Messages Table
+CREATE TABLE messages (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  phone TEXT,
+  subject TEXT,
+  message TEXT NOT NULL,
+  status TEXT DEFAULT 'new', -- 'new' or 'read'
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 2. Enable Security
+ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
+
+-- 3. Allow Public Insert (Everyone can send messages) & Read
+CREATE POLICY "Allow public access messages" ON messages FOR ALL USING (true) WITH CHECK (true);
 ```
 
 ### Initial Setup (If starting from scratch)

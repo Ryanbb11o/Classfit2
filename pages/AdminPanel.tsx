@@ -1,13 +1,13 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Calendar, Clock, User, Check, X, ShieldAlert, CheckCircle2, DollarSign, CreditCard, Banknote, LayoutDashboard, ListFilter, FileSpreadsheet, TrendingUp, Phone, Loader2, Trash2, Users, Shield, RefreshCw, History, Briefcase, CheckCircle, ArrowRight, AlertTriangle } from 'lucide-react';
+import { Calendar, Clock, User, Check, X, ShieldAlert, CheckCircle2, DollarSign, CreditCard, Banknote, LayoutDashboard, ListFilter, FileSpreadsheet, TrendingUp, Phone, Loader2, Trash2, Users, Shield, RefreshCw, History, Briefcase, CheckCircle, ArrowRight, AlertTriangle, MessageSquare, Mail, Eye } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, getTrainers, DEFAULT_PROFILE_IMAGE } from '../constants';
 import emailjs from '@emailjs/browser';
 import { Trainer } from '../types';
 
 const AdminPanel: React.FC = () => {
-  const { language, bookings, updateBooking, deleteBooking, isAdmin, users, deleteUser, updateUser, currentUser, refreshData } = useAppContext();
+  const { language, bookings, updateBooking, deleteBooking, isAdmin, users, deleteUser, updateUser, currentUser, refreshData, messages, deleteMessage, markMessageRead } = useAppContext();
   const t = TRANSLATIONS[language];
   
   // MERGE STATIC AND DYNAMIC TRAINERS TO FIX "BLANK NAME" ISSUE
@@ -40,7 +40,7 @@ const AdminPanel: React.FC = () => {
   const [completingId, setCompletingId] = useState<string | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'history' | 'finance' | 'users' | 'applications'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'history' | 'finance' | 'users' | 'applications' | 'messages'>('overview');
 
   // Refresh data on mount AND when tab changes to ensure fresh data
   useEffect(() => {
@@ -51,6 +51,7 @@ const AdminPanel: React.FC = () => {
   const historyBookingsList = bookings.filter(b => b.status === 'completed' || b.status === 'cancelled');
   const completedBookings = bookings.filter(b => b.status === 'completed');
   const pendingApplications = users.filter(u => u.role === 'trainer_pending');
+  const newMessagesCount = messages.filter(m => m.status === 'new').length;
   
   const totalIncome = completedBookings.reduce((sum, b) => sum + b.price, 0);
 
@@ -79,6 +80,7 @@ const AdminPanel: React.FC = () => {
 
   const pendingCount = bookings.filter(b => b.status === 'pending').length;
   const appCount = pendingApplications.length;
+  const msgCount = messages.length;
 
   const handleManualRefresh = () => {
     setIsRefreshing(true);
@@ -102,6 +104,16 @@ const AdminPanel: React.FC = () => {
     if (window.confirm("Reject and DELETE this application?")) {
         await deleteUser(id);
     }
+  };
+
+  const handleDeleteMessage = async (id: string) => {
+     if (window.confirm(language === 'bg' ? 'Сигурни ли сте?' : 'Are you sure you want to delete this message?')) {
+        await deleteMessage(id);
+     }
+  };
+
+  const handleMarkRead = async (id: string) => {
+      await markMessageRead(id);
   };
 
   const handleConfirm = async (bookingId: string) => {
@@ -227,7 +239,10 @@ const AdminPanel: React.FC = () => {
             <ListFilter size={14} className="inline mr-2" />{t.tabBookings} {pendingCount > 0 && <span className="ml-1 px-1.5 py-0.5 bg-brand text-dark rounded text-[8px]">{pendingCount}</span>}
           </button>
           <button onClick={() => setActiveTab('applications')} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'applications' ? 'bg-brand text-dark' : 'text-slate-400'}`}>
-            <Briefcase size={14} className="inline mr-2" /> Trainer Requests {appCount > 0 && <span className="ml-1 px-1.5 py-0.5 bg-white text-dark rounded text-[8px]">{appCount}</span>}
+            <Briefcase size={14} className="inline mr-2" /> Requests {appCount > 0 && <span className="ml-1 px-1.5 py-0.5 bg-white text-dark rounded text-[8px]">{appCount}</span>}
+          </button>
+          <button onClick={() => setActiveTab('messages')} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'messages' ? 'bg-brand text-dark' : 'text-slate-400'}`}>
+            <MessageSquare size={14} className="inline mr-2" /> {t.tabMessages} {newMessagesCount > 0 && <span className="ml-1 px-1.5 py-0.5 bg-white text-dark rounded text-[8px]">{newMessagesCount}</span>}
           </button>
           <button onClick={() => setActiveTab('users')} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'users' ? 'bg-brand text-dark' : 'text-slate-400'}`}>
             <Users size={14} className="inline mr-2" />{t.tabUsers}
@@ -259,6 +274,27 @@ const AdminPanel: React.FC = () => {
                   </button>
                 </div>
             )}
+            
+            {/* ALERT BANNER FOR MESSAGES */}
+            {newMessagesCount > 0 && (
+                <div className="mb-8 p-6 bg-blue-500/10 border border-blue-500/20 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-blue-500 text-white rounded-xl">
+                        <MessageSquare size={24} />
+                    </div>
+                    <div>
+                        <h3 className="text-xl font-black uppercase italic text-white">Inbox</h3>
+                        <p className="text-slate-400 font-medium">{newMessagesCount} new message(s) in inbox.</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setActiveTab('messages')}
+                    className="px-6 py-3 bg-blue-500 text-white rounded-xl font-black uppercase tracking-widest hover:bg-white hover:text-blue-500 transition-all flex items-center gap-2"
+                  >
+                    View Messages <ArrowRight size={16} />
+                  </button>
+                </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-16">
               <div className="p-10 bg-brand text-dark rounded-[2.5rem] shadow-xl relative overflow-hidden group">
@@ -287,6 +323,7 @@ const AdminPanel: React.FC = () => {
           </div>
         )}
 
+        {/* ... (finance, bookings, applications tabs remain unchanged) ... */}
         {activeTab === 'finance' && (
           <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-hidden animate-in fade-in slide-in-from-bottom-4">
              <div className="p-8 border-b border-white/5 bg-white/5">
@@ -451,6 +488,79 @@ const AdminPanel: React.FC = () => {
                                 className="px-4 py-2 bg-red-500/10 text-red-500 rounded-lg text-[9px] font-black uppercase hover:bg-red-500 hover:text-white transition-all flex items-center gap-1"
                              >
                                 <Trash2 size={12} /> Reject
+                             </button>
+                           </td>
+                         </tr>
+                       ))
+                   )}
+                 </tbody>
+               </table>
+             </div>
+          </div>
+        )}
+
+        {/* MESSAGES TAB */}
+        {activeTab === 'messages' && (
+          <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-hidden animate-in fade-in">
+             <div className="p-8 border-b border-white/5 bg-white/5 flex items-center justify-between">
+                <h3 className="text-lg font-black uppercase italic text-white flex items-center gap-3">
+                   <MessageSquare className="text-brand" size={20} /> {t.allMessages} <span className="bg-brand text-dark px-2 py-0.5 rounded text-xs">{messages.length}</span>
+                </h3>
+                <button onClick={handleManualRefresh} className="text-xs text-slate-400 hover:text-white flex items-center gap-1">
+                   <RefreshCw size={12} className={isRefreshing ? "animate-spin" : ""} />
+                </button>
+             </div>
+             <div className="overflow-x-auto">
+               <table className="w-full text-left">
+                 <thead>
+                   <tr className="border-b border-white/5 text-[10px] font-black text-slate-500 uppercase">
+                     <th className="px-8 py-6 w-1/4">{t.sender}</th>
+                     <th className="px-8 py-6 w-1/4">{t.subject}</th>
+                     <th className="px-8 py-6 w-1/3">{t.message}</th>
+                     <th className="px-8 py-6">{t.received}</th>
+                     <th className="px-8 py-6 text-right">{t.action}</th>
+                   </tr>
+                 </thead>
+                 <tbody className="divide-y divide-white/5">
+                   {messages.length === 0 ? (
+                      <tr><td colSpan={5} className="px-8 py-32 text-center text-slate-500 uppercase font-black italic">Inbox Empty</td></tr>
+                   ) : (
+                       messages.map(m => (
+                         <tr key={m.id} className={`hover:bg-white/5 align-top transition-colors ${m.status === 'new' ? 'bg-brand/5' : ''}`}>
+                           <td className="px-8 py-6">
+                                <div className={`font-black uppercase italic text-xs text-white mb-1 ${m.status === 'new' ? 'text-brand' : ''}`}>
+                                    {m.status === 'new' && <span className="w-2 h-2 rounded-full bg-brand inline-block mr-2 animate-pulse"></span>}
+                                    {m.name}
+                                </div>
+                                <div className="text-[10px] text-slate-400 font-bold mb-1 flex items-center gap-1"><Mail size={10} /> {m.email}</div>
+                                <div className="text-[10px] text-slate-400 font-bold flex items-center gap-1"><Phone size={10} /> {m.phone}</div>
+                           </td>
+                           <td className="px-8 py-6 text-xs text-white font-bold uppercase">{m.subject}</td>
+                           <td className="px-8 py-6 text-xs text-slate-300 italic leading-relaxed whitespace-pre-wrap max-w-xs">{m.message}</td>
+                           <td className="px-8 py-6 text-[10px] text-slate-500 font-bold uppercase">
+                              {new Date(m.date).toLocaleDateString()} <br/>
+                              {new Date(m.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                           </td>
+                           <td className="px-8 py-6 text-right flex flex-col gap-2 items-end">
+                             {m.status === 'new' && (
+                                <button 
+                                  onClick={() => handleMarkRead(m.id)}
+                                  className="px-3 py-2 bg-brand/20 text-brand rounded-lg text-[9px] font-black uppercase hover:bg-brand hover:text-dark transition-all flex items-center gap-2"
+                                >
+                                    <Eye size={12} /> Mark Read
+                                </button>
+                             )}
+                             <a 
+                                href={`mailto:${m.email}?subject=Re: ${m.subject}`}
+                                className="px-3 py-2 bg-white/5 text-slate-300 rounded-lg text-[9px] font-black uppercase hover:bg-white hover:text-dark transition-all flex items-center gap-2"
+                             >
+                                <Mail size={12} /> {t.reply}
+                             </a>
+                             <button 
+                                onClick={() => handleDeleteMessage(m.id)}
+                                className="px-3 py-2 bg-red-500/10 text-red-500 rounded-lg text-[9px] font-black uppercase hover:bg-red-500 hover:text-white transition-all flex items-center gap-2"
+                             >
+                                <Trash2 size={12} /> {t.deleteMsg}
                              </button>
                            </td>
                          </tr>
