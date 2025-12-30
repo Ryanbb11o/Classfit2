@@ -24,7 +24,7 @@ interface AppContextType {
   deleteUser: (id: string) => Promise<void>;
   logout: () => void;
   refreshData: () => Promise<void>;
-  sendMessage: (msg: Omit<ContactMessage, 'id' | 'date' | 'status'>) => Promise<boolean>;
+  sendMessage: (msg: Omit<ContactMessage, 'id' | 'date' | 'status'>) => Promise<{ success: boolean; error?: string }>;
   isLoading: boolean;
   isDemoMode: boolean;
 }
@@ -103,6 +103,31 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return () => window.removeEventListener('storage', handleStorageChange);
   }, [isDemoMode]);
 
+  // Supabase Realtime Subscription (Notifications)
+  useEffect(() => {
+    if (isDemoMode) return;
+
+    // Subscribe to changes in public tables to update Admin UI instantly
+    const channel = supabase.channel('public:db_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
+         console.log('Realtime update: Messages');
+         refreshData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => {
+         console.log('Realtime update: Bookings');
+         refreshData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, () => {
+         console.log('Realtime update: Users');
+         refreshData();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isDemoMode]);
+
   const logout = () => {
     setCurrentUser(null);
     localStorage.removeItem('classfit_user');
@@ -169,7 +194,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }
 
       // 3. Fetch Messages
-      const { data: mData } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
+      const { data: mData, error: mError } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
+      
       if (mData) {
         setMessages(mData.map((m: any) => ({
             id: m.id,
@@ -387,7 +413,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     await refreshData();
   };
 
-  const sendMessage = async (msg: Omit<ContactMessage, 'id' | 'date' | 'status'>): Promise<boolean> => {
+  const sendMessage = async (msg: Omit<ContactMessage, 'id' | 'date' | 'status'>): Promise<{ success: boolean; error?: string }> => {
     try {
         if (isDemoMode) {
             const newMessage: ContactMessage = {
@@ -399,8 +425,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             const newMsgs = [newMessage, ...messages];
             setMessages(newMsgs);
             localStorage.setItem('classfit_messages', JSON.stringify(newMsgs));
-            return true;
+            return { success: true };
         }
+        
+        // Ensure table exists implicitly by handling error 
         const { error } = await supabase.from('messages').insert([{
             name: msg.name,
             email: msg.email,
@@ -409,11 +437,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             message: msg.message,
             status: 'new'
         }]);
-        if (error) { console.error(error); return false; }
+        
+        if (error) { 
+            console.error("Supabase Insert Error:", error); 
+            return { success: false, error: error.message }; 
+        }
+        
+        // Manual refresh for the sender
         await refreshData(); 
-        return true;
-    } catch (e) {
-        return false;
+        return { success: true };
+    } catch (e: any) {
+        console.error("Unknown Error:", e);
+        return { success: false, error: e.message || 'Unknown error' };
     }
   };
 

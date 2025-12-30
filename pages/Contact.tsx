@@ -26,13 +26,17 @@ const Contact: React.FC = () => {
     setError('');
     
     try {
-        const success = await sendMessage(formData);
+        const { success, error: sendError } = await sendMessage(formData);
         
         if (success) {
             setIsSubmitted(true);
             setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
         } else {
-            setError(language === 'bg' ? 'Възникна грешка. Моля опитайте отново.' : 'An error occurred. Please try again.');
+            console.error(sendError);
+            const msg = sendError?.includes('relation "public.messages" does not exist') 
+                ? 'System Error: Database table missing. Please run SQL migration.'
+                : (language === 'bg' ? 'Възникна грешка. Моля опитайте отново.' : 'An error occurred. Please try again.');
+            setError(msg);
         }
     } catch (e) {
         setError(language === 'bg' ? 'Възникна грешка.' : 'An error occurred.');
