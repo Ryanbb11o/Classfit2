@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Language, Booking, User, ContactMessage } from './types';
+import { Language, Booking, User } from './types';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 import { DEFAULT_PROFILE_IMAGE } from './constants';
 
@@ -14,9 +14,6 @@ interface AppContextType {
   isAdmin: boolean;
   currentUser: User | null;
   users: User[];
-  messages: ContactMessage[];
-  deleteMessage: (id: string) => Promise<void>;
-  markMessageRead: (id: string) => Promise<void>;
   login: (email: string, pass: string) => Promise<boolean>;
   register: (name: string, email: string, pass: string) => Promise<boolean>;
   registerTrainer: (name: string, email: string, pass: string, phone: string, specialty: string) => Promise<{ success: boolean; msg?: string }>;
@@ -24,7 +21,6 @@ interface AppContextType {
   deleteUser: (id: string) => Promise<void>;
   logout: () => void;
   refreshData: () => Promise<void>;
-  sendMessage: (msg: Omit<ContactMessage, 'id' | 'date' | 'status'>) => Promise<{ success: boolean; error?: string }>;
   isLoading: boolean;
   isDemoMode: boolean;
 }
@@ -35,7 +31,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [language, setLanguage] = useState<Language>('bg');
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [users, setUsers] = useState<User[]>([]);
-  const [messages, setMessages] = useState<ContactMessage[]>([]); 
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -52,7 +47,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         } else {
           const localBookings = localStorage.getItem('classfit_bookings');
           const localUsers = localStorage.getItem('classfit_users');
-          const localMsgs = localStorage.getItem('classfit_messages');
           
           if (localBookings) setBookings(JSON.parse(localBookings));
           if (localUsers) {
@@ -63,7 +57,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             }));
             setUsers(mappedDemoUsers);
           }
-          if (localMsgs) setMessages(JSON.parse(localMsgs));
         }
         
         const savedUser = localStorage.getItem('classfit_user');
@@ -94,9 +87,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       if (e.key === 'classfit_users' && e.newValue) {
          setUsers(JSON.parse(e.newValue));
       }
-      if (e.key === 'classfit_messages' && e.newValue) { 
-         setMessages(JSON.parse(e.newValue));
-      }
     };
 
     window.addEventListener('storage', handleStorageChange);
@@ -109,9 +99,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     // Subscribe to changes in public tables to update Admin UI instantly
     const channel = supabase.channel('public:db_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
-         refreshData();
-      })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => {
          refreshData();
       })
@@ -135,7 +122,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       // ... (keep demo logic same for development safety) ...
       const localBookings = localStorage.getItem('classfit_bookings');
       const localUsers = localStorage.getItem('classfit_users');
-      const localMsgs = localStorage.getItem('classfit_messages'); 
       
       if (localBookings) setBookings(JSON.parse(localBookings));
       if (localUsers) {
@@ -145,7 +131,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
              image: u.image || (u.role !== 'admin' ? DEFAULT_PROFILE_IMAGE : '')
           })));
       }
-      if (localMsgs) setMessages(JSON.parse(localMsgs)); 
       return;
     }
 
@@ -189,24 +174,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           joinedDate: u.joined_date
         }));
         setUsers(mappedUsers);
-      }
-
-      // 3. Fetch Messages
-      const { data: mData, error: mError } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
-      
-      if (mError) {
-        console.error("Supabase Error (Messages):", mError.message);
-      } else if (mData) {
-        setMessages(mData.map((m: any) => ({
-            id: m.id,
-            name: m.name,
-            email: m.email,
-            phone: m.phone,
-            subject: m.subject,
-            message: m.message,
-            date: m.created_at || m.date,
-            status: m.status
-        })));
       }
 
       // Security Check
@@ -450,88 +417,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     await refreshData();
   };
 
-  // FIXED: STRICT DATABASE USAGE (No Local Storage Fallback for Production)
-  const sendMessage = async (msg: Omit<ContactMessage, 'id' | 'date' | 'status'>): Promise<{ success: boolean; error?: string }> => {
-    // 1. If in Demo Mode (Environment variables missing), save locally
-    if (isDemoMode) {
-        const localMessage: ContactMessage = {
-            id: Math.random().toString(36).substr(2, 9),
-            name: msg.name,
-            email: msg.email,
-            phone: msg.phone,
-            subject: msg.subject,
-            message: msg.message,
-            date: new Date().toISOString(),
-            status: 'new'
-        };
-        try {
-            setMessages(prev => {
-                const newMsgs = [localMessage, ...prev];
-                localStorage.setItem('classfit_messages', JSON.stringify(newMsgs));
-                return newMsgs;
-            });
-            return { success: true };
-        } catch (e: any) {
-            return { success: false, error: "Failed to save locally in Demo Mode." };
-        }
-    }
-
-    // 2. LIVE MODE: Try Supabase
-    try {
-        const { error } = await supabase.from('messages').insert([{
-            name: msg.name,
-            email: msg.email,
-            phone: msg.phone,
-            subject: msg.subject,
-            message: msg.message,
-            status: 'new'
-        }]);
-        
-        if (error) {
-            console.error("Supabase Database Error:", error);
-            // Return the specific error so the UI can warn the admin
-            return { success: false, error: error.message }; 
-        }
-        
-        await refreshData();
-        return { success: true };
-    } catch (err: any) {
-        console.error("Network/Supabase Exception:", err);
-        return { success: false, error: err.message || "Network error" };
-    }
-  };
-
-  const deleteMessage = async (id: string) => {
-      if (isDemoMode) {
-          const newMsgs = messages.filter(m => m.id !== id);
-          setMessages(newMsgs);
-          localStorage.setItem('classfit_messages', JSON.stringify(newMsgs));
-          return;
-      }
-      const { error } = await supabase.from('messages').delete().eq('id', id);
-      if (error) throw error;
-      await refreshData();
-  };
-
-  const markMessageRead = async (id: string) => {
-      if (isDemoMode) {
-          const newMsgs = messages.map(m => m.id === id ? { ...m, status: 'read' as const } : m);
-          setMessages(newMsgs);
-          localStorage.setItem('classfit_messages', JSON.stringify(newMsgs));
-          return;
-      }
-      const { error } = await supabase.from('messages').update({ status: 'read' }).eq('id', id);
-      if (error) throw error;
-      await refreshData();
-  };
-
   return (
     <AppContext.Provider value={{ 
       language, setLanguage, 
       bookings, addBooking, updateBooking, deleteBooking,
       isAdmin,
       currentUser, users, login, register, registerTrainer, updateUser, deleteUser, logout, refreshData,
-      messages, deleteMessage, sendMessage, markMessageRead,
       isLoading,
       isDemoMode
     }}>
