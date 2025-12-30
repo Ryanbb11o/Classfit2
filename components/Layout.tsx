@@ -1,13 +1,13 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Menu, X, ShieldCheck, User as UserIcon, Home, Info, Calendar, Dumbbell, ShoppingBag, LogIn, LogOut, Phone, Briefcase, Bell, AlertCircle, CheckCircle, Mail } from 'lucide-react';
+import { Menu, X, ShieldCheck, User as UserIcon, Home, Info, Calendar, Dumbbell, ShoppingBag, LogIn, LogOut, Phone, Briefcase, Bell, AlertCircle, CheckCircle, Mail, MessageSquare } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS } from '../constants';
 import LanguageSwitcher from './LanguageSwitcher';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { language, isAdmin, currentUser, logout, users, bookings } = useAppContext();
+  const { language, isAdmin, currentUser, logout, users, bookings, messages } = useAppContext();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
@@ -38,8 +38,11 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     : isTrainer 
       ? bookings.filter(b => b.trainerId === currentUser?.id && b.status === 'pending')
       : [];
+
+  // Get unread messages (Admin only)
+  const newMessages = isAdmin ? messages.filter(m => m.status === 'new') : [];
   
-  const totalNotifications = pendingApplications.length + pendingBookings.length;
+  const totalNotifications = pendingApplications.length + pendingBookings.length + newMessages.length;
 
   const closeMenu = () => setIsMenuOpen(false);
 
@@ -49,10 +52,12 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     closeMenu();
   };
 
-  const handleNotificationClick = (type: 'application' | 'booking') => {
+  const handleNotificationClick = (type: 'application' | 'booking' | 'message') => {
     setShowNotifications(false);
     if (isAdmin) {
-      navigate('/admin');
+      // Pass state to AdminPanel to switch tabs automatically
+      const tabName = type === 'message' ? 'messages' : type === 'application' ? 'applications' : 'bookings';
+      navigate('/admin', { state: { activeTab: tabName } });
     } else if (isTrainer) {
       navigate('/trainer');
     }
@@ -146,6 +151,26 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                                </div>
                             ) : (
                               <>
+                                {/* New Messages (Admin Only) */}
+                                {newMessages.map(m => (
+                                  <div 
+                                    key={m.id}
+                                    onClick={() => handleNotificationClick('message')}
+                                    className="p-4 border-b border-white/5 hover:bg-white/5 cursor-pointer transition-colors group"
+                                  >
+                                    <div className="flex items-start gap-3">
+                                       <div className="p-2 bg-brand/10 text-brand rounded-full shrink-0 group-hover:bg-brand group-hover:text-dark transition-colors">
+                                          <MessageSquare size={14} />
+                                       </div>
+                                       <div className="overflow-hidden">
+                                          <p className="text-xs font-bold text-white mb-1">New Message</p>
+                                          <p className="text-[10px] text-slate-300 uppercase italic truncate">{m.subject || 'No Subject'}</p>
+                                          <p className="text-[9px] text-slate-500 mt-1 truncate">From: {m.name}</p>
+                                       </div>
+                                    </div>
+                                  </div>
+                                ))}
+
                                 {/* Trainer Applications (Admin Only) */}
                                 {pendingApplications.map(u => (
                                   <div 
@@ -154,13 +179,12 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                                     className="p-4 border-b border-white/5 hover:bg-white/5 cursor-pointer transition-colors group"
                                   >
                                     <div className="flex items-start gap-3">
-                                       <div className="p-2 bg-brand/10 text-brand rounded-full shrink-0 group-hover:bg-brand group-hover:text-dark transition-colors">
+                                       <div className="p-2 bg-yellow-500/10 text-yellow-500 rounded-full shrink-0 group-hover:bg-yellow-500 group-hover:text-dark transition-colors">
                                           <Briefcase size={14} />
                                        </div>
                                        <div>
                                           <p className="text-xs font-bold text-white mb-1">New Trainer Application</p>
-                                          <p className="text-[10px] text-brand font-black uppercase italic tracking-wider">({getDisplayName(u.name)})</p>
-                                          <p className="text-[9px] text-slate-500 mt-1">{new Date(u.joinedDate).toLocaleDateString()}</p>
+                                          <p className="text-[10px] text-yellow-500 font-black uppercase italic tracking-wider">({getDisplayName(u.name)})</p>
                                        </div>
                                     </div>
                                   </div>
@@ -190,7 +214,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                          </div>
                          <div className="p-3 bg-dark/50 text-center border-t border-white/5">
                             <button 
-                              onClick={() => handleNotificationClick('application')}
+                              onClick={() => handleNotificationClick(isAdmin ? 'application' : 'booking')}
                               className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors"
                             >
                               View Panel

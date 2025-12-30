@@ -5,10 +5,12 @@ import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, getTrainers, DEFAULT_PROFILE_IMAGE } from '../constants';
 import emailjs from '@emailjs/browser';
 import { Trainer } from '../types';
+import { useLocation } from 'react-router-dom';
 
 const AdminPanel: React.FC = () => {
   const { language, bookings, updateBooking, deleteBooking, isAdmin, users, deleteUser, updateUser, currentUser, refreshData, messages, deleteMessage, markMessageRead } = useAppContext();
   const t = TRANSLATIONS[language];
+  const location = useLocation();
   
   // MERGE STATIC AND DYNAMIC TRAINERS TO FIX "BLANK NAME" ISSUE
   const trainers = useMemo(() => {
@@ -41,6 +43,16 @@ const AdminPanel: React.FC = () => {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'history' | 'finance' | 'users' | 'applications' | 'messages'>('overview');
+
+  // Handle incoming navigation state to switch tabs automatically
+  useEffect(() => {
+    if (location.state && (location.state as any).activeTab) {
+        const targetTab = (location.state as any).activeTab;
+        setActiveTab(targetTab);
+        // Clean up history state to prevent stuck tab on refresh (optional, but good practice)
+        window.history.replaceState({}, document.title);
+    }
+  }, [location]);
 
   // Refresh data on mount AND when tab changes to ensure fresh data
   useEffect(() => {
