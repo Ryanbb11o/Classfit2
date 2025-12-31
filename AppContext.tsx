@@ -17,6 +17,7 @@ interface AppContextType {
   login: (email: string, pass: string) => Promise<boolean>;
   register: (name: string, email: string, pass: string) => Promise<boolean>;
   registerTrainer: (name: string, email: string, pass: string, phone: string, specialty: string) => Promise<{ success: boolean; msg?: string }>;
+  requestTrainerUpgrade: (userId: string, currentName: string, phone: string, specialty: string) => Promise<{ success: boolean; msg?: string }>;
   updateUser: (id: string, updates: Partial<User>) => Promise<void>;
   deleteUser: (id: string) => Promise<void>;
   logout: () => void;
@@ -381,6 +382,32 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return { success: true };
   };
 
+  const requestTrainerUpgrade = async (userId: string, currentName: string, phone: string, specialty: string): Promise<{ success: boolean; msg?: string }> => {
+    const formattedName = `${currentName} (${specialty})`;
+    
+    if (isDemoMode) {
+        const newUsers = users.map(u => u.id === userId ? { ...u, role: 'trainer_pending' as const, phone, name: formattedName } : u);
+        setUsers(newUsers);
+        localStorage.setItem('classfit_users', JSON.stringify(newUsers));
+        if (currentUser && currentUser.id === userId) {
+            const updated = { ...currentUser, role: 'trainer_pending' as const, phone, name: formattedName };
+            setCurrentUser(updated);
+            localStorage.setItem('classfit_user', JSON.stringify(updated));
+        }
+        return { success: true };
+    }
+
+    const { error } = await supabase.from('users').update({
+        role: 'trainer_pending',
+        name: formattedName,
+        phone: phone
+    }).eq('id', userId);
+
+    if (error) return { success: false, msg: error.message };
+    await refreshData();
+    return { success: true };
+  };
+
   const updateUser = async (id: string, updates: Partial<User>) => {
     if (isDemoMode) {
         const newUsers = users.map(u => u.id === id ? { ...u, ...updates } : u);
@@ -422,7 +449,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       language, setLanguage, 
       bookings, addBooking, updateBooking, deleteBooking,
       isAdmin,
-      currentUser, users, login, register, registerTrainer, updateUser, deleteUser, logout, refreshData,
+      currentUser, users, login, register, registerTrainer, requestTrainerUpgrade, updateUser, deleteUser, logout, refreshData,
       isLoading,
       isDemoMode
     }}>

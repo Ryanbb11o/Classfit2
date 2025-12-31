@@ -1,16 +1,22 @@
 
 import React, { useState, useMemo } from 'react';
-import { Calendar, Clock, CheckCircle, Timer, XCircle, Trash2, CheckCircle2, User as UserIcon, Mail, CalendarPlus, Phone, MapPin, ChevronRight, LogOut, Dumbbell, Activity, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, CheckCircle, Timer, XCircle, Trash2, CheckCircle2, User as UserIcon, Mail, CalendarPlus, Phone, MapPin, ChevronRight, LogOut, Dumbbell, Activity, AlertCircle, Briefcase, Loader2, X } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, getTrainers, DEFAULT_PROFILE_IMAGE } from '../constants';
 import { useNavigate } from 'react-router-dom';
 import { Trainer, Booking } from '../types';
 
 const CustomerDashboard: React.FC = () => {
-  const { language, bookings, updateBooking, deleteBooking, currentUser, logout, users } = useAppContext();
+  const { language, bookings, updateBooking, deleteBooking, currentUser, logout, users, requestTrainerUpgrade } = useAppContext();
   const t = TRANSLATIONS[language];
   const navigate = useNavigate();
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+
+  // Upgrade Modal State
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeSpecialty, setUpgradeSpecialty] = useState('');
+  const [upgradePhone, setUpgradePhone] = useState(currentUser?.phone || '');
+  const [isUpgrading, setIsUpgrading] = useState(false);
 
   // 1. COMBINE STATIC AND DYNAMIC TRAINERS
   const allTrainers = useMemo(() => {
@@ -88,6 +94,34 @@ const CustomerDashboard: React.FC = () => {
     navigate('/');
   }
 
+  const handleUpgradeSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!currentUser) return;
+      setIsUpgrading(true);
+      
+      try {
+          // Attempt upgrade
+          const { success, msg } = await requestTrainerUpgrade(
+              currentUser.id,
+              currentUser.name, // Pass current name, backend appends specialty
+              upgradePhone,
+              upgradeSpecialty
+          );
+          
+          if (success) {
+              alert(language === 'bg' ? 'Заявката е изпратена успешно!' : 'Application sent successfully!');
+              setShowUpgradeModal(false);
+          } else {
+              alert('Error: ' + msg);
+          }
+      } catch (error) {
+          console.error(error);
+          alert('System error occurred.');
+      } finally {
+          setIsUpgrading(false);
+      }
+  };
+
   const getTrainerImage = (trainer?: Trainer) => {
       if (!trainer || !trainer.image) return DEFAULT_PROFILE_IMAGE;
       return trainer.image;
@@ -100,6 +134,7 @@ const CustomerDashboard: React.FC = () => {
   const getRoleLabel = () => {
     if (currentUser.role === 'trainer') return t.trainer;
     if (currentUser.role === 'admin') return t.admin;
+    if (currentUser.role === 'trainer_pending') return t.roleTrainerPending;
     return t.clubMember;
   };
 
@@ -108,6 +143,9 @@ const CustomerDashboard: React.FC = () => {
     if (currentUser.role === 'admin') {
         return 'text-red-500 bg-red-500/10 border border-red-500/20';
     }
+    if (currentUser.role === 'trainer_pending') {
+        return 'text-yellow-500 bg-yellow-500/10 border border-yellow-500/20';
+    }
     return 'text-brand bg-brand/10';
   };
 
@@ -115,7 +153,7 @@ const CustomerDashboard: React.FC = () => {
     <div className="max-w-5xl mx-auto px-4 py-24 animate-in fade-in slide-in-from-bottom-2 duration-500">
       
       {/* Profile Header */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-16 bg-surface p-8 rounded-[2.5rem] border border-white/5 shadow-2xl">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-8 bg-surface p-8 rounded-[2.5rem] border border-white/5 shadow-2xl">
          <div className="flex items-center gap-6">
             <div className="w-24 h-24 rounded-full p-1 border-2 border-brand/50">
                 <img 
@@ -145,6 +183,41 @@ const CustomerDashboard: React.FC = () => {
            <LogOut size={16} /> {t.logout}
          </button>
       </div>
+
+      {/* BECOME A TRAINER CTA (Only for standard users) */}
+      {currentUser.role === 'user' && (
+          <div className="mb-12 p-8 bg-gradient-to-r from-surface to-brand/5 rounded-[2.5rem] border border-brand/20 relative overflow-hidden group">
+              <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+                  <div className="flex items-center gap-6">
+                      <div className="w-16 h-16 bg-brand text-dark rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-brand/20">
+                          <Briefcase size={28} />
+                      </div>
+                      <div className="text-center md:text-left">
+                          <h3 className="text-2xl font-black uppercase italic text-white mb-1">Join Our Team</h3>
+                          <p className="text-slate-400 font-medium text-sm">Become a trainer at ClassFit and grow your business.</p>
+                      </div>
+                  </div>
+                  <button 
+                    onClick={() => setShowUpgradeModal(true)}
+                    className="px-8 py-4 bg-brand text-dark rounded-full font-black uppercase tracking-widest hover:bg-white transition-all shadow-xl shadow-brand/10 whitespace-nowrap"
+                  >
+                      Apply Now
+                  </button>
+              </div>
+              <div className="absolute top-0 right-0 w-64 h-full bg-brand/5 -skew-x-12 transform translate-x-10 pointer-events-none"></div>
+          </div>
+      )}
+
+      {/* PENDING STATUS MESSAGE */}
+      {currentUser.role === 'trainer_pending' && (
+           <div className="mb-12 p-6 bg-yellow-500/10 border border-yellow-500/20 rounded-[2rem] flex items-center gap-4">
+              <div className="p-3 bg-yellow-500 text-dark rounded-xl shrink-0"><AlertCircle size={24} /></div>
+              <div>
+                  <h3 className="text-white font-black uppercase italic text-lg">Application Pending</h3>
+                  <p className="text-slate-400 text-sm">Your request to become a trainer is under review by the administration.</p>
+              </div>
+           </div>
+      )}
 
       <div className="flex items-center justify-between mb-8 px-2">
           <h2 className="text-2xl font-black uppercase italic tracking-tighter text-white">{t.myBookings}</h2>
@@ -285,6 +358,61 @@ const CustomerDashboard: React.FC = () => {
             })
         )}
       </div>
+
+      {/* MODAL: UPGRADE TO TRAINER */}
+      {showUpgradeModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-dark/90 backdrop-blur-md animate-in fade-in duration-300">
+              <div className="bg-surface rounded-[2.5rem] border border-white/10 p-8 w-full max-w-md shadow-2xl relative animate-in zoom-in-95 duration-300">
+                  <button 
+                    onClick={() => setShowUpgradeModal(false)}
+                    className="absolute top-6 right-6 p-2 bg-white/5 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                  >
+                      <X size={20} />
+                  </button>
+
+                  <div className="text-center mb-8">
+                      <div className="w-16 h-16 bg-brand text-dark rounded-2xl flex items-center justify-center mx-auto mb-4">
+                          <Briefcase size={28} />
+                      </div>
+                      <h2 className="text-2xl font-black uppercase italic text-white mb-2">Become a Trainer</h2>
+                      <p className="text-slate-400 text-sm">Please confirm your specialty and contact number.</p>
+                  </div>
+
+                  <form onSubmit={handleUpgradeSubmit} className="space-y-4">
+                      <div>
+                          <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Specialty</label>
+                          <input 
+                            type="text" 
+                            required
+                            className="w-full bg-dark/50 border border-white/5 rounded-xl px-5 py-4 text-white font-bold outline-none focus:border-brand placeholder-slate-600"
+                            placeholder="e.g. Yoga, CrossFit, Boxing"
+                            value={upgradeSpecialty}
+                            onChange={(e) => setUpgradeSpecialty(e.target.value)}
+                          />
+                      </div>
+                      <div>
+                          <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Phone Number</label>
+                          <input 
+                            type="tel" 
+                            required
+                            className="w-full bg-dark/50 border border-white/5 rounded-xl px-5 py-4 text-white font-bold outline-none focus:border-brand placeholder-slate-600"
+                            placeholder="+359..."
+                            value={upgradePhone}
+                            onChange={(e) => setUpgradePhone(e.target.value)}
+                          />
+                      </div>
+                      
+                      <button 
+                        type="submit"
+                        disabled={isUpgrading}
+                        className="w-full py-4 bg-brand text-dark rounded-xl font-black uppercase tracking-widest hover:bg-white transition-all mt-4 flex items-center justify-center gap-2"
+                      >
+                          {isUpgrading ? <Loader2 className="animate-spin" /> : 'Submit Application'}
+                      </button>
+                  </form>
+              </div>
+          </div>
+      )}
     </div>
   );
 };
