@@ -78,12 +78,10 @@ const TrainerSignUp: React.FC = () => {
              <Dumbbell size={20} />
           </div>
           <h1 className="text-3xl font-black uppercase italic tracking-tighter mb-2 text-white">
-            {language === 'bg' ? 'Стани част от екипа' : 'Join as a Trainer'}
+            {t.joinTeamTitle}
           </h1>
           <p className="text-slate-400 font-medium max-w-sm mx-auto italic text-xs">
-            {language === 'bg' 
-                ? 'Развивайте бизнеса си в ClassFit. Достъп до премиум база и нови клиенти.' 
-                : 'Grow your business at ClassFit. Access premium facilities and new clients.'}
+            {t.joinTeamDesc}
           </p>
         </div>
 

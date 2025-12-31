@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Calendar, Clock, User, Check, X, ShieldAlert, CheckCircle2, DollarSign, CreditCard, Banknote, LayoutDashboard, ListFilter, FileSpreadsheet, TrendingUp, Phone, Loader2, Trash2, Users, Shield, RefreshCw, History, Briefcase, CheckCircle, ArrowRight, AlertTriangle, Mail } from 'lucide-react';
+import { Calendar, Clock, User, Check, X, ShieldAlert, CheckCircle2, DollarSign, CreditCard, Banknote, LayoutDashboard, ListFilter, FileSpreadsheet, TrendingUp, Phone, Loader2, Trash2, Users, Shield, RefreshCw, History, Briefcase, CheckCircle, ArrowRight, AlertTriangle, Mail, Edit } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, getTrainers, DEFAULT_PROFILE_IMAGE } from '../constants';
 import emailjs from '@emailjs/browser';
@@ -116,6 +116,25 @@ const AdminPanel: React.FC = () => {
     if (window.confirm("Reject and DELETE this application?")) {
         await deleteUser(id);
     }
+  };
+
+  const handleRoleChange = async (userId: string, newRole: string) => {
+      if (userId === currentUser?.id) {
+          alert("You cannot change your own role here.");
+          return;
+      }
+      
+      const roleValue = newRole as 'user' | 'admin' | 'trainer' | 'trainer_pending';
+      if (window.confirm(`Are you sure you want to change this user's role to ${newRole.toUpperCase()}?`)) {
+          try {
+              await updateUser(userId, { role: roleValue });
+              // Small delay to ensure DB updates before refresh
+              setTimeout(() => refreshData(), 200);
+          } catch (e) {
+              console.error("Role update failed", e);
+              alert("Failed to update role.");
+          }
+      }
   };
 
   const handleConfirm = async (bookingId: string) => {
@@ -487,7 +506,7 @@ const AdminPanel: React.FC = () => {
                  </thead>
                  <tbody className="divide-y divide-white/5">
                    {users.map(u => (
-                     <tr key={u.id} className="hover:bg-white/5">
+                     <tr key={u.id} className="hover:bg-white/5 group">
                        <td className="px-8 py-6 flex items-center gap-3">
                           <img 
                             src={u.image || DEFAULT_PROFILE_IMAGE} 
@@ -498,14 +517,22 @@ const AdminPanel: React.FC = () => {
                        </td>
                        <td className="px-8 py-6 text-xs text-slate-400">{u.email}</td>
                        <td className="px-8 py-6">
-                            <span className={`px-3 py-1 rounded text-[9px] font-black uppercase ${
-                                u.role === 'admin' ? 'bg-red-500/10 text-red-500' : 
-                                u.role === 'trainer' ? 'bg-brand text-dark' :
-                                u.role === 'trainer_pending' ? 'bg-yellow-500/10 text-yellow-500' :
-                                'bg-white/5 text-slate-500'
-                            }`}>
-                                {u.role}
-                            </span>
+                            <select 
+                              value={u.role}
+                              onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                              disabled={u.id === currentUser?.id}
+                              className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase outline-none border cursor-pointer transition-all appearance-none pr-8 ${
+                                  u.role === 'admin' ? 'bg-red-500/10 text-red-500 border-red-500/20 focus:border-red-500' : 
+                                  u.role === 'trainer' ? 'bg-brand text-dark border-brand focus:border-white' :
+                                  u.role === 'trainer_pending' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20 focus:border-yellow-500' :
+                                  'bg-white/5 text-slate-500 border-white/5 focus:border-white/20'
+                              }`}
+                            >
+                                <option value="user">{t.roleUser}</option>
+                                <option value="trainer">{t.roleTrainer}</option>
+                                <option value="admin">{t.roleAdmin}</option>
+                                <option value="trainer_pending">{t.roleTrainerPending}</option>
+                            </select>
                        </td>
                        <td className="px-8 py-6 text-right">
                          {u.id !== currentUser?.id && <button onClick={() => handleDeleteUser(u.id)} className="p-2 text-slate-600 hover:text-red-500 transition-all"><Trash2 size={16} /></button>}

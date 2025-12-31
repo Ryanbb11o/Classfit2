@@ -89,7 +89,6 @@ export const getProducts = (lang: Language): Product[] => {
       name: 'ON Gold Standard Whey 2.27kg', 
       price: 135.00, 
       category: isBg ? 'Добавки' : 'Supplements', 
-      // Updated to official ON Gold Standard Image
       image: 'https://content.optimumnutrition.com/i/on/on-gold-standard-100-whey_Image_01?locale=en-us,en-gb,*&layer0=$MAIN$',
       description: isBg ? 'Най-продаваният протеин в света.' : 'The world\'s best-selling whey protein.'
     },
@@ -274,6 +273,15 @@ export const TRANSLATIONS = {
     monFri: 'Пон - Пет',
     satSun: 'Съб - Нед',
     sendSuccess: 'Съобщението е изпратено успешно!',
+    joinTeam: 'Кариера',
+    joinTeamTitle: 'Стани част от екипа',
+    joinTeamDesc: 'Развивайте бизнеса си в ClassFit.',
+    trainerRegistration: 'Регистрация за треньори',
+    roleUser: 'Потребител',
+    roleTrainer: 'Треньор',
+    roleAdmin: 'Админ',
+    roleTrainerPending: 'Чакащ',
+    changeRole: 'Промяна',
   },
   en: {
     home: 'Home',
@@ -436,5 +444,14 @@ export const TRANSLATIONS = {
     monFri: 'Mon - Fri',
     satSun: 'Sat - Sun',
     sendSuccess: 'Message sent successfully!',
+    joinTeam: 'Join Our Team',
+    joinTeamTitle: 'Partner with ClassFit',
+    joinTeamDesc: 'Grow your personal training business with us.',
+    trainerRegistration: 'Trainer Registration',
+    roleUser: 'User',
+    roleTrainer: 'Trainer',
+    roleAdmin: 'Admin',
+    roleTrainerPending: 'Pending',
+    changeRole: 'Change Role',
   }
 };

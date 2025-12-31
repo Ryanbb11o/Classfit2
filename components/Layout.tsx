@@ -322,7 +322,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 {t.contact}
               </NavLink>
               <NavLink to="/trainer-signup" className="text-brand hover:text-white transition-all duration-200 mt-4 block">
-                 Join Team (Trainers)
+                 {t.joinTeam}
               </NavLink>
             </div>
           </div>

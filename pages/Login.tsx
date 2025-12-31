@@ -86,7 +86,7 @@ const Login: React.FC = () => {
         
         <div className="mt-6 pt-6 border-t border-white/5 text-center">
              <Link to="/trainer-signup" className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors">
-                <Briefcase size={12} /> Are you a trainer?
+                <Briefcase size={12} /> {t.trainerRegistration}
              </Link>
         </div>
 
