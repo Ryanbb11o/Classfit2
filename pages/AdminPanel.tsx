@@ -234,7 +234,7 @@ const AdminPanel: React.FC = () => {
             <ListFilter size={14} className="inline mr-2" />{t.tabBookings} {pendingCount > 0 && <span className="ml-1 px-1.5 py-0.5 bg-brand text-dark rounded text-[8px]">{pendingCount}</span>}
           </button>
           <button onClick={() => setActiveTab('applications')} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'applications' ? 'bg-brand text-dark' : 'text-slate-400'}`}>
-            <Briefcase size={14} className="inline mr-2" /> Requests {appCount > 0 && <span className="ml-1 px-1.5 py-0.5 bg-white text-dark rounded text-[8px]">{appCount}</span>}
+            <Briefcase size={14} className="inline mr-2" /> Trainer Apps {appCount > 0 && <span className="ml-1 px-1.5 py-0.5 bg-white text-dark rounded text-[8px]">{appCount}</span>}
           </button>
           <button onClick={() => setActiveTab('users')} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'users' ? 'bg-brand text-dark' : 'text-slate-400'}`}>
             <Users size={14} className="inline mr-2" />{t.tabUsers}
