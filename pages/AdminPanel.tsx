@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Calendar, Clock, User, Check, X, ShieldAlert, CheckCircle2, DollarSign, CreditCard, Banknote, LayoutDashboard, ListFilter, FileSpreadsheet, TrendingUp, Phone, Loader2, Trash2, Users, Shield, RefreshCw, History, Briefcase, CheckCircle, ArrowRight, AlertTriangle, Mail, Edit } from 'lucide-react';
+import { Calendar, Clock, User, Check, X, ShieldAlert, CheckCircle2, DollarSign, CreditCard, Banknote, LayoutDashboard, ListFilter, FileSpreadsheet, TrendingUp, Phone, Loader2, Trash2, Users, Shield, RefreshCw, History, Briefcase, CheckCircle, ArrowRight, AlertTriangle, Mail, Edit, ChevronDown } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, getTrainers, DEFAULT_PROFILE_IMAGE } from '../constants';
 import emailjs from '@emailjs/browser';
@@ -411,20 +411,20 @@ const AdminPanel: React.FC = () => {
                                   value={u.role}
                                   onChange={(e) => handleRoleChange(u.id, e.target.value)}
                                   disabled={u.id === currentUser?.id}
-                                  className={`w-full px-4 py-2 rounded-xl text-[9px] font-black uppercase outline-none border cursor-pointer transition-all appearance-none pr-10 ${
+                                  className={`w-full px-4 py-2.5 rounded-xl text-[9px] font-black uppercase outline-none border cursor-pointer transition-all appearance-none pr-10 shadow-sm ${
                                       u.role === 'admin' ? 'bg-red-500/10 text-red-500 border-red-500/20 focus:border-red-500' : 
-                                      u.role === 'trainer' ? 'bg-brand text-dark border-brand focus:border-white' :
+                                      u.role === 'trainer' ? 'bg-brand/10 text-brand border-brand/20 focus:border-brand' :
                                       u.role === 'trainer_pending' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20 focus:border-yellow-500' :
-                                      'bg-white/5 text-slate-300 border-white/5 hover:border-white/20'
+                                      'bg-white/5 text-slate-400 border-white/5 hover:border-white/20'
                                   }`}
                                 >
-                                    <option value="user">{t.roleUser}</option>
-                                    <option value="trainer">{t.roleTrainer}</option>
-                                    <option value="admin">{t.roleAdmin}</option>
-                                    <option value="trainer_pending">{t.roleTrainerPending}</option>
+                                    <option value="user" className="bg-surface text-white">{t.roleUser}</option>
+                                    <option value="trainer" className="bg-surface text-white">{t.roleTrainer}</option>
+                                    <option value="admin" className="bg-surface text-white">{t.roleAdmin}</option>
+                                    <option value="trainer_pending" className="bg-surface text-white">{t.roleTrainerPending}</option>
                                 </select>
-                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
-                                    <Shield size={10} />
+                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                                    <ChevronDown size={14} />
                                 </div>
                             </div>
                        </td>
