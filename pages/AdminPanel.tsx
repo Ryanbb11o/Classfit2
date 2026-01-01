@@ -12,15 +12,12 @@ const AdminPanel: React.FC = () => {
   const t = TRANSLATIONS[language];
   const location = useLocation();
   
-  // MERGE STATIC AND DYNAMIC TRAINERS TO FIX "BLANK NAME" ISSUE
+  // MERGE STATIC AND DYNAMIC TRAINERS
   const trainers = useMemo(() => {
     const staticTrainers = getTrainers(language);
-    
-    // Convert users with role 'trainer' into Trainer objects
     const dynamicTrainers: Trainer[] = users
       .filter(u => u.role === 'trainer')
       .map(u => {
-        // STRICT PARSING: Separate Name from Specialty
         const match = u.name.match(/^(.*)\s\((.*)\)$/);
         const displayName = match ? match[1] : u.name;
         const displaySpecialty = match ? match[2] : (language === 'bg' ? 'Фитнес инструктор' : 'Fitness Instructor');
@@ -44,25 +41,21 @@ const AdminPanel: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'history' | 'finance' | 'users' | 'applications'>('overview');
 
-  // Handle incoming navigation state to switch tabs automatically
   useEffect(() => {
     if (location.state && (location.state as any).activeTab) {
         const targetTab = (location.state as any).activeTab;
-        if (targetTab !== 'messages') { // Filter out messages tab if previously linked
+        if (targetTab !== 'messages') {
             setActiveTab(targetTab);
         }
-        // Clean up history state to prevent stuck tab on refresh
         window.history.replaceState({}, document.title);
     }
   }, [location]);
 
-  // Refresh data on mount AND when tab changes to ensure fresh data
   useEffect(() => {
     refreshData();
   }, [activeTab]);
 
   const activeBookingsList = bookings.filter(b => b.status === 'pending' || b.status === 'confirmed');
-  const historyBookingsList = bookings.filter(b => b.status === 'completed' || b.status === 'cancelled');
   const completedBookings = bookings.filter(b => b.status === 'completed');
   const pendingApplications = users.filter(u => u.role === 'trainer_pending');
   
@@ -107,32 +100,36 @@ const AdminPanel: React.FC = () => {
   };
 
   const handleApproveTrainer = async (id: string) => {
-    if (window.confirm("Approve this user as a Trainer? They will gain Trainer access.")) {
+    if (window.confirm("Approve this user as a Trainer?")) {
         await updateUser(id, { role: 'trainer' });
     }
   };
 
   const handleRejectTrainer = async (id: string) => {
-    if (window.confirm("Reject and DELETE this application?")) {
+    if (window.confirm("Reject and delete this application?")) {
         await deleteUser(id);
     }
   };
 
   const handleRoleChange = async (userId: string, newRole: string) => {
       if (userId === currentUser?.id) {
-          alert("You cannot change your own role here.");
+          alert(language === 'bg' ? "Не можете да променяте собствената си роля тук." : "You cannot change your own role here.");
           return;
       }
       
       const roleValue = newRole as 'user' | 'admin' | 'trainer' | 'trainer_pending';
-      if (window.confirm(`Are you sure you want to change this user's role to ${newRole.toUpperCase()}?`)) {
+      const roleName = t[`role${newRole.charAt(0).toUpperCase() + newRole.slice(1)}` as keyof typeof t] || newRole;
+      
+      if (window.confirm(language === 'bg' ? `Промяна на ролята на ${roleName}?` : `Change user role to ${roleName}?`)) {
           try {
+              setIsRefreshing(true);
               await updateUser(userId, { role: roleValue });
-              // Small delay to ensure DB updates before refresh
-              setTimeout(() => refreshData(), 200);
+              await refreshData();
+              setIsRefreshing(false);
           } catch (e) {
               console.error("Role update failed", e);
               alert("Failed to update role.");
+              setIsRefreshing(false);
           }
       }
   };
@@ -140,75 +137,9 @@ const AdminPanel: React.FC = () => {
   const handleConfirm = async (bookingId: string) => {
     const booking = bookings.find(b => b.id === bookingId);
     if (!booking) return;
-
     setProcessingId(bookingId);
-
-    // Важно: Използваме езика на резервацията, не текущия език на админа
-    const bookingLang = booking.language || 'bg'; 
-    const bookingTrainers = getTrainers(bookingLang);
-    const trainer = bookingTrainers.find(tr => tr.id === booking.trainerId);
-    const currentT = TRANSLATIONS[bookingLang];
-    
-    if (booking.customerEmail && trainer) {
-      // 1. Форматиране на датата спрямо езика на клиента
-      const dateObj = new Date(booking.date);
-      const dateOptions: Intl.DateTimeFormatOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-      const formattedDate = dateObj.toLocaleDateString(bookingLang === 'bg' ? 'bg-BG' : 'en-US', dateOptions);
-      const humanReadableDateTime = bookingLang === 'bg' 
-        ? `${formattedDate} в ${booking.time} ч.`
-        : `${formattedDate} @ ${booking.time}`;
-
-      // 2. Google Calendar линк
-      const [year, month, day] = booking.date.split('-');
-      const [hour, minute] = booking.time.split(':');
-      const startIso = `${year}${month}${day}T${hour}${minute}00`;
-      const endHour = (parseInt(hour) + 1).toString().padStart(2, '0');
-      const endIso = `${year}${month}${day}T${endHour}${minute}00`;
-      
-      const calText = encodeURIComponent(bookingLang === 'bg' ? `Тренировка с ${trainer.name} @ ClassFit` : `Training with ${trainer.name} @ ClassFit`);
-      const calLoc = encodeURIComponent(`ул. "Студентска" 1А, до Лидл, Varna`);
-      const calendarUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=${calText}&dates=${startIso}/${endIso}&location=${calLoc}`;
-
-      // 3. Параметри за имейл шаблона
-      const templateParams = {
-        to_email: booking.customerEmail,
-        gym_name: "ClassFit Varna",
-        booking_id: booking.id.toUpperCase(),
-        customer_name: booking.customerName,
-        service_name: trainer.specialty,
-        start_datetime_human: humanReadableDateTime,
-        duration_minutes: "60",
-        coach_name: trainer.name,
-        location_name: "ClassFit Varna (Studentska 1A)",
-        address_line: currentT.address,
-        price: booking.price.toFixed(2),
-        currency: bookingLang === 'bg' ? 'лв.' : 'BGN',
-        payment_method: currentT.payAtDesk,
-        manage_booking_url: `${window.location.origin}/profile`,
-        add_to_calendar_url: calendarUrl,
-        checkin_code: booking.id.slice(0, 6).toUpperCase(),
-        support_email: "support@classfitvarna.bg",
-        support_phone: currentT.gymPhone,
-        terms_url: `${window.location.origin}/about`,
-        privacy_url: `${window.location.origin}/about`
-      };
-
-      // Избор на шаблон според езика
-      const templateId = bookingLang === 'bg' ? 'template_8dnoxwb' : 'template_18zuajh'; 
-
-      try {
-        await emailjs.send('service_ienhll4', templateId, templateParams, 'OSc44Rzyw4ZIkrQ8U');
-      } catch (error) {
-        console.error('[EmailJS] Confirmation failed:', error);
-      }
-    }
-
     await updateBooking(bookingId, { status: 'confirmed' });
     setProcessingId(null);
-  };
-
-  const handleDeleteBooking = (id: string) => {
-    deleteBooking(id);
   };
 
   const handleDeleteUser = (id: string) => {
@@ -216,7 +147,6 @@ const AdminPanel: React.FC = () => {
     if (window.confirm(t.sure)) deleteUser(id);
   };
 
-  // HELPER: Clean name display
   const cleanName = (name: string) => name.split('(')[0].trim();
 
   if (!isAdmin) {
@@ -264,8 +194,6 @@ const AdminPanel: React.FC = () => {
       <div className="min-h-[400px]">
         {activeTab === 'overview' && (
           <div className="animate-in fade-in slide-in-from-bottom-4">
-            
-            {/* ALERT BANNER FOR TRAINER APPLICATIONS */}
             {pendingApplications.length > 0 && (
                 <div className="mb-8 p-6 bg-yellow-500/10 border border-yellow-500/20 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
@@ -277,10 +205,7 @@ const AdminPanel: React.FC = () => {
                         <p className="text-slate-400 font-medium">{pendingApplications.length} pending trainer application(s).</p>
                     </div>
                   </div>
-                  <button 
-                    onClick={() => setActiveTab('applications')}
-                    className="px-6 py-3 bg-yellow-500 text-dark rounded-xl font-black uppercase tracking-widest hover:bg-white transition-all flex items-center gap-2"
-                  >
+                  <button onClick={() => setActiveTab('applications')} className="px-6 py-3 bg-yellow-500 text-dark rounded-xl font-black uppercase tracking-widest hover:bg-white transition-all flex items-center gap-2">
                     Review Now <ArrowRight size={16} />
                   </button>
                 </div>
@@ -313,9 +238,8 @@ const AdminPanel: React.FC = () => {
           </div>
         )}
 
-        {/* ... (finance, bookings, applications tabs remain unchanged) ... */}
         {activeTab === 'finance' && (
-          <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-hidden animate-in fade-in slide-in-from-bottom-4">
+          <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-hidden">
              <div className="p-8 border-b border-white/5 bg-white/5">
                 <h3 className="text-lg font-black uppercase italic text-white"><TrendingUp size={18} className="inline mr-2 text-brand" /> {t.financialAnalysis}</h3>
              </div>
@@ -343,13 +267,6 @@ const AdminPanel: React.FC = () => {
                        <td className="px-8 py-5 text-right"><span className="font-black italic text-brand text-lg">{row.totalIncome} BGN</span></td>
                      </tr>
                    ))}
-                   <tr className="bg-dark text-white border-t border-white/5 font-black uppercase italic text-xs">
-                      <td className="px-8 py-6 text-slate-400">{t.totalTotal}</td>
-                      <td className="px-8 py-6 text-center text-brand">{analyticsSheet.reduce((a, b) => a + b.totalCount, 0)}</td>
-                      <td className="px-8 py-6 text-right">{analyticsSheet.reduce((a, b) => a + b.totalCount > 0 ? a + b.cashIncome : a, 0)} BGN</td>
-                      <td className="px-8 py-6 text-right">{analyticsSheet.reduce((a, b) => a + b.totalCount > 0 ? a + b.cardIncome : a, 0)} BGN</td>
-                      <td className="px-8 py-6 text-right text-brand text-xl">{totalIncome} BGN</td>
-                   </tr>
                  </tbody>
                </table>
              </div>
@@ -377,17 +294,12 @@ const AdminPanel: React.FC = () => {
                     activeBookingsList.map(booking => {
                       const trainer = trainers.find(tr => tr.id === booking.trainerId);
                       const bookingUser = users.find(u => u.id === booking.userId);
-                      const isPending = booking.status === 'pending';
                       const isConfirmed = booking.status === 'confirmed';
                       const isProcessing = processingId === booking.id;
                       return (
                         <tr key={booking.id} className="hover:bg-white/5">
                           <td className="px-8 py-6 flex items-center gap-3">
-                            <img 
-                                src={bookingUser?.image || DEFAULT_PROFILE_IMAGE} 
-                                alt={booking.customerName} 
-                                className="w-10 h-10 rounded-xl object-cover bg-dark" 
-                            />
+                            <img src={bookingUser?.image || DEFAULT_PROFILE_IMAGE} alt={booking.customerName} className="w-10 h-10 rounded-xl object-cover bg-dark" />
                             <div>
                                 <span className="font-black italic uppercase text-xs text-white">{cleanName(booking.customerName)}</span>
                                 {booking.customerPhone && <span className="block text-[9px] text-slate-500">{booking.customerPhone}</span>}
@@ -402,7 +314,7 @@ const AdminPanel: React.FC = () => {
                           </td>
                           <td className="px-8 py-6 text-right">
                              <div className="flex items-center justify-end gap-2">
-                                {isPending && (
+                                {booking.status === 'pending' && (
                                   <>
                                     <button onClick={() => handleConfirm(booking.id)} disabled={isProcessing} className="p-2 bg-green-500/10 text-green-500 rounded-lg hover:bg-green-500 hover:text-white transition-all">
                                       {isProcessing ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
@@ -436,14 +348,9 @@ const AdminPanel: React.FC = () => {
         )}
 
         {activeTab === 'applications' && (
-          <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-hidden animate-in fade-in">
+          <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-hidden">
              <div className="p-8 border-b border-white/5 bg-white/5 flex items-center justify-between">
-                <h3 className="text-lg font-black uppercase italic text-white flex items-center gap-3">
-                   <Briefcase className="text-brand" size={20} /> Pending Trainer Applications
-                </h3>
-                <button onClick={handleManualRefresh} className="text-xs text-slate-400 hover:text-white flex items-center gap-1">
-                   <RefreshCw size={12} className={isRefreshing ? "animate-spin" : ""} /> Refresh List
-                </button>
+                <h3 className="text-lg font-black uppercase italic text-white flex items-center gap-3"><Briefcase className="text-brand" size={20} /> Trainer Applications</h3>
              </div>
              <div className="overflow-x-auto">
                <table className="w-full text-left">
@@ -451,34 +358,20 @@ const AdminPanel: React.FC = () => {
                    <tr className="border-b border-white/5 text-[10px] font-black text-slate-500 uppercase">
                      <th className="px-8 py-6">{t.name}</th>
                      <th className="px-8 py-6">{t.email}</th>
-                     <th className="px-8 py-6">{t.phone}</th>
                      <th className="px-8 py-6 text-right">{t.action}</th>
                    </tr>
                  </thead>
                  <tbody className="divide-y divide-white/5">
                    {pendingApplications.length === 0 ? (
-                      <tr><td colSpan={4} className="px-8 py-32 text-center text-slate-500 uppercase font-black italic">No pending applications</td></tr>
+                      <tr><td colSpan={3} className="px-8 py-32 text-center text-slate-500 uppercase font-black italic">No pending apps</td></tr>
                    ) : (
                        pendingApplications.map(u => (
                          <tr key={u.id} className="hover:bg-white/5">
-                           <td className="px-8 py-6 font-black uppercase italic text-xs text-white">
-                                {cleanName(u.name)}
-                           </td>
+                           <td className="px-8 py-6 font-black uppercase italic text-xs text-white">{cleanName(u.name)}</td>
                            <td className="px-8 py-6 text-xs text-slate-400">{u.email}</td>
-                           <td className="px-8 py-6 text-xs text-brand font-bold">{u.phone || 'N/A'}</td>
                            <td className="px-8 py-6 text-right flex justify-end gap-2">
-                             <button 
-                                onClick={() => handleApproveTrainer(u.id)} 
-                                className="px-4 py-2 bg-green-500/10 text-green-500 rounded-lg text-[9px] font-black uppercase hover:bg-green-500 hover:text-white transition-all flex items-center gap-1"
-                             >
-                                <CheckCircle size={12} /> Approve
-                             </button>
-                             <button 
-                                onClick={() => handleRejectTrainer(u.id)}
-                                className="px-4 py-2 bg-red-500/10 text-red-500 rounded-lg text-[9px] font-black uppercase hover:bg-red-500 hover:text-white transition-all flex items-center gap-1"
-                             >
-                                <Trash2 size={12} /> Reject
-                             </button>
+                             <button onClick={() => handleApproveTrainer(u.id)} className="px-4 py-2 bg-green-500/10 text-green-500 rounded-lg text-[9px] font-black uppercase hover:bg-green-500 hover:text-white transition-all">Approve</button>
+                             <button onClick={() => handleRejectTrainer(u.id)} className="px-4 py-2 bg-red-500/10 text-red-500 rounded-lg text-[9px] font-black uppercase hover:bg-red-500 hover:text-white transition-all">Reject</button>
                            </td>
                          </tr>
                        ))
@@ -508,31 +401,32 @@ const AdminPanel: React.FC = () => {
                    {users.map(u => (
                      <tr key={u.id} className="hover:bg-white/5 group">
                        <td className="px-8 py-6 flex items-center gap-3">
-                          <img 
-                            src={u.image || DEFAULT_PROFILE_IMAGE} 
-                            alt={u.name} 
-                            className="w-10 h-10 rounded-xl object-cover bg-dark" 
-                          />
+                          <img src={u.image || DEFAULT_PROFILE_IMAGE} alt={u.name} className="w-10 h-10 rounded-xl object-cover bg-dark" />
                           <span className="font-black uppercase italic text-xs text-white">{cleanName(u.name)}</span>
                        </td>
                        <td className="px-8 py-6 text-xs text-slate-400">{u.email}</td>
                        <td className="px-8 py-6">
-                            <select 
-                              value={u.role}
-                              onChange={(e) => handleRoleChange(u.id, e.target.value)}
-                              disabled={u.id === currentUser?.id}
-                              className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase outline-none border cursor-pointer transition-all appearance-none pr-8 ${
-                                  u.role === 'admin' ? 'bg-red-500/10 text-red-500 border-red-500/20 focus:border-red-500' : 
-                                  u.role === 'trainer' ? 'bg-brand text-dark border-brand focus:border-white' :
-                                  u.role === 'trainer_pending' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20 focus:border-yellow-500' :
-                                  'bg-white/5 text-slate-500 border-white/5 focus:border-white/20'
-                              }`}
-                            >
-                                <option value="user">{t.roleUser}</option>
-                                <option value="trainer">{t.roleTrainer}</option>
-                                <option value="admin">{t.roleAdmin}</option>
-                                <option value="trainer_pending">{t.roleTrainerPending}</option>
-                            </select>
+                            <div className="relative inline-block w-40">
+                                <select 
+                                  value={u.role}
+                                  onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                                  disabled={u.id === currentUser?.id}
+                                  className={`w-full px-4 py-2 rounded-xl text-[9px] font-black uppercase outline-none border cursor-pointer transition-all appearance-none pr-10 ${
+                                      u.role === 'admin' ? 'bg-red-500/10 text-red-500 border-red-500/20 focus:border-red-500' : 
+                                      u.role === 'trainer' ? 'bg-brand text-dark border-brand focus:border-white' :
+                                      u.role === 'trainer_pending' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20 focus:border-yellow-500' :
+                                      'bg-white/5 text-slate-300 border-white/5 hover:border-white/20'
+                                  }`}
+                                >
+                                    <option value="user">{t.roleUser}</option>
+                                    <option value="trainer">{t.roleTrainer}</option>
+                                    <option value="admin">{t.roleAdmin}</option>
+                                    <option value="trainer_pending">{t.roleTrainerPending}</option>
+                                </select>
+                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
+                                    <Shield size={10} />
+                                </div>
+                            </div>
                        </td>
                        <td className="px-8 py-6 text-right">
                          {u.id !== currentUser?.id && <button onClick={() => handleDeleteUser(u.id)} className="p-2 text-slate-600 hover:text-red-500 transition-all"><Trash2 size={16} /></button>}
