@@ -1,16 +1,104 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Menu, X, ShieldCheck, User as UserIcon, Home, Info, Calendar, Dumbbell, ShoppingBag, LogIn, LogOut, Phone, Briefcase, Bell, Mail } from 'lucide-react';
+import { Menu, X, ShieldCheck, User as UserIcon, Home, Info, Calendar, Dumbbell, ShoppingBag, LogIn, LogOut, Phone, Briefcase, Bell, Mail, Star, MessageSquare, Check, Loader2 } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS } from '../constants';
 import LanguageSwitcher from './LanguageSwitcher';
+import { Booking } from '../types';
+
+const ReviewModal: React.FC<{ 
+  booking: Booking | null; 
+  onClose: () => void; 
+  onSubmit: (id: string) => void;
+}> = ({ booking, onClose, onSubmit }) => {
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  if (!booking) return null;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    // Simulate API call
+    setTimeout(() => {
+      onSubmit(booking.id);
+      setIsSubmitting(false);
+    }, 1000);
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-dark/90 backdrop-blur-md animate-in fade-in duration-300">
+       <div className="bg-surface rounded-[2.5rem] border border-white/10 p-8 w-full max-w-md shadow-2xl relative animate-in zoom-in-95 duration-300">
+          <button 
+            onClick={onClose}
+            className="absolute top-6 right-6 p-2 bg-white/5 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+          >
+             <X size={20} />
+          </button>
+
+          <div className="text-center mb-8">
+             <div className="w-16 h-16 bg-brand text-dark rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-brand/20">
+                <Star size={28} className="fill-dark" />
+             </div>
+             <h2 className="text-2xl font-black uppercase italic text-white mb-2">Leave a Review</h2>
+             <p className="text-slate-400 text-sm">Your trainer is waiting for your feedback on your session from <span className="text-white font-bold">{booking.date}</span>.</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+             <div className="flex justify-center gap-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setRating(star)}
+                    className="p-1 transition-transform hover:scale-110 focus:outline-none"
+                  >
+                    <Star 
+                      size={32} 
+                      className={`${star <= rating ? 'text-brand fill-brand' : 'text-slate-600'}`} 
+                    />
+                  </button>
+                ))}
+             </div>
+
+             <div>
+                <textarea 
+                  required
+                  rows={4}
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  placeholder="How was your workout?"
+                  className="w-full bg-dark/50 border border-white/5 rounded-xl px-5 py-4 text-white font-medium outline-none focus:border-brand resize-none placeholder-slate-600"
+                />
+             </div>
+             
+             <button 
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full py-4 bg-brand text-dark rounded-xl font-black uppercase tracking-widest hover:bg-white transition-all flex items-center justify-center gap-2"
+             >
+                {isSubmitting ? <Loader2 className="animate-spin" /> : 'Submit Review'}
+             </button>
+          </form>
+       </div>
+    </div>
+  );
+};
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { language, isAdmin, currentUser, logout, users, bookings } = useAppContext();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
+
+  // Review System State
+  const [reviewedBookingIds, setReviewedBookingIds] = useState<string[]>(() => {
+    const saved = localStorage.getItem('classfit_reviewed_bookings');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [bookingToReview, setBookingToReview] = useState<Booking | null>(null);
 
   const t = TRANSLATIONS[language];
   const navigate = useNavigate();
@@ -26,20 +114,38 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const handleReviewSubmit = (id: string) => {
+    const newReviewedIds = [...reviewedBookingIds, id];
+    setReviewedBookingIds(newReviewedIds);
+    localStorage.setItem('classfit_reviewed_bookings', JSON.stringify(newReviewedIds));
+    setBookingToReview(null);
+    alert("Thank you! Your review has been submitted.");
+  };
+
   // --- Notification Logic ---
   const isTrainer = currentUser?.role === 'trainer';
+  const isUser = currentUser?.role === 'user';
   
-  // Get pending trainer applications (Admin only)
+  // 1. Admin: Pending Trainer Apps
   const pendingApplications = isAdmin ? users.filter(u => u.role === 'trainer_pending') : [];
   
-  // Get pending bookings (Admin sees all pending, Trainer sees only theirs)
+  // 2. Admin/Trainer: Pending Bookings
   const pendingBookings = isAdmin 
     ? bookings.filter(b => b.status === 'pending')
     : isTrainer 
       ? bookings.filter(b => b.trainerId === currentUser?.id && b.status === 'pending')
       : [];
 
-  const totalNotifications = pendingApplications.length + pendingBookings.length;
+  // 3. Customer: Completed bookings that haven't been reviewed yet
+  const pendingReviews = isUser 
+    ? bookings.filter(b => 
+        b.userId === currentUser?.id && 
+        b.status === 'completed' && 
+        !reviewedBookingIds.includes(b.id)
+      )
+    : [];
+
+  const totalNotifications = pendingApplications.length + pendingBookings.length + pendingReviews.length;
 
   const closeMenu = () => setIsMenuOpen(false);
 
@@ -49,10 +155,15 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     closeMenu();
   };
 
-  const handleNotificationClick = (type: 'application' | 'booking') => {
+  const handleNotificationClick = (type: 'application' | 'booking' | 'review', data?: any) => {
     setShowNotifications(false);
+    
+    if (type === 'review' && data) {
+      setBookingToReview(data);
+      return;
+    }
+
     if (isAdmin) {
-      // Pass state to AdminPanel to switch tabs automatically
       const tabName = type === 'application' ? 'applications' : 'bookings';
       navigate('/admin', { state: { activeTab: tabName } });
     } else if (isTrainer) {
@@ -121,8 +232,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                <LanguageSwitcher />
             </div>
 
-            {/* NOTIFICATIONS (Admin + Trainer) - Visible on Mobile & Desktop */}
-            {(isAdmin || isTrainer) && (
+            {/* NOTIFICATIONS (Global) */}
+            {currentUser && (
                  <div className="relative flex items-center" ref={notifRef}>
                     <button 
                       onClick={() => setShowNotifications(!showNotifications)}
@@ -148,6 +259,27 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                                </div>
                             ) : (
                               <>
+                                {/* Pending Reviews (Customers) */}
+                                {pendingReviews.map(b => (
+                                  <div 
+                                    key={b.id}
+                                    onClick={() => handleNotificationClick('review', b)}
+                                    className="p-4 border-b border-white/5 hover:bg-white/5 cursor-pointer transition-colors group bg-brand/5"
+                                  >
+                                     <div className="flex items-start gap-3">
+                                       <div className="p-2 bg-brand text-dark rounded-full shrink-0 shadow-lg shadow-brand/20">
+                                          <Star size={14} className="fill-dark" />
+                                       </div>
+                                       <div>
+                                          <p className="text-xs font-bold text-white mb-1">Feedback Request</p>
+                                          <p className="text-[10px] text-slate-300 italic leading-relaxed">
+                                            Your trainer is waiting for you to leave a review for the session on {b.date}.
+                                          </p>
+                                       </div>
+                                    </div>
+                                  </div>
+                                ))}
+
                                 {/* Trainer Applications (Admin Only) */}
                                 {pendingApplications.map(u => (
                                   <div 
@@ -189,18 +321,20 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                               </>
                             )}
                          </div>
-                         <div className="p-3 bg-dark/50 text-center border-t border-white/5">
-                            <button 
-                              onClick={() => handleNotificationClick(isAdmin ? 'application' : 'booking')}
-                              className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors"
-                            >
-                              View Panel
-                            </button>
-                         </div>
+                         {(isAdmin || isTrainer) && (
+                            <div className="p-3 bg-dark/50 text-center border-t border-white/5">
+                                <button 
+                                  onClick={() => handleNotificationClick(isAdmin ? 'application' : 'booking')}
+                                  className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors"
+                                >
+                                  View Panel
+                                </button>
+                            </div>
+                         )}
                       </div>
                     )}
                  </div>
-               )}
+            )}
 
             {/* Hamburger Menu Icon */}
             <button 
@@ -331,6 +465,15 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           </div>
         </div>
       </footer>
+
+      {/* Review Modal */}
+      {bookingToReview && (
+         <ReviewModal 
+            booking={bookingToReview}
+            onClose={() => setBookingToReview(null)}
+            onSubmit={handleReviewSubmit}
+         />
+      )}
     </div>
   );
 };
