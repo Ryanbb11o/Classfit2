@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Clock, CheckCircle, XCircle, User, Briefcase, RefreshCw, AlertCircle, Link as LinkIcon, Check, DollarSign, ListFilter, LayoutDashboard, Settings, Camera, Save, Loader2 } from 'lucide-react';
+import { Calendar, Clock, CheckCircle, XCircle, User, Briefcase, RefreshCw, AlertCircle, Link as LinkIcon, Check, DollarSign, ListFilter, LayoutDashboard, Settings, Camera, Save, Loader2, Zap } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, getTrainers, DEFAULT_PROFILE_IMAGE } from '../constants';
 
@@ -34,9 +34,6 @@ const TrainerDashboard: React.FC = () => {
       navigate('/login');
     }
   }, [currentUser, isLoading, navigate]);
-
-  // Removed automatic refreshData() on mount to prevent infinite re-renders and form resets.
-  // Data is already loaded by AppContext.
 
   // 3. Load user data into edit state (Run once when user data is available)
   useEffect(() => {
@@ -360,27 +357,37 @@ const TrainerDashboard: React.FC = () => {
             {activeTab === 'profile' && (
                 <div className="p-8 md:p-12 animate-in fade-in">
                     <div className="flex flex-col lg:flex-row gap-12">
-                        {/* Preview Side */}
+                        {/* Preview Side - Updated to match Booking Page Design */}
                         <div className="w-full lg:w-1/3 flex flex-col items-center">
-                            <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-6 w-full text-center">Live Preview</h3>
-                            <div className="w-full max-w-xs bg-surface border-2 border-brand rounded-3xl p-6 relative overflow-hidden group">
-                                <div className="aspect-square rounded-2xl bg-dark mb-4 overflow-hidden relative">
+                            <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-6 w-full text-center">Live Preview (Public)</h3>
+                            <div className="w-full relative rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white/5 bg-surface group">
+                                <div className="aspect-[3/4] relative">
                                     <img 
-                                      src={editImage || DEFAULT_PROFILE_IMAGE} 
-                                      alt="Preview" 
-                                      className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" 
+                                        src={editImage || DEFAULT_PROFILE_IMAGE} 
+                                        alt="Preview" 
+                                        className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" 
                                     />
-                                    {!editImage && (
-                                        <div className="absolute inset-0 flex items-center justify-center text-white/50 bg-black/30 pointer-events-none">
-                                            <span className="text-xs font-bold uppercase tracking-widest">Default Image</span>
+                                    <div className="absolute inset-0 bg-gradient-to-t from-dark via-transparent to-transparent opacity-90"></div>
+                                    <div className="absolute bottom-0 left-0 p-6 w-full">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <span className="px-3 py-1 bg-brand text-dark text-[10px] font-black uppercase tracking-widest rounded-full">
+                                                {editSpecialty || 'Specialty'}
+                                            </span>
+                                            <span className="px-3 py-1 bg-white/10 backdrop-blur text-white text-[10px] font-black uppercase tracking-widest rounded-full border border-white/10">
+                                                20 BGN
+                                            </span>
                                         </div>
-                                    )}
+                                        <h2 className="text-3xl font-black uppercase italic text-white leading-none mb-2">{editName}</h2>
+                                    </div>
                                 </div>
-                                <h4 className="font-black uppercase italic text-xl text-white">{editName}</h4>
-                                <p className="text-[10px] uppercase tracking-widest text-brand font-bold mb-2">
-                                    {editSpecialty || 'Specialty'}
-                                </p>
-                                <p className="text-slate-400 text-sm italic line-clamp-3">{editBio || 'No bio yet.'}</p>
+                                <div className="p-6 bg-surface border-t border-white/5">
+                                     <div className="flex items-start gap-2 mb-2">
+                                        <Zap size={14} className="text-brand shrink-0 mt-0.5" />
+                                        <p className="text-slate-400 text-xs italic leading-relaxed line-clamp-4">
+                                            {editBio || 'No biography set.'}
+                                        </p>
+                                     </div>
+                                </div>
                             </div>
                         </div>
 
@@ -434,7 +441,7 @@ const TrainerDashboard: React.FC = () => {
                                         <button 
                                             type="button" 
                                             onClick={() => setEditImage('https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=400&auto=format&fit=crop')}
-                                            className="px-4 bg-white/5 rounded-xl text-[10px] font-black uppercase hover:bg-white/10"
+                                            className="px-4 bg-white/5 rounded-xl text-[10px] font-black uppercase hover:bg-white/10 whitespace-nowrap"
                                         >
                                             Use Demo
                                         </button>
