@@ -61,6 +61,7 @@ export interface Product {
 
 export interface Review {
   id: string;
+  trainerId?: string; // Linked to a trainer (optional, if undefined it's a general gym review)
   author: string;
   rating: number;
   text: string;

@@ -1,16 +1,16 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Clock, CheckCircle, XCircle, User, Briefcase, RefreshCw, AlertCircle, Link as LinkIcon, Check, DollarSign, ListFilter, LayoutDashboard, Settings, Camera, Save, Loader2, Zap } from 'lucide-react';
+import { Calendar, Clock, CheckCircle, XCircle, User, Briefcase, RefreshCw, AlertCircle, Link as LinkIcon, Check, DollarSign, ListFilter, LayoutDashboard, Settings, Camera, Save, Loader2, Zap, Star } from 'lucide-react';
 import { useAppContext } from '../AppContext';
-import { TRANSLATIONS, getTrainers, DEFAULT_PROFILE_IMAGE } from '../constants';
+import { TRANSLATIONS, getTrainers, DEFAULT_PROFILE_IMAGE, getTrainerReviews } from '../constants';
 
 const TrainerDashboard: React.FC = () => {
   const { currentUser, bookings, updateBooking, updateUser, language, refreshData, isLoading } = useAppContext();
   const navigate = useNavigate();
   const t = TRANSLATIONS[language];
   
-  const [activeTab, setActiveTab] = useState<'schedule' | 'requests' | 'profile'>('schedule');
+  const [activeTab, setActiveTab] = useState<'schedule' | 'requests' | 'reviews' | 'profile'>('schedule');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -132,6 +132,9 @@ const TrainerDashboard: React.FC = () => {
   
   const totalEarnings = completedBookings.reduce((sum, b) => sum + b.price, 0);
 
+  // Reviews Data
+  const myReviews = getTrainerReviews(currentUser.id, language);
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-24 animate-in fade-in slide-in-from-bottom-2 duration-500">
       
@@ -228,6 +231,12 @@ const TrainerDashboard: React.FC = () => {
             >
                <ListFilter size={14} /> Requests
                {pendingRequests.length > 0 && <span className="ml-2 bg-brand text-dark px-1.5 py-0.5 rounded text-[9px]">{pendingRequests.length}</span>}
+            </button>
+            <button 
+              onClick={() => setActiveTab('reviews')}
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'reviews' ? 'bg-white text-dark' : 'bg-white/5 text-slate-400 hover:text-white'}`}
+            >
+               <Star size={14} /> Reviews
             </button>
             <button 
               onClick={() => setActiveTab('profile')}
@@ -351,6 +360,30 @@ const TrainerDashboard: React.FC = () => {
                         )}
                      </tbody>
                   </table>
+               </div>
+            )}
+
+            {activeTab === 'reviews' && (
+               <div className="p-8 md:p-12 animate-in fade-in grid grid-cols-1 md:grid-cols-2 gap-6">
+                   {myReviews.map((review, i) => (
+                      <div key={i} className="bg-white/5 rounded-2xl p-6 border border-white/5 hover:border-brand/30 transition-all">
+                          <div className="flex items-center gap-4 mb-4">
+                             <div className="w-10 h-10 rounded-full bg-brand text-dark flex items-center justify-center font-bold text-sm">
+                                {review.avatar}
+                             </div>
+                             <div>
+                                <h4 className="font-bold text-white text-sm">{review.author}</h4>
+                                <div className="flex gap-1 mt-1">
+                                    {[...Array(review.rating)].map((_, j) => (
+                                        <Star key={j} size={12} className="text-brand fill-brand" />
+                                    ))}
+                                </div>
+                             </div>
+                             <span className="ml-auto text-[10px] text-slate-500 uppercase font-bold">{review.time}</span>
+                          </div>
+                          <p className="text-slate-300 italic text-sm leading-relaxed">"{review.text}"</p>
+                      </div>
+                   ))}
                </div>
             )}
 

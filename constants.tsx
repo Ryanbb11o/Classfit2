@@ -120,6 +120,50 @@ export const getReviews = (lang: Language): Review[] => {
   ];
 };
 
+export const getTrainerReviews = (trainerId: string, lang: Language): Review[] => {
+  const isBg = lang === 'bg';
+  // Demo reviews pool - strictly positive
+  const reviews: Review[] = [
+    { 
+      id: `tr1-${trainerId}`, 
+      trainerId,
+      author: isBg ? 'Михаил Т.' : 'Michael T.', 
+      rating: 5, 
+      text: isBg ? 'Изключителен професионалист! Помогна ми да кача 5кг мускулна маса за 2 месеца.' : 'Exceptional professional! Helped me gain 5kg of muscle mass in 2 months.', 
+      time: isBg ? 'преди 3 дни' : '3 days ago', 
+      avatar: 'M' 
+    },
+    { 
+      id: `tr2-${trainerId}`, 
+      trainerId,
+      author: isBg ? 'Виктория С.' : 'Victoria S.', 
+      rating: 5, 
+      text: isBg ? 'Тренировките са тежки, но резултатите си заслужават. Препоръчвам горещо!' : 'Workouts are tough but results are worth it. Highly recommend!', 
+      time: isBg ? 'преди 1 седмица' : '1 week ago', 
+      avatar: 'V' 
+    },
+    { 
+      id: `tr3-${trainerId}`, 
+      trainerId,
+      author: isBg ? 'Пламен Д.' : 'Plamen D.', 
+      rating: 4, 
+      text: isBg ? 'Много добро отношение и индивидуален подход към всеки детайл.' : 'Great attitude and individual approach to every detail.', 
+      time: isBg ? 'преди 2 седмици' : '2 weeks ago', 
+      avatar: 'P' 
+    },
+    { 
+      id: `tr4-${trainerId}`, 
+      trainerId,
+      author: isBg ? 'Елена К.' : 'Elena K.', 
+      rating: 5, 
+      text: isBg ? 'Най-добрият треньор, с когото съм работила във Варна.' : 'The best trainer I have worked with in Varna.', 
+      time: isBg ? 'преди 1 месец' : '1 month ago', 
+      avatar: 'E' 
+    }
+  ];
+  return reviews;
+};
+
 export const TRANSLATIONS = {
   bg: {
     home: 'Начало',

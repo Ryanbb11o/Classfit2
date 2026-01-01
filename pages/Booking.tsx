@@ -1,9 +1,9 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, Calendar as CalendarIcon, Clock, Info, User, Phone, X, LogIn, Mail, Loader2, ChevronLeft, ChevronRight, ArrowLeft, Star, Award, Zap, Quote } from 'lucide-react';
+import { Check, Calendar as CalendarIcon, Clock, Info, User, Phone, X, LogIn, Mail, Loader2, ChevronLeft, ChevronRight, ArrowLeft, Star, Award, Zap, Quote, ThumbsUp } from 'lucide-react';
 import { useAppContext } from '../AppContext';
-import { getTrainers, TRANSLATIONS, DEFAULT_PROFILE_IMAGE } from '../constants';
+import { getTrainers, TRANSLATIONS, DEFAULT_PROFILE_IMAGE, getTrainerReviews } from '../constants';
 import { Trainer, Booking } from '../types';
 
 const BookingPage: React.FC = () => {
@@ -57,6 +57,12 @@ const BookingPage: React.FC = () => {
   const [guestName, setGuestName] = useState('');
   const [guestPhone, setGuestPhone] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
+
+  // Get reviews for selected trainer
+  const trainerReviews = useMemo(() => {
+    if (!selectedTrainer) return [];
+    return getTrainerReviews(selectedTrainer.id, language);
+  }, [selectedTrainer, language]);
 
   // Scroll to calendar when trainer selected
   useEffect(() => {
@@ -376,6 +382,36 @@ const BookingPage: React.FC = () => {
                           <p className="text-xl font-black text-white italic">High Intensity</p>
                       </div>
                   </div>
+
+                  {/* REVIEWS SECTION IN LEFT COLUMN */}
+                  <div className="bg-surface rounded-[2.5rem] border border-white/5 p-8 max-h-[500px] overflow-y-auto custom-scrollbar">
+                     <h3 className="text-lg font-black uppercase italic text-white mb-6 flex items-center gap-2 sticky top-0 bg-surface z-10 py-2">
+                        <Star size={18} className="text-brand fill-brand" /> Client Stories
+                     </h3>
+                     <div className="space-y-6">
+                        {trainerReviews.map((review, i) => (
+                           <div key={i} className="p-6 bg-white/5 rounded-2xl border border-white/5">
+                              <div className="flex items-center gap-3 mb-3">
+                                 <div className="w-8 h-8 rounded-full bg-brand text-dark flex items-center justify-center font-bold text-xs">
+                                    {review.avatar}
+                                 </div>
+                                 <div>
+                                    <p className="text-xs font-bold text-white">{review.author}</p>
+                                    <div className="flex gap-0.5">
+                                       {[...Array(review.rating)].map((_, j) => (
+                                          <Star key={j} size={10} className="text-brand fill-brand" />
+                                       ))}
+                                    </div>
+                                 </div>
+                                 <span className="ml-auto text-[9px] text-slate-500 uppercase font-bold">{review.time}</span>
+                              </div>
+                              <p className="text-sm text-slate-300 italic leading-relaxed">
+                                 "{review.text}"
+                              </p>
+                           </div>
+                        ))}
+                     </div>
+                  </div>
                </div>
             </div>
 
@@ -435,6 +471,25 @@ const BookingPage: React.FC = () => {
                                   {time}
                                </button>
                             ))}
+                         </div>
+
+                         {/* REVIEW SUMMARY BADGE ABOVE PRICE */}
+                         <div className="flex items-center gap-3 mb-6 bg-white/5 p-4 rounded-2xl border border-white/5 w-fit">
+                              <div className="flex items-center gap-1">
+                                  <Star size={16} className="text-brand fill-brand" />
+                                  <span className="text-lg font-black text-white">5.0</span>
+                              </div>
+                              <div className="h-4 w-px bg-white/10"></div>
+                              <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">
+                                  High Rated Trainer
+                              </span>
+                              <div className="ml-2 flex -space-x-2">
+                                  {trainerReviews.slice(0,3).map((r,i) => (
+                                      <div key={i} className="w-6 h-6 rounded-full bg-brand text-dark border-2 border-surface flex items-center justify-center text-[8px] font-black">
+                                          {r.avatar}
+                                      </div>
+                                  ))}
+                              </div>
                          </div>
 
                          <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-4">
