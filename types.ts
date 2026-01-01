@@ -20,6 +20,7 @@ export interface Trainer {
   price: number;
   image: string;
   phone: string; // New field for direct contact
+  bio?: string; // New field for profile
   availability: string[]; // Mocked available hours e.g., ["09:00", "10:00"]
 }
 

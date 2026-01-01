@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, Calendar as CalendarIcon, Clock, Info, User, Phone, X, LogIn, Mail, Loader2, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react';
+import { Check, Calendar as CalendarIcon, Clock, Info, User, Phone, X, LogIn, Mail, Loader2, ChevronLeft, ChevronRight, ArrowLeft, Star, Award, Zap, Quote } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { getTrainers, TRANSLATIONS, DEFAULT_PROFILE_IMAGE } from '../constants';
 import { Trainer, Booking } from '../types';
@@ -19,7 +19,7 @@ const BookingPage: React.FC = () => {
     const dynamicTrainers: Trainer[] = users
       .filter(u => u.role === 'trainer')
       .map(u => {
-        // CLEAN NAME PARSING: Separate "Name (Specialty)" logic
+        // STRICT PARSING: Separate Name from Specialty
         const match = u.name.match(/^(.*)\s\((.*)\)$/);
         const displayName = match ? match[1] : u.name;
         const displaySpecialty = match ? match[2] : (language === 'bg' ? 'Персонален треньор' : 'Personal Trainer');
@@ -31,6 +31,7 @@ const BookingPage: React.FC = () => {
           price: 20, 
           image: u.image || DEFAULT_PROFILE_IMAGE, 
           phone: u.phone || '',
+          bio: u.bio || '', // Added bio support
           availability: ['08:00', '09:00', '10:00', '14:00', '15:00', '16:00', '17:00']
         };
       });
@@ -74,7 +75,7 @@ const BookingPage: React.FC = () => {
   const getFirstDayOfMonth = (date: Date) => {
     const year = date.getFullYear();
     const month = date.getMonth();
-    // 0 = Sunday, 1 = Monday. We want Monday start? Let's stick to standard 0-6 Sun-Sat for simplicity in grid
+    // Monday = 1, Sunday = 0.
     return new Date(year, month, 1).getDay();
   };
 
@@ -99,13 +100,8 @@ const BookingPage: React.FC = () => {
 
   const renderCalendar = () => {
     const daysInMonth = getDaysInMonth(currentMonth);
-    const firstDay = getFirstDayOfMonth(currentMonth); // 0 (Sun) - 6 (Sat)
-    
-    // Adjust for Monday start if desired, but let's do standard Sun-Sat for international compatibility
-    // Actually, Bulgaria uses Monday start usually. Let's do Monday start logic.
-    // Monday = 1, Sunday = 0.
-    // Shift: Mon(1)->0, Tue(2)->1 ... Sun(0)->6
-    const startDayIndex = firstDay === 0 ? 6 : firstDay - 1; 
+    const firstDay = getFirstDayOfMonth(currentMonth); 
+    const startDayIndex = firstDay === 0 ? 6 : firstDay - 1; // Mon start
 
     const days = [];
     // Padding
@@ -266,7 +262,7 @@ const BookingPage: React.FC = () => {
   return (
     <div className="min-h-screen py-24 animate-in fade-in duration-500">
       
-      {/* SECTION 1: TRAINER SELECTION */}
+      {/* SECTION 1: TRAINER GRID SELECTION */}
       {!selectedTrainer ? (
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
@@ -311,110 +307,155 @@ const BookingPage: React.FC = () => {
           </div>
         </div>
       ) : (
-        /* SECTION 2: CALENDAR & TIME SELECTION */
-        <div className="max-w-6xl mx-auto px-6 animate-in slide-in-from-bottom-8 fade-in duration-500">
+        /* SECTION 2: RICH TRAINER PROFILE & BOOKING INTERFACE */
+        <div className="max-w-7xl mx-auto px-6 animate-in slide-in-from-bottom-8 fade-in duration-500">
           
           <button 
             onClick={() => { setSelectedTrainer(null); setSelectedTime(null); }}
             className="mb-8 flex items-center gap-2 text-slate-400 hover:text-white font-black uppercase tracking-widest text-xs transition-colors group"
           >
             <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-            {language === 'bg' ? 'Назад към Треньори' : 'Back to Trainers'}
+            {language === 'bg' ? 'Обратно към всички треньори' : 'Back to all trainers'}
           </button>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
             
-            {/* Left Column: Trainer Info & Custom Calendar */}
-            <div className="lg:col-span-1 space-y-6">
-               {/* Trainer Card Mini */}
-               <div className="bg-surface p-6 rounded-[2rem] border border-white/5 flex items-center gap-5">
-                  <img src={selectedTrainer.image} alt={selectedTrainer.name} className="w-20 h-20 rounded-2xl object-cover bg-slate-600" />
-                  <div>
-                    <h3 className="text-xl font-black uppercase italic text-white leading-none mb-1">{selectedTrainer.name}</h3>
-                    <p className="text-xs text-brand font-black uppercase tracking-wider">{selectedTrainer.specialty}</p>
+            {/* LEFT COLUMN: TRAINER PROFILE (5 cols) */}
+            <div className="lg:col-span-5 space-y-8">
+               <div className="relative rounded-[3rem] overflow-hidden shadow-2xl border-4 border-white/5 bg-surface group">
+                  <div className="aspect-[3/4] relative">
+                     <img 
+                        src={selectedTrainer.image} 
+                        alt={selectedTrainer.name} 
+                        className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
+                     />
+                     <div className="absolute inset-0 bg-gradient-to-t from-dark via-transparent to-transparent opacity-90"></div>
+                     <div className="absolute bottom-0 left-0 p-8 w-full">
+                        <div className="flex items-center gap-2 mb-3">
+                            <span className="px-4 py-1.5 bg-brand text-dark text-xs font-black uppercase tracking-widest rounded-full">
+                                {selectedTrainer.specialty}
+                            </span>
+                            {selectedTrainer.price > 0 && (
+                                <span className="px-4 py-1.5 bg-white/10 backdrop-blur text-white text-xs font-black uppercase tracking-widest rounded-full border border-white/10">
+                                    {selectedTrainer.price} BGN
+                                </span>
+                            )}
+                        </div>
+                        <h2 className="text-4xl md:text-5xl font-black uppercase italic text-white leading-none mb-2">{selectedTrainer.name}</h2>
+                     </div>
                   </div>
                </div>
 
-               {/* CUSTOM CALENDAR */}
-               <div className="bg-surface p-6 rounded-[2.5rem] border border-white/10 shadow-2xl">
-                  <div className="flex items-center justify-between mb-6 px-2">
-                     <button onClick={handlePrevMonth} className="p-2 hover:bg-white/5 rounded-full text-slate-400 hover:text-white transition-colors">
-                        <ChevronLeft size={20} />
-                     </button>
-                     <div className="text-center">
-                        <span className="block text-lg font-black uppercase italic text-white">
-                           {monthNames[currentMonth.getMonth()]}
-                        </span>
-                        <span className="text-xs font-bold text-slate-500">
-                           {currentMonth.getFullYear()}
-                        </span>
-                     </div>
-                     <button onClick={handleNextMonth} className="p-2 hover:bg-white/5 rounded-full text-slate-400 hover:text-white transition-colors">
-                        <ChevronRight size={20} />
-                     </button>
-                  </div>
+               {/* Bio & Stats */}
+               <div className="space-y-6">
+                  {selectedTrainer.bio ? (
+                      <div className="p-8 bg-surface rounded-[2.5rem] border border-white/5 relative overflow-hidden">
+                          <Quote className="absolute top-6 right-6 text-white/5" size={48} />
+                          <h3 className="text-lg font-black uppercase italic text-white mb-4 flex items-center gap-2">
+                             <User size={18} className="text-brand" /> About Coach
+                          </h3>
+                          <p className="text-slate-400 leading-relaxed font-medium italic text-sm">
+                              {selectedTrainer.bio}
+                          </p>
+                      </div>
+                  ) : (
+                      <div className="p-8 bg-surface rounded-[2.5rem] border border-white/5">
+                           <p className="text-slate-500 italic text-sm text-center">No biography available.</p>
+                      </div>
+                  )}
 
-                  <div className="grid grid-cols-7 gap-1 mb-2 text-center">
-                     {weekDays.map(day => (
-                        <div key={day} className="text-[10px] font-black text-slate-600 uppercase py-2">
-                           {day}
-                        </div>
-                     ))}
-                  </div>
-
-                  <div className="grid grid-cols-7 gap-1 place-items-center">
-                     {renderCalendar()}
+                  <div className="grid grid-cols-2 gap-4">
+                      <div className="p-6 bg-surface rounded-[2rem] border border-white/5 text-center">
+                          <Award className="mx-auto text-brand mb-2" size={24} />
+                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Experience</p>
+                          <p className="text-xl font-black text-white italic">5+ Years</p>
+                      </div>
+                      <div className="p-6 bg-surface rounded-[2rem] border border-white/5 text-center">
+                          <Zap className="mx-auto text-brand mb-2" size={24} />
+                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Style</p>
+                          <p className="text-xl font-black text-white italic">High Intensity</p>
+                      </div>
                   </div>
                </div>
             </div>
 
-            {/* Right Column: Time Selection & Confirmation */}
-            <div className="lg:col-span-2">
-               <div className="bg-surface rounded-[2.5rem] border border-white/5 p-8 md:p-10 h-full flex flex-col">
-                  <div className="mb-8">
-                     <h2 className="text-3xl font-black uppercase italic text-white mb-2">
-                        {language === 'bg' ? 'Изберете Час' : 'Select Time'}
-                     </h2>
-                     <p className="text-slate-400 text-sm font-medium">
-                        {selectedDate.toLocaleDateString(language === 'bg' ? 'bg-BG' : 'en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-                     </p>
-                  </div>
+            {/* RIGHT COLUMN: BOOKING INTERFACE (7 cols) */}
+            <div className="lg:col-span-7 flex flex-col">
+               <div className="bg-surface rounded-[3rem] border border-white/5 p-8 md:p-12 h-full shadow-2xl relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-brand/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+                  
+                  <div className="relative z-10">
+                      <div className="flex items-center justify-between mb-8">
+                         <h3 className="text-2xl font-black uppercase italic text-white">
+                            {language === 'bg' ? 'Изберете дата' : 'Select Date'}
+                         </h3>
+                         <div className="flex gap-2">
+                             <button onClick={handlePrevMonth} className="p-3 hover:bg-white/5 rounded-full text-slate-400 hover:text-white transition-colors border border-white/5">
+                                <ChevronLeft size={20} />
+                             </button>
+                             <div className="px-4 py-3 bg-white/5 rounded-full border border-white/5 min-w-[140px] text-center">
+                                <span className="text-xs font-black uppercase tracking-widest text-white">
+                                   {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
+                                </span>
+                             </div>
+                             <button onClick={handleNextMonth} className="p-3 hover:bg-white/5 rounded-full text-slate-400 hover:text-white transition-colors border border-white/5">
+                                <ChevronRight size={20} />
+                             </button>
+                         </div>
+                      </div>
 
-                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 mb-10">
-                     {selectedTrainer.availability.map(time => (
-                        <button
-                           key={time}
-                           onClick={() => setSelectedTime(time)}
-                           className={`py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all border-2 ${
-                              selectedTime === time
-                                 ? 'bg-brand text-dark border-brand shadow-lg shadow-brand/20 scale-105'
-                                 : 'bg-dark/50 text-slate-400 border-white/5 hover:border-brand/40 hover:text-white'
-                           }`}
-                        >
-                           {time}
-                        </button>
-                     ))}
-                  </div>
+                      <div className="grid grid-cols-7 gap-1 mb-2 text-center">
+                         {weekDays.map(day => (
+                            <div key={day} className="text-[10px] font-black text-slate-500 uppercase py-2">
+                               {day}
+                            </div>
+                         ))}
+                      </div>
 
-                  <div className="mt-auto pt-8 border-t border-white/5">
-                     <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
-                        <div>
-                           <div className="text-[10px] text-slate-500 uppercase tracking-[0.3em] font-black mb-1">{t.total}</div>
-                           <div className="text-4xl font-black uppercase italic text-white">{selectedTrainer.price} <span className="text-lg text-slate-500">BGN</span></div>
-                        </div>
+                      <div className="grid grid-cols-7 gap-2 place-items-center mb-12">
+                         {renderCalendar()}
+                      </div>
 
-                        <button 
-                           onClick={initiateBooking}
-                           disabled={!selectedTime || isSubmitting}
-                           className={`w-full sm:w-auto px-12 py-5 rounded-full font-black uppercase italic tracking-[0.2em] transition-all flex items-center justify-center gap-3 shadow-xl ${
-                              selectedTime && !isSubmitting
-                                 ? 'bg-brand text-dark hover:bg-white hover:text-dark hover:scale-105 shadow-brand/20'
-                                 : 'bg-white/10 text-slate-500 cursor-not-allowed shadow-none'
-                           }`}
-                        >
-                           {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : (language === 'bg' ? 'Запиши Час' : 'Book Session')}
-                        </button>
-                     </div>
+                      <div className="border-t border-white/5 pt-10">
+                         <h3 className="text-2xl font-black uppercase italic text-white mb-6">
+                            {language === 'bg' ? 'Свободни Часове' : 'Available Slots'}
+                         </h3>
+                         
+                         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 mb-10">
+                            {selectedTrainer.availability.map(time => (
+                               <button
+                                  key={time}
+                                  onClick={() => setSelectedTime(time)}
+                                  className={`py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all border-2 ${
+                                     selectedTime === time
+                                        ? 'bg-brand text-dark border-brand shadow-lg shadow-brand/20 scale-105'
+                                        : 'bg-dark/50 text-slate-400 border-white/5 hover:border-brand/40 hover:text-white'
+                                  }`}
+                               >
+                                  {time}
+                               </button>
+                            ))}
+                         </div>
+
+                         <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-4">
+                            <div>
+                               <div className="text-[10px] text-slate-500 uppercase tracking-[0.3em] font-black mb-1">{t.total}</div>
+                               <div className="text-4xl font-black uppercase italic text-white">{selectedTrainer.price} <span className="text-lg text-slate-500">BGN</span></div>
+                            </div>
+
+                            <button 
+                               onClick={initiateBooking}
+                               disabled={!selectedTime || isSubmitting}
+                               className={`w-full sm:w-auto px-12 py-5 rounded-full font-black uppercase italic tracking-[0.2em] transition-all flex items-center justify-center gap-3 shadow-xl ${
+                                  selectedTime && !isSubmitting
+                                     ? 'bg-brand text-dark hover:bg-white hover:text-dark hover:scale-105 shadow-brand/20'
+                                     : 'bg-white/10 text-slate-500 cursor-not-allowed shadow-none'
+                               }`}
+                            >
+                               {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : (language === 'bg' ? 'Запиши Час' : 'Book Session')}
+                            </button>
+                         </div>
+                      </div>
                   </div>
                </div>
             </div>
