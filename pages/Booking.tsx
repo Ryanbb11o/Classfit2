@@ -382,36 +382,6 @@ const BookingPage: React.FC = () => {
                           <p className="text-xl font-black text-white italic">High Intensity</p>
                       </div>
                   </div>
-
-                  {/* REVIEWS SECTION IN LEFT COLUMN */}
-                  <div className="bg-surface rounded-[2.5rem] border border-white/5 p-8 max-h-[500px] overflow-y-auto custom-scrollbar">
-                     <h3 className="text-lg font-black uppercase italic text-white mb-6 flex items-center gap-2 sticky top-0 bg-surface z-10 py-2">
-                        <Star size={18} className="text-brand fill-brand" /> Client Stories
-                     </h3>
-                     <div className="space-y-6">
-                        {trainerReviews.map((review, i) => (
-                           <div key={i} className="p-6 bg-white/5 rounded-2xl border border-white/5">
-                              <div className="flex items-center gap-3 mb-3">
-                                 <div className="w-8 h-8 rounded-full bg-brand text-dark flex items-center justify-center font-bold text-xs">
-                                    {review.avatar}
-                                 </div>
-                                 <div>
-                                    <p className="text-xs font-bold text-white">{review.author}</p>
-                                    <div className="flex gap-0.5">
-                                       {[...Array(review.rating)].map((_, j) => (
-                                          <Star key={j} size={10} className="text-brand fill-brand" />
-                                       ))}
-                                    </div>
-                                 </div>
-                                 <span className="ml-auto text-[9px] text-slate-500 uppercase font-bold">{review.time}</span>
-                              </div>
-                              <p className="text-sm text-slate-300 italic leading-relaxed">
-                                 "{review.text}"
-                              </p>
-                           </div>
-                        ))}
-                     </div>
-                  </div>
                </div>
             </div>
 
@@ -511,6 +481,43 @@ const BookingPage: React.FC = () => {
                             </button>
                          </div>
                       </div>
+
+                      {/* CLIENT REVIEWS SECTION - Moved Here */}
+                      <div className="mt-12 pt-10 border-t border-white/5">
+                         <h3 className="text-lg font-black uppercase italic text-white mb-6 flex items-center gap-2">
+                            <Star size={18} className="text-brand fill-brand" /> Client Reviews
+                         </h3>
+                         <div className="space-y-4 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
+                            {trainerReviews.length > 0 ? (
+                                trainerReviews.map((review, i) => (
+                                   <div key={i} className="p-4 bg-white/5 rounded-2xl border border-white/5">
+                                      <div className="flex items-center gap-3 mb-3">
+                                         <div className="w-8 h-8 rounded-full bg-brand text-dark flex items-center justify-center font-bold text-xs">
+                                            {review.avatar}
+                                         </div>
+                                         <div>
+                                            <p className="text-xs font-bold text-white">{review.author}</p>
+                                            <div className="flex gap-0.5">
+                                               {[...Array(review.rating)].map((_, j) => (
+                                                  <Star key={j} size={10} className="text-brand fill-brand" />
+                                               ))}
+                                            </div>
+                                         </div>
+                                         <span className="ml-auto text-[9px] text-slate-500 uppercase font-bold">{review.time}</span>
+                                      </div>
+                                      <p className="text-sm text-slate-300 italic leading-relaxed">
+                                         "{review.text}"
+                                      </p>
+                                   </div>
+                                ))
+                            ) : (
+                                <div className="text-center py-8 text-slate-500 text-sm font-medium italic">
+                                    No reviews yet. Be the first to leave one!
+                                </div>
+                            )}
+                         </div>
+                      </div>
+
                   </div>
                </div>
             </div>
