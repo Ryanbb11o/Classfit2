@@ -1,4 +1,4 @@
-import React, { useState, ReactNode, Component } from 'react';
+import React, { useState, ReactNode } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AppProvider, useAppContext } from './AppContext';
 import Layout from './components/Layout';
@@ -24,7 +24,6 @@ interface ErrorBoundaryState {
   hasError: boolean;
 }
 
-// Fix: Using React.Component and explicit constructor to correctly type props and state on the instance
 class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
@@ -40,7 +39,6 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   }
   
   render() {
-    // Correctly accessing state and props from the Component base class
     if (this.state.hasError) {
       return (
         <div className="min-h-screen bg-dark flex flex-col items-center justify-center p-6 text-center">

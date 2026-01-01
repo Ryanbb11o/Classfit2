@@ -17,16 +17,10 @@ export interface Trainer {
   id: string;
   name: string;
   specialty: string;
-  philosophy?: string; // One-liner hook
-  experienceYears?: number;
-  certifications?: string[];
-  instagramHandle?: string;
-  instagramFeed?: string[]; // URLs to mock images
-  tags?: string[];
   price: number;
   image: string;
-  phone: string;
-  availability: string[];
+  phone: string; // New field for direct contact
+  availability: string[]; // Mocked available hours e.g., ["09:00", "10:00"]
 }
 
 export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed';

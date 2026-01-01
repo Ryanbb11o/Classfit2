@@ -1,6 +1,7 @@
 
 import { Trainer, Membership, Product, Language, Review } from './types';
 
+// Updated to a gender-neutral silhouette as requested
 export const DEFAULT_PROFILE_IMAGE = "https://upload.wikimedia.org/wikipedia/commons/2/2c/Default_pfp.svg";
 
 export const getTrainers = (lang: Language): Trainer[] => {
@@ -10,18 +11,8 @@ export const getTrainers = (lang: Language): Trainer[] => {
       id: '1',
       name: isBg ? 'Иван Петров' : 'Ivan Petrov',
       specialty: isBg ? 'Силови тренировки' : 'Strength Training',
-      philosophy: isBg ? 'Дисциплината е единственият път към трайни резултати.' : 'Discipline is the only path to lasting results.',
-      experienceYears: 8,
-      certifications: isBg ? ['NASM Certified', 'Магистър НСА', 'Powerlifting Coach'] : ['NASM Certified', 'Master NSA', 'Powerlifting Coach'],
-      instagramHandle: '@ivan_fit_varna',
-      instagramFeed: [
-        'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=400&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?q=80&w=400&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?q=80&w=400&auto=format&fit=crop'
-      ],
-      tags: isBg ? ['Тежести', 'Хипертрофия', 'Мотивация'] : ['Weights', 'Hypertrophy', 'Motivation'],
       price: 15,
-      image: 'https://images.unsplash.com/photo-1594381898411-846e7d193883?q=80&w=600&auto=format&fit=crop',
+      image: 'https://images.unsplash.com/photo-1594381898411-846e7d193883?q=80&w=400&auto=format&fit=crop',
       phone: '+359 88 123 4567',
       availability: ['08:00', '09:00', '10:00', '14:00', '15:00', '16:00']
     },
@@ -29,18 +20,8 @@ export const getTrainers = (lang: Language): Trainer[] => {
       id: '2',
       name: isBg ? 'Мария Иванова' : 'Maria Ivanova',
       specialty: isBg ? 'Йога и Пилатес' : 'Yoga & Pilates',
-      philosophy: isBg ? 'Намерете баланса между тялото и ума.' : 'Find the balance between body and mind.',
-      experienceYears: 5,
-      certifications: isBg ? ['RYT 500 Yoga Alliance', 'Pilates Method Alliance'] : ['RYT 500 Yoga Alliance', 'Pilates Method Alliance'],
-      instagramHandle: '@maria_flow_varna',
-      instagramFeed: [
-        'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=400&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1599447421416-3414500d18a5?q=80&w=400&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1575052814086-f385e2e2ad1b?q=80&w=400&auto=format&fit=crop'
-      ],
-      tags: isBg ? ['Гъвкавост', 'Дзен', 'Медитация'] : ['Flexibility', 'Zen', 'Meditation'],
       price: 15,
-      image: 'https://images.unsplash.com/photo-1518611012118-296072bb5fe9?q=80&w=600&auto=format&fit=crop',
+      image: 'https://images.unsplash.com/photo-1518611012118-296072bb5fe9?q=80&w=400&auto=format&fit=crop',
       phone: '+359 88 234 5678',
       availability: ['07:00', '11:00', '12:00', '17:00', '18:00']
     },
@@ -48,18 +29,8 @@ export const getTrainers = (lang: Language): Trainer[] => {
       id: '3',
       name: isBg ? 'Елена Костова' : 'Elena Kostova',
       specialty: isBg ? 'Кросфит' : 'Crossfit',
-      philosophy: isBg ? 'Вашият лимит е само илюзия.' : 'Your limit is just an illusion.',
-      experienceYears: 6,
-      certifications: isBg ? ['CrossFit Level 2', 'Weightlifting Coach'] : ['CrossFit Level 2', 'Weightlifting Coach'],
-      instagramHandle: '@elena_beast_mode',
-      instagramFeed: [
-        'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?q=80&w=400&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1548690312-e3b507d8c110?q=80&w=400&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1550345332-09e3ac987658?q=80&w=400&auto=format&fit=crop'
-      ],
-      tags: isBg ? ['Интензивност', 'WOD', 'Функционалност'] : ['Intensity', 'WOD', 'Functional'],
       price: 15,
-      image: 'https://images.unsplash.com/photo-1548690312-e3b507d8c110?q=80&w=600&auto=format&fit=crop',
+      image: 'https://images.unsplash.com/photo-1548690312-e3b507d8c110?q=80&w=400&auto=format&fit=crop',
       phone: '+359 88 345 6789',
       availability: ['09:00', '10:00', '11:00', '15:00', '19:00']
     }
@@ -311,12 +282,6 @@ export const TRANSLATIONS = {
     roleAdmin: 'Админ',
     roleTrainerPending: 'Чакащ',
     changeRole: 'Промяна',
-    yearsExp: 'години опит',
-    viewProfile: 'Виж профила',
-    closeProfile: 'Затвори',
-    certifications: 'Сертификати',
-    instagramTitle: 'Тренировъчен лайфстайл',
-    bookThisTrainer: 'Запиши час при този треньор'
   },
   en: {
     home: 'Home',
@@ -488,11 +453,5 @@ export const TRANSLATIONS = {
     roleAdmin: 'Admin',
     roleTrainerPending: 'Pending',
     changeRole: 'Change Role',
-    yearsExp: 'years exp',
-    viewProfile: 'View Profile',
-    closeProfile: 'Close',
-    certifications: 'Certifications',
-    instagramTitle: 'Training Lifestyle',
-    bookThisTrainer: 'Book this Trainer'
   }
 };
