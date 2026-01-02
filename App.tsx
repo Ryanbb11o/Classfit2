@@ -24,9 +24,11 @@ interface ErrorBoundaryState {
   hasError: boolean;
 }
 
-class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+// Fix: Explicitly extending React.Component to resolve TypeScript errors regarding 'state' and 'props' properties
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
+    // Fix: Correctly initialize state on the class instance
     this.state = { hasError: false };
   }
 
@@ -39,6 +41,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
   
   render() {
+    // Fix: Access state inherited from React.Component
     if (this.state.hasError) {
       return (
         <div className="min-h-screen bg-dark flex flex-col items-center justify-center p-6 text-center">
@@ -52,6 +55,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
       );
     }
     
+    // Fix: Access props inherited from React.Component
     return this.props.children;
   }
 }
