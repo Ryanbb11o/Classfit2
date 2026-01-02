@@ -184,8 +184,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     const { error } = await supabase.from('bookings').insert([payload]);
     if (error) {
-      console.error("Supabase Error details:", error.message, error.details, error.hint);
-      throw new Error(error.message);
+      console.error("Booking Error Details:", error.message, error.details);
+      throw new Error(error.message || "Database Insert Failed");
     }
     await refreshData();
   };

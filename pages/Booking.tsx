@@ -160,7 +160,6 @@ const BookingPage: React.FC = () => {
     if (!selectedTrainer || !selectedTime || !selectedDate) return;
     setIsSubmitting(true);
     
-    // Format date carefully
     const offset = selectedDate.getTimezoneOffset();
     const localDate = new Date(selectedDate.getTime() - (offset*60*1000));
     const formattedDate = localDate.toISOString().split('T')[0];
@@ -189,11 +188,11 @@ const BookingPage: React.FC = () => {
       setShowGuestForm(false);
       setIsSuccess(true);
     } catch (error: any) {
-      console.error("Booking failed:", error);
-      const msg = error?.message || "Database Error";
+      console.error("Booking caught error:", error);
+      const errorMsg = error?.message || "Check connection or SQL tables.";
       alert(language === 'bg' 
-        ? `Възникна грешка при резервация: ${msg}. Моля проверете базата данни.` 
-        : `Booking error: ${msg}. Please ensure your database tables are set up.`);
+        ? `Грешка: ${errorMsg}. Моля уверете се, че сте изпълнили SQL скрипта в Supabase.` 
+        : `Error: ${errorMsg}. Please ensure you have run the provided SQL setup in Supabase.`);
     } finally {
       setIsSubmitting(false);
     }
