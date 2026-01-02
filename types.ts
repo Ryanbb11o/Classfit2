@@ -50,6 +50,7 @@ export interface Booking {
   hasBeenReviewed?: boolean;
   rating?: number;
   reviewText?: string;
+  isAiEnhanced?: boolean;
 }
 
 export interface Membership {

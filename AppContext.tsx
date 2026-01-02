@@ -122,7 +122,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           gymAddress: b.gym_address || 'бул. „Осми приморски полк“ 128 (Спирка МИР)',
           hasBeenReviewed: b.has_been_reviewed || false,
           rating: b.rating,
-          reviewText: b.review_text
+          reviewText: b.review_text,
+          isAiEnhanced: b.is_ai_enhanced || false
         })));
       }
       
@@ -198,7 +199,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return;
     }
     
-    // Explicitly map keys to match DB columns exactly
     const dbUpdates: any = {};
     if (updates.status) dbUpdates.status = updates.status;
     if (updates.paymentMethod) dbUpdates.payment_method = updates.paymentMethod;
@@ -206,6 +206,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (updates.hasBeenReviewed !== undefined) dbUpdates.has_been_reviewed = updates.hasBeenReviewed;
     if (updates.rating !== undefined) dbUpdates.rating = updates.rating;
     if (updates.reviewText !== undefined) dbUpdates.review_text = updates.reviewText;
+    if (updates.isAiEnhanced !== undefined) dbUpdates.is_ai_enhanced = updates.isAiEnhanced;
 
     const { error } = await supabase.from('bookings').update(dbUpdates).eq('id', id);
     if (error) {

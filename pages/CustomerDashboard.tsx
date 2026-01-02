@@ -1,27 +1,52 @@
 
 import React, { useState, useMemo } from 'react';
-import { Calendar, Clock, CheckCircle, Timer, XCircle, Trash2, CheckCircle2, User as UserIcon, Mail, CalendarPlus, Phone, MapPin, ChevronRight, LogOut, Dumbbell, Activity, AlertCircle, Briefcase, Loader2, X, MapPinned, CreditCard, Banknote, Timer as ClockIcon, Star, CheckSquare } from 'lucide-react';
+import { Calendar, Clock, CheckCircle, Timer, XCircle, Trash2, CheckCircle2, User as UserIcon, Mail, CalendarPlus, Phone, MapPin, ChevronRight, LogOut, Dumbbell, Activity, AlertCircle, Briefcase, Loader2, X, MapPinned, CreditCard, Banknote, Timer as ClockIcon, Star, CheckSquare, Sparkles } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, getTrainers, DEFAULT_PROFILE_IMAGE } from '../constants';
 import { useNavigate } from 'react-router-dom';
 import { Trainer, Booking } from '../types';
+import { GoogleGenAI } from "@google/genai";
 
 const ReviewModal: React.FC<{ 
   booking: Booking | null; 
   onClose: () => void; 
-  onSubmit: (id: string, rating: number, text: string) => Promise<void>;
+  onSubmit: (id: string, rating: number, text: string, isAi: boolean) => Promise<void>;
 }> = ({ booking, onClose, onSubmit }) => {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isEnhancing, setIsEnhancing] = useState(false);
+  const [isAiEnhanced, setIsAiEnhanced] = useState(false);
 
   if (!booking) return null;
+
+  const handleAiEnhance = async () => {
+    if (!comment.trim()) return;
+    setIsEnhancing(true);
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const response = await ai.models.generateContent({
+        model: 'gemini-3-flash-preview',
+        contents: `Enhance this gym review for a trainer at ClassFit. Keep the sentiment exactly as it is (positive or negative), but make it more clear and professional. Return only the enhanced text. Original text: "${comment}"`,
+      });
+      
+      const enhancedText = response.text;
+      if (enhancedText) {
+        setComment(enhancedText.trim());
+        setIsAiEnhanced(true);
+      }
+    } catch (error) {
+      console.error("AI Enhancement failed:", error);
+    } finally {
+      setIsEnhancing(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await onSubmit(booking.id, rating, comment);
+      await onSubmit(booking.id, rating, comment, isAiEnhanced);
     } finally {
       setIsSubmitting(false);
     }
@@ -46,7 +71,7 @@ const ReviewModal: React.FC<{
              <p className="text-slate-400 text-sm font-medium italic">How was your session on <span className="text-white font-bold">{booking.date}</span>?</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-8 text-left">
+          <form onSubmit={handleSubmit} className="space-y-6 text-left">
              <div className="flex justify-center gap-2">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button
@@ -63,13 +88,31 @@ const ReviewModal: React.FC<{
                 ))}
              </div>
 
-             <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Tell us about your experience</label>
+             <div className="space-y-2 relative">
+                <div className="flex items-center justify-between mb-1 px-2">
+                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Your Feedback</label>
+                   <button
+                      type="button"
+                      onClick={handleAiEnhance}
+                      disabled={isEnhancing || !comment.trim()}
+                      className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${
+                        isAiEnhanced 
+                          ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
+                          : 'bg-brand/10 text-brand border border-brand/20 hover:bg-brand hover:text-dark disabled:opacity-50'
+                      }`}
+                   >
+                      {isEnhancing ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+                      {isAiEnhanced ? 'AI Enhanced' : 'AI Enhance Review'}
+                   </button>
+                </div>
                 <textarea 
                   rows={4}
                   value={comment}
-                  onChange={(e) => setComment(e.target.value)}
-                  placeholder="Excellent trainer, really pushed me to my limits!"
+                  onChange={(e) => {
+                    setComment(e.target.value);
+                    if (isAiEnhanced) setIsAiEnhanced(false);
+                  }}
+                  placeholder="The session was great! I learned a lot today..."
                   className="w-full bg-dark/50 border border-white/5 rounded-2xl px-5 py-4 text-white font-medium italic outline-none focus:border-brand resize-none placeholder-slate-600 transition-all"
                 />
              </div>
@@ -79,10 +122,10 @@ const ReviewModal: React.FC<{
                 disabled={isSubmitting}
                 className="w-full py-5 bg-brand text-dark rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-white transition-all flex items-center justify-center gap-2 shadow-xl shadow-brand/10"
              >
-                {isSubmitting ? <Loader2 className="animate-spin" /> : 'Confirm & Send Review'}
+                {isSubmitting ? <Loader2 className="animate-spin" /> : 'Submit Review'}
              </button>
              <p className="text-center text-[9px] text-slate-600 font-bold uppercase tracking-widest">
-               Submission marks session as complete
+               Marks session as complete at the front desk
              </p>
           </form>
        </div>
@@ -167,14 +210,13 @@ const CustomerDashboard: React.FC = () => {
       }
   };
 
-  const handleReviewSubmit = async (id: string, rating: number, text: string) => {
-    // 1. Mark as completed/awaiting payment
-    // 2. Save rating and review text
+  const handleReviewSubmit = async (id: string, rating: number, text: string, isAi: boolean) => {
     await updateBooking(id, { 
       status: 'trainer_completed',
       hasBeenReviewed: true, 
       rating: rating, 
-      reviewText: text 
+      reviewText: text,
+      isAiEnhanced: isAi
     });
     setBookingToReview(null);
     alert(language === 'bg' ? 'Благодарим за отзива! Моля платете на рецепция.' : 'Review saved! Please settle payment at the front desk.');
@@ -210,7 +252,7 @@ const CustomerDashboard: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-8">
-        <h2 className="text-xs font-black uppercase tracking-[0.4em] text-slate-500 mb-2 italic">My Schedule</h2>
+        <h2 className="text-xs font-black uppercase tracking-[0.4em] text-slate-500 mb-2 italic">My Training Schedule</h2>
         {myBookings.length === 0 ? (
             <div className="text-center py-24 bg-surface/50 rounded-[3rem] border border-white/5 border-dashed">
                 <div className="w-16 h-16 bg-white/5 text-slate-700 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -263,7 +305,7 @@ const CustomerDashboard: React.FC = () => {
                                    <div className="flex items-center gap-3">
                                       {isCompleted ? <CheckSquare size={16} className="text-green-500" /> : <CreditCard size={16} className="text-blue-400" />}
                                       <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                                         {isCompleted ? `PAID (${booking.paymentMethod?.toUpperCase()})` : (isAwaitingPay ? 'PAY AT DESK' : 'RESERVED')}
+                                         {isCompleted ? `PAID (${booking.paymentMethod?.toUpperCase()})` : (isAwaitingPay ? 'PAY AT RECEPTION' : 'RESERVED')}
                                       </span>
                                    </div>
                                 </div>
@@ -292,13 +334,15 @@ const CustomerDashboard: React.FC = () => {
                                       onClick={() => setBookingToReview(booking)}
                                       className="flex items-center gap-2 px-6 py-3 bg-brand text-dark rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-lg shadow-brand/10 group/btn"
                                    >
-                                      <CheckCircle2 size={14} className="group-hover/btn:scale-110 transition-transform" /> Mark Done & Review
+                                      <Star size={14} className="group-hover/btn:scale-110 transition-transform" /> Finish & Review
                                    </button>
                                 )}
                                 {(isCompleted || isAwaitingPay) && booking.hasBeenReviewed && (
-                                   <span className="flex items-center gap-2 px-4 py-2 bg-white/5 text-slate-500 rounded-xl text-[9px] font-black uppercase border border-white/5">
-                                      <Star size={12} className="text-brand fill-brand" /> Feedback Shared
-                                   </span>
+                                   <div className="flex flex-col gap-1">
+                                      <span className="flex items-center gap-2 px-4 py-2 bg-white/5 text-slate-500 rounded-xl text-[9px] font-black uppercase border border-white/5">
+                                         <Star size={12} className="text-brand fill-brand" /> Feedback Shared {booking.isAiEnhanced && <span className="text-blue-400 ml-1">(AI Enhanced)</span>}
+                                      </span>
+                                   </div>
                                 )}
                             </div>
                             
