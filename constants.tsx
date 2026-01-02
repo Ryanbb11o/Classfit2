@@ -187,7 +187,7 @@ export const TRANSLATIONS = {
     gymPhone: '+359 88 343 0184',
     transform: 'ТРАНСФОРМИРАЙ',
     yourself: 'СЕБЕ СИ',
-    motivation: 'Вашият път към съвършенството започва тук.',
+    motivation: 'Вашият път към съвършенството начина тук.',
     joinMovement: 'Стани част от ClassFit',
     bookNow: 'Запиши час',
     eliteBase: 'Елитна База Варна',
@@ -336,6 +336,8 @@ export const TRANSLATIONS = {
     roleAdmin: 'Админ',
     roleTrainerPending: 'Чакащ',
     changeRole: 'Промяна',
+    emailConfirmMsg: 'Потвърждение за резервацията е изпратено на:',
+    trainerReviewMsg: 'Треньорът ще прегледа вашата заявка и ще я потвърди скоро.',
   },
   en: {
     home: 'Home',
@@ -508,5 +510,7 @@ export const TRANSLATIONS = {
     roleAdmin: 'Admin',
     roleTrainerPending: 'Pending',
     changeRole: 'Change',
+    emailConfirmMsg: 'A confirmation has been sent to:',
+    trainerReviewMsg: 'Your selected trainer will review and confirm your session shortly.',
   }
 };

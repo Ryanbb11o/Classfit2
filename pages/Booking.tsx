@@ -92,10 +92,10 @@ const BookingPage: React.FC = () => {
   const renderCalendar = () => {
     const daysInMonth = getDaysInMonth(currentMonth);
     const firstDay = getFirstDayOfMonth(currentMonth); 
-    const startDayIndex = firstDay === 0 ? 6 : firstDay - 1; 
+    const startDayIndex = firstDay === 0 ? { start: 6 } : { start: firstDay - 1 }; 
 
     const days = [];
-    for (let i = 0; i < startDayIndex; i++) {
+    for (let i = 0; i < startDayIndex.start; i++) {
         days.push(<div key={`empty-${i}`} className="h-8 w-8"></div>);
     }
 
@@ -210,7 +210,17 @@ const BookingPage: React.FC = () => {
             <Check size={40} strokeWidth={3} />
           </div>
           <h2 className="text-4xl font-black uppercase italic mb-4 text-white tracking-tighter leading-none">{t.reqSent}</h2>
-          <p className="text-slate-400 mb-8 text-sm max-w-sm mx-auto">{t.confirmText}</p>
+          <p className="text-slate-400 mb-2 text-sm max-w-sm mx-auto">{t.trainerReviewMsg}</p>
+        </div>
+
+        {/* EMAIL NOTIFICATION BLOCK */}
+        <div className="bg-brand/10 border border-brand/20 rounded-2xl p-6 mb-8 text-center animate-in slide-in-from-bottom-2 duration-700 delay-300">
+            <div className="flex items-center justify-center gap-3 text-brand mb-2">
+                <Mail size={16} />
+                <span className="text-[10px] font-black uppercase tracking-widest">{t.emailConfirmMsg}</span>
+            </div>
+            <p className="text-white font-bold text-sm underline decoration-brand/50 underline-offset-4">{lastBooking.customerEmail}</p>
+            <p className="text-[10px] text-slate-500 mt-3 font-medium">Please check your inbox (and spam folder) for session details.</p>
         </div>
 
         {/* Contact Information Block */}
@@ -550,7 +560,7 @@ const BookingPage: React.FC = () => {
 
               <form onSubmit={handleGuestSubmit} className="space-y-4">
                 <div className="space-y-1">
-                   <label className="text-[9px] font-black uppercase tracking-widest text-slate-600 ml-2">Full Name</label>
+                   <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-2">Full Name</label>
                    <input 
                       type="text" required value={guestName} placeholder={t.name}
                       onChange={(e) => setGuestName(e.target.value)}
@@ -558,7 +568,7 @@ const BookingPage: React.FC = () => {
                    />
                 </div>
                 <div className="space-y-1">
-                   <label className="text-[9px] font-black uppercase tracking-widest text-slate-600 ml-2">Phone Number</label>
+                   <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-2">Phone Number</label>
                    <input 
                       type="tel" required value={guestPhone} placeholder={t.phone}
                       onChange={(e) => setGuestPhone(e.target.value)}
@@ -566,7 +576,7 @@ const BookingPage: React.FC = () => {
                    />
                 </div>
                 <div className="space-y-1">
-                   <label className="text-[9px] font-black uppercase tracking-widest text-slate-600 ml-2">Email Address</label>
+                   <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-2">Email Address</label>
                    <input 
                       type="email" required value={guestEmail} placeholder="Email"
                       onChange={(e) => setGuestEmail(e.target.value)}

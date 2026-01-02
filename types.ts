@@ -5,12 +5,14 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  password: string; // Note: In a real app, never store passwords in plain text/frontend
-  phone?: string; // Added phone field
-  image?: string; // New: Profile picture URL
-  bio?: string;   // New: Short biography for trainers
+  password: string; 
+  phone?: string; 
+  image?: string; 
+  bio?: string;   
   joinedDate: string;
   role: 'user' | 'admin' | 'trainer_pending' | 'trainer';
+  approvedBy?: string; // ID or Name of admin who approved the trainer
+  commissionRate?: number; // Percentage (e.g., 20 for 20%)
 }
 
 export interface Trainer {
@@ -19,9 +21,11 @@ export interface Trainer {
   specialty: string;
   price: number;
   image: string;
-  phone: string; // New field for direct contact
-  bio?: string; // New field for profile
-  availability: string[]; // Mocked available hours e.g., ["09:00", "10:00"]
+  phone: string; 
+  bio?: string; 
+  availability: string[]; 
+  commissionRate?: number;
+  approvedBy?: string;
 }
 
 export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'trainer_completed';
@@ -29,23 +33,24 @@ export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed' 
 export interface Booking {
   id: string;
   trainerId: string;
-  userId?: string; // Link booking to a specific user account. Undefined if guest.
+  userId?: string; 
   customerName: string;
-  customerPhone?: string; // New field for guest bookings
-  customerEmail?: string; // New field for email notifications
-  language?: Language; // Track language preference for notifications
-  date: string; // ISO string
+  customerPhone?: string; 
+  customerEmail?: string; 
+  language?: Language; 
+  date: string; 
   time: string;
   price: number;
   status: BookingStatus;
   paymentMethod?: 'card' | 'cash';
+  commissionAmount?: number; // Calculated at completion
 }
 
 export interface Membership {
   id: string;
   name: string;
   price: string;
-  unit: string; // e.g., 'visit', 'month'
+  unit: string; 
   features: string[];
   isPopular?: boolean;
 }
@@ -56,12 +61,12 @@ export interface Product {
   price: number;
   image: string;
   category: string;
-  description: string; // New field for product details
+  description: string; 
 }
 
 export interface Review {
   id: string;
-  trainerId?: string; // Linked to a trainer (optional, if undefined it's a general gym review)
+  trainerId?: string; 
   author: string;
   rating: number;
   text: string;

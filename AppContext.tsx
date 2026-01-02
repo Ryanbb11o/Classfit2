@@ -38,7 +38,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const isAdmin = currentUser?.role === 'admin';
   const isDemoMode = !isSupabaseConfigured;
 
-  // Initial Data Fetch
   useEffect(() => {
     const init = async () => {
       setIsLoading(true);
@@ -52,11 +51,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           if (localBookings) setBookings(JSON.parse(localBookings));
           if (localUsers) {
             const parsedUsers = JSON.parse(localUsers);
-            const mappedDemoUsers = parsedUsers.map((u: User) => ({
-                ...u,
-                image: u.image || (u.role !== 'admin' ? DEFAULT_PROFILE_IMAGE : '')
-            }));
-            setUsers(mappedDemoUsers);
+            setUsers(parsedUsers);
           }
         }
         
@@ -64,7 +59,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         if (savedUser) {
            const parsedUser = JSON.parse(savedUser);
            if (parsedUser) {
-             parsedUser.image = parsedUser.image || (parsedUser.role !== 'admin' ? DEFAULT_PROFILE_IMAGE : '');
              setCurrentUser(parsedUser);
            }
         }
@@ -77,42 +71,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     init();
   }, [isDemoMode]);
 
-  // Sync across tabs in Demo Mode
-  useEffect(() => {
-    if (!isDemoMode) return;
-
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'classfit_bookings' && e.newValue) {
-         setBookings(JSON.parse(e.newValue));
-      }
-      if (e.key === 'classfit_users' && e.newValue) {
-         setUsers(JSON.parse(e.newValue));
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, [isDemoMode]);
-
-  // Supabase Realtime Subscription (Notifications)
-  useEffect(() => {
-    if (isDemoMode) return;
-
-    // Subscribe to changes in public tables to update Admin UI instantly
-    const channel = supabase.channel('public:db_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => {
-         refreshData();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, () => {
-         refreshData();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [isDemoMode]);
-
   const logout = () => {
     setCurrentUser(null);
     localStorage.removeItem('classfit_user');
@@ -120,27 +78,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const refreshData = async () => {
     if (isDemoMode) {
-      // ... (keep demo logic same for development safety) ...
       const localBookings = localStorage.getItem('classfit_bookings');
       const localUsers = localStorage.getItem('classfit_users');
-      
       if (localBookings) setBookings(JSON.parse(localBookings));
-      if (localUsers) {
-          const parsed = JSON.parse(localUsers);
-          setUsers(parsed.map((u: User) => ({
-             ...u,
-             image: u.image || (u.role !== 'admin' ? DEFAULT_PROFILE_IMAGE : '')
-          })));
-      }
+      if (localUsers) setUsers(JSON.parse(localUsers));
       return;
     }
 
     try {
-      // 1. Fetch Bookings
-      const { data: bData, error: bError } = await supabase.from('bookings').select('*').order('created_at', { ascending: false });
-      if (bError) throw bError;
+      const { data: bData } = await supabase.from('bookings').select('*').order('created_at', { ascending: false });
       if (bData) {
-        const mappedBookings: Booking[] = bData.map((b: any) => ({
+        setBookings(bData.map((b: any) => ({
           id: b.id,
           trainerId: b.trainer_id,
           userId: b.user_id,
@@ -152,44 +100,38 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           price: b.price,
           status: b.status,
           paymentMethod: b.payment_method,
-          language: b.language
-        }));
-        setBookings(mappedBookings);
+          language: b.language,
+          commissionAmount: b.commission_amount
+        })));
       }
       
-      // 2. Fetch Users
-      const { data: uData, error: uError } = await supabase.from('users').select('*');
-      if (uError) throw uError;
-      
-      let mappedUsers: User[] = [];
+      const { data: uData } = await supabase.from('users').select('*');
       if (uData) {
-        mappedUsers = uData.map((u: any) => ({
+        const mappedUsers = uData.map((u: any) => ({
           id: u.id,
           name: u.name,
           email: u.email,
           password: u.password,
           role: u.role,
           phone: u.phone,
-          image: u.image || (u.role !== 'admin' ? DEFAULT_PROFILE_IMAGE : ''), 
+          image: u.image || DEFAULT_PROFILE_IMAGE, 
           bio: u.bio,     
-          joinedDate: u.joined_date
+          joinedDate: u.joined_date,
+          approvedBy: u.approved_by,
+          commissionRate: u.commission_rate || 0
         }));
         setUsers(mappedUsers);
-      }
 
-      // Security Check
-      const storedUserStr = localStorage.getItem('classfit_user');
-      if (storedUserStr) {
-        const storedUser = JSON.parse(storedUserStr);
-        if (mappedUsers.length > 0) {
-            const latestUserData = mappedUsers.find(u => u.id === storedUser.id);
-            if (latestUserData) {
-              setCurrentUser(latestUserData);
-              localStorage.setItem('classfit_user', JSON.stringify(latestUserData));
-            }
+        const storedUserStr = localStorage.getItem('classfit_user');
+        if (storedUserStr) {
+          const storedUser = JSON.parse(storedUserStr);
+          const latestUserData = mappedUsers.find(u => u.id === storedUser.id);
+          if (latestUserData) {
+            setCurrentUser(latestUserData);
+            localStorage.setItem('classfit_user', JSON.stringify(latestUserData));
+          }
         }
       }
-
     } catch (e) {
       console.error("Refresh failed:", e);
     }
@@ -202,7 +144,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       localStorage.setItem('classfit_bookings', JSON.stringify(newBookings));
       return;
     }
-
     const { error } = await supabase.from('bookings').insert([{
       trainer_id: booking.trainerId,
       user_id: booking.userId,
@@ -215,7 +156,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       status: booking.status,
       language: booking.language
     }]);
-
     if (error) throw error;
     await refreshData();
   };
@@ -227,185 +167,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       localStorage.setItem('classfit_bookings', JSON.stringify(newBookings));
       return;
     }
-
     const dbUpdates: any = {};
     if (updates.status) dbUpdates.status = updates.status;
     if (updates.paymentMethod) dbUpdates.payment_method = updates.paymentMethod;
+    if (updates.commissionAmount !== undefined) dbUpdates.commission_amount = updates.commissionAmount;
 
     const { error } = await supabase.from('bookings').update(dbUpdates).eq('id', id);
     if (error) throw error;
     await refreshData();
-  };
-
-  const deleteBooking = async (id: string) => {
-    if (isDemoMode) {
-      const newBookings = bookings.filter(b => b.id !== id);
-      setBookings(newBookings);
-      localStorage.setItem('classfit_bookings', JSON.stringify(newBookings));
-      return;
-    }
-    const { error } = await supabase.from('bookings').delete().eq('id', id);
-    if (error) throw error;
-    await refreshData();
-  };
-
-  const login = async (email: string, pass: string): Promise<boolean> => {
-    if (isDemoMode) {
-      const existingUser = users.find(u => u.email === email && u.password === pass);
-      let mockUser: User;
-      if (existingUser) {
-          mockUser = existingUser;
-      } else {
-          mockUser = { 
-            id: 'demo-1', 
-            name: 'Demo Admin', 
-            email, 
-            password: pass, 
-            role: email.includes('admin') ? 'admin' : 'user',
-            joinedDate: new Date().toISOString()
-          };
-      }
-      mockUser.image = mockUser.image || (mockUser.role !== 'admin' ? DEFAULT_PROFILE_IMAGE : '');
-      setCurrentUser(mockUser);
-      localStorage.setItem('classfit_user', JSON.stringify(mockUser));
-      return true;
-    }
-
-    // 1. Try normal login against DB
-    const { data, error } = await supabase.from('users').select('*').eq('email', email).eq('password', pass).single();
-
-    if (data) {
-        const user: User = {
-          id: data.id,
-          name: data.name,
-          email: data.email,
-          password: data.password,
-          role: data.role,
-          phone: data.phone,
-          image: data.image || (data.role !== 'admin' ? DEFAULT_PROFILE_IMAGE : ''),
-          bio: data.bio,
-          joinedDate: data.joined_date
-        };
-        setCurrentUser(user);
-        localStorage.setItem('classfit_user', JSON.stringify(user));
-        await refreshData();
-        return true;
-    }
-
-    // 2. BOOTSTRAP: If login failed, check if this is the "Bootstrap Admin" credentials
-    // AND if the database currently has NO admins.
-    if (email === 'admin@classfit.bg' && pass === 'admin123') {
-        const { data: admins } = await supabase.from('users').select('id').eq('role', 'admin');
-        
-        // If no admins exist, create the first one automatically
-        if (!admins || admins.length === 0) {
-            const { data: newAdmin, error: createError } = await supabase.from('users').insert([{
-                name: 'Master Admin',
-                email: email,
-                password: pass,
-                role: 'admin',
-                image: DEFAULT_PROFILE_IMAGE
-            }]).select().single();
-
-            if (newAdmin && !createError) {
-                const user: User = {
-                    id: newAdmin.id,
-                    name: newAdmin.name,
-                    email: newAdmin.email,
-                    password: newAdmin.password,
-                    role: newAdmin.role,
-                    phone: newAdmin.phone,
-                    image: newAdmin.image || DEFAULT_PROFILE_IMAGE,
-                    joinedDate: newAdmin.joined_date
-                };
-                setCurrentUser(user);
-                localStorage.setItem('classfit_user', JSON.stringify(user));
-                await refreshData();
-                return true;
-            }
-        }
-    }
-
-    return false;
-  };
-
-  const register = async (name: string, email: string, pass: string): Promise<boolean> => {
-    if (isDemoMode) {
-       const mockUser: User = { 
-        id: Math.random().toString(36).substr(2, 9), 
-        name, 
-        email, 
-        password: pass, 
-        role: 'user', 
-        joinedDate: new Date().toISOString(),
-        image: DEFAULT_PROFILE_IMAGE
-       };
-       const newUsers = [...users, mockUser];
-       localStorage.setItem('classfit_users', JSON.stringify(newUsers));
-       setUsers(newUsers);
-       setCurrentUser(mockUser);
-       localStorage.setItem('classfit_user', JSON.stringify(mockUser));
-       return true;
-    }
-
-    const { data, error } = await supabase.from('users').insert([{ name, email, password: pass, role: 'user' }]).select().single();
-    if (error || !data) return false;
-    const user: User = {
-      id: data.id, name: data.name, email: data.email, password: data.password, role: data.role, phone: data.phone, joinedDate: data.joined_date, image: DEFAULT_PROFILE_IMAGE
-    };
-    setCurrentUser(user);
-    localStorage.setItem('classfit_user', JSON.stringify(user));
-    await refreshData();
-    return true;
-  };
-
-  const registerTrainer = async (name: string, email: string, pass: string, phone: string, specialty: string): Promise<{ success: boolean; msg?: string }> => {
-    if (isDemoMode) {
-       const newUser: User = { 
-        id: Math.random().toString(36).substr(2, 9), 
-        name: `${name} (${specialty})`, 
-        email, 
-        password: pass, 
-        phone,
-        role: 'trainer_pending',
-        joinedDate: new Date().toISOString(),
-        image: DEFAULT_PROFILE_IMAGE
-       };
-       const newUsers = [...users, newUser];
-       localStorage.setItem('classfit_users', JSON.stringify(newUsers));
-       setUsers(newUsers);
-       return { success: true };
-    }
-    const { error } = await supabase.from('users').insert([{ name: `${name} (${specialty})`, email, phone, password: pass, role: 'trainer_pending' }]).select().single();
-    if (error) return { success: false, msg: error.message };
-    await refreshData();
-    return { success: true };
-  };
-
-  const requestTrainerUpgrade = async (userId: string, currentName: string, phone: string, specialty: string): Promise<{ success: boolean; msg?: string }> => {
-    const formattedName = `${currentName} (${specialty})`;
-    
-    if (isDemoMode) {
-        const newUsers = users.map(u => u.id === userId ? { ...u, role: 'trainer_pending' as const, phone, name: formattedName } : u);
-        setUsers(newUsers);
-        localStorage.setItem('classfit_users', JSON.stringify(newUsers));
-        if (currentUser && currentUser.id === userId) {
-            const updated = { ...currentUser, role: 'trainer_pending' as const, phone, name: formattedName };
-            setCurrentUser(updated);
-            localStorage.setItem('classfit_user', JSON.stringify(updated));
-        }
-        return { success: true };
-    }
-
-    const { error } = await supabase.from('users').update({
-        role: 'trainer_pending',
-        name: formattedName,
-        phone: phone
-    }).eq('id', userId);
-
-    if (error) return { success: false, msg: error.message };
-    await refreshData();
-    return { success: true };
   };
 
   const updateUser = async (id: string, updates: Partial<User>) => {
@@ -415,7 +184,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         localStorage.setItem('classfit_users', JSON.stringify(newUsers));
         if (currentUser && currentUser.id === id) {
            const updatedUser = { ...currentUser, ...updates };
-           updatedUser.image = updatedUser.image || (updatedUser.role !== 'admin' ? DEFAULT_PROFILE_IMAGE : '');
            setCurrentUser(updatedUser);
            localStorage.setItem('classfit_user', JSON.stringify(updatedUser));
         }
@@ -427,6 +195,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (updates.phone !== undefined) dbUpdates.phone = updates.phone;
     if (updates.image !== undefined) dbUpdates.image = updates.image;
     if (updates.bio !== undefined) dbUpdates.bio = updates.bio;
+    if (updates.approvedBy !== undefined) dbUpdates.approved_by = updates.approvedBy;
+    if (updates.commissionRate !== undefined) dbUpdates.commission_rate = updates.commissionRate;
+    
     const { error } = await supabase.from('users').update(dbUpdates).eq('id', id);
     if (error) throw error;
     await refreshData();
@@ -439,19 +210,108 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       localStorage.setItem('classfit_users', JSON.stringify(newUsers));
       return;
     }
-    const { error } = await supabase.from('users').delete().eq('id', id);
-    if (error) throw error;
+    await supabase.from('users').delete().eq('id', id);
+    await refreshData();
+  };
+
+  const login = async (email: string, pass: string): Promise<boolean> => {
+    if (isDemoMode) {
+      const existingUser = users.find(u => u.email === email && u.password === pass);
+      if (existingUser) {
+          setCurrentUser(existingUser);
+          localStorage.setItem('classfit_user', JSON.stringify(existingUser));
+          return true;
+      }
+      return false;
+    }
+    const { data } = await supabase.from('users').select('*').eq('email', email).eq('password', pass).single();
+    if (data) {
+        const user: User = {
+          id: data.id,
+          name: data.name,
+          email: data.email,
+          password: data.password,
+          role: data.role,
+          phone: data.phone,
+          image: data.image || DEFAULT_PROFILE_IMAGE,
+          bio: data.bio,
+          joinedDate: data.joined_date,
+          approvedBy: data.approved_by,
+          commissionRate: data.commission_rate || 0
+        };
+        setCurrentUser(user);
+        localStorage.setItem('classfit_user', JSON.stringify(user));
+        await refreshData();
+        return true;
+    }
+    return false;
+  };
+
+  const register = async (name: string, email: string, pass: string): Promise<boolean> => {
+    if (isDemoMode) {
+       const mockUser: User = { 
+        id: Math.random().toString(36).substr(2, 9), 
+        name, email, password: pass, role: 'user', joinedDate: new Date().toISOString(), image: DEFAULT_PROFILE_IMAGE
+       };
+       const newUsers = [...users, mockUser];
+       localStorage.setItem('classfit_users', JSON.stringify(newUsers));
+       setUsers(newUsers);
+       setCurrentUser(mockUser);
+       localStorage.setItem('classfit_user', JSON.stringify(mockUser));
+       return true;
+    }
+    const { data } = await supabase.from('users').insert([{ name, email, password: pass, role: 'user' }]).select().single();
+    if (!data) return false;
+    await refreshData();
+    return true;
+  };
+
+  const registerTrainer = async (name: string, email: string, pass: string, phone: string, specialty: string): Promise<{ success: boolean; msg?: string }> => {
+    if (isDemoMode) {
+       const newUser: User = { 
+        id: Math.random().toString(36).substr(2, 9), 
+        name: `${name} (${specialty})`, 
+        email, password: pass, phone, role: 'trainer_pending', joinedDate: new Date().toISOString(), image: DEFAULT_PROFILE_IMAGE, commissionRate: 20
+       };
+       const newUsers = [...users, newUser];
+       localStorage.setItem('classfit_users', JSON.stringify(newUsers));
+       setUsers(newUsers);
+       return { success: true };
+    }
+    const { error } = await supabase.from('users').insert([{ name: `${name} (${specialty})`, email, phone, password: pass, role: 'trainer_pending', commission_rate: 20 }]).select().single();
+    if (error) return { success: false, msg: error.message };
+    await refreshData();
+    return { success: true };
+  };
+
+  const requestTrainerUpgrade = async (userId: string, currentName: string, phone: string, specialty: string): Promise<{ success: boolean; msg?: string }> => {
+    const formattedName = `${currentName} (${specialty})`;
+    if (isDemoMode) {
+        const newUsers = users.map(u => u.id === userId ? { ...u, role: 'trainer_pending' as const, phone, name: formattedName, commissionRate: 20 } : u);
+        setUsers(newUsers);
+        localStorage.setItem('classfit_users', JSON.stringify(newUsers));
+        return { success: true };
+    }
+    const { error } = await supabase.from('users').update({ role: 'trainer_pending', name: formattedName, phone, commission_rate: 20 }).eq('id', userId);
+    if (error) return { success: false, msg: error.message };
+    await refreshData();
+    return { success: true };
+  };
+
+  const deleteBooking = async (id: string) => {
+    if (isDemoMode) {
+      const newBookings = bookings.filter(b => b.id !== id);
+      setBookings(newBookings);
+      localStorage.setItem('classfit_bookings', JSON.stringify(newBookings));
+      return;
+    }
+    await supabase.from('bookings').delete().eq('id', id);
     await refreshData();
   };
 
   return (
     <AppContext.Provider value={{ 
-      language, setLanguage, 
-      bookings, addBooking, updateBooking, deleteBooking,
-      isAdmin,
-      currentUser, users, login, register, registerTrainer, requestTrainerUpgrade, updateUser, deleteUser, logout, refreshData,
-      isLoading,
-      isDemoMode
+      language, setLanguage, bookings, addBooking, updateBooking, deleteBooking, isAdmin, currentUser, users, login, register, registerTrainer, requestTrainerUpgrade, updateUser, deleteUser, logout, refreshData, isLoading, isDemoMode
     }}>
       {children}
     </AppContext.Provider>
