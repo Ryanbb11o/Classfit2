@@ -164,12 +164,14 @@ const BookingPage: React.FC = () => {
     const localDate = new Date(selectedDate.getTime() - (offset*60*1000));
     const formattedDate = localDate.toISOString().split('T')[0];
 
+    // Generate code
     const bookingId = Math.random().toString(36).substr(2, 9).toUpperCase();
+    
     const newBooking: Booking = {
-      id: bookingId,
+      id: String(bookingId),
       checkInCode: bookingId.substring(0, 6),
-      trainerId: selectedTrainer.id,
-      userId: userId, 
+      trainerId: String(selectedTrainer.id),
+      userId: userId ? String(userId) : undefined, 
       customerName: name,
       customerPhone: phone,
       customerEmail: email,
@@ -190,9 +192,17 @@ const BookingPage: React.FC = () => {
     } catch (error: any) {
       console.error("Booking caught error:", error);
       const errorMsg = error?.message || "Check connection or SQL tables.";
-      alert(language === 'bg' 
-        ? `Грешка: ${errorMsg}. Моля уверете се, че сте изпълнили SQL скрипта в Supabase.` 
-        : `Error: ${errorMsg}. Please ensure you have run the provided SQL setup in Supabase.`);
+      
+      // Better instructions for the user if they see the UUID error
+      if (errorMsg.includes('uuid')) {
+          alert(language === 'bg' 
+            ? 'Грешка в базата данни (UUID). Трябва да промените колоната ID на TEXT в Supabase. Вижте предоставения SQL скрипт.' 
+            : 'Database error (UUID mismatch). You must change the ID column to TEXT in Supabase SQL editor.');
+      } else {
+          alert(language === 'bg' 
+            ? `Грешка: ${errorMsg}. Моля уверете се, че сте изпълнили SQL скрипта в Supabase.` 
+            : `Error: ${errorMsg}. Please ensure you have run the provided SQL setup in Supabase.`);
+      }
     } finally {
       setIsSubmitting(false);
     }

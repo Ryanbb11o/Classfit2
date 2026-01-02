@@ -98,10 +98,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       if (bError) throw bError;
       if (bData) {
         setBookings(bData.map((b: any) => ({
-          id: b.id,
-          checkInCode: b.check_in_code || b.id.substring(0, 6).toUpperCase(),
-          trainerId: b.trainer_id,
-          userId: b.user_id,
+          id: String(b.id),
+          checkInCode: b.check_in_code || String(b.id).substring(0, 6).toUpperCase(),
+          trainerId: String(b.trainer_id),
+          userId: b.user_id ? String(b.user_id) : undefined,
           customerName: b.customer_name,
           customerPhone: b.customer_phone,
           customerEmail: b.customer_email,
@@ -125,7 +125,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       if (uError) throw uError;
       if (uData) {
         const mappedUsers = uData.map((u: any) => ({
-          id: u.id,
+          id: String(u.id),
           name: u.name,
           email: u.email,
           password: u.password,
@@ -138,15 +138,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           commissionRate: u.commission_rate || 0
         }));
         setUsers(mappedUsers);
-        const storedUserStr = localStorage.getItem('classfit_user');
-        if (storedUserStr) {
-          const storedUser = JSON.parse(storedUserStr);
-          const latestUserData = mappedUsers.find(u => u.id === storedUser.id);
-          if (latestUserData) {
-            setCurrentUser(latestUserData);
-            localStorage.setItem('classfit_user', JSON.stringify(latestUserData));
-          }
-        }
       }
     } catch (e) {
       console.error("Refresh failed:", e);
@@ -166,10 +157,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
 
     const payload = {
-      id: booking.id,
+      id: String(booking.id), // Ensure it's a string
       check_in_code: checkInCode,
-      trainer_id: booking.trainerId,
-      user_id: booking.userId || null,
+      trainer_id: String(booking.trainerId),
+      user_id: booking.userId ? String(booking.userId) : null,
       customer_name: booking.customerName,
       customer_phone: booking.customerPhone || null,
       customer_email: booking.customerEmail || null,
@@ -265,7 +256,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const { data } = await supabase.from('users').select('*').eq('email', email).eq('password', pass).single();
     if (data) {
         const user: User = {
-          id: data.id,
+          id: String(data.id),
           name: data.name,
           email: data.email,
           password: data.password,
