@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { LayoutDashboard, ListFilter, MessageSquare, Briefcase, UserCheck, FileSpreadsheet, Users, RefreshCw, Star, CheckSquare, Trash2, Wallet, Banknote, CreditCard, Percent, Eye, Mail, Phone, AlertTriangle, Save, Loader2, X, Check, ArrowUpRight, TrendingUp } from 'lucide-react';
+import { LayoutDashboard, ListFilter, MessageSquare, Briefcase, UserCheck, FileSpreadsheet, Users, RefreshCw, Star, Trash2, Percent, Eye, X, Save, Loader2, TrendingUp, QrCode, Calendar, User, Mail, Shield } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, DEFAULT_PROFILE_IMAGE } from '../constants';
 import { User as UserType, Booking, Review } from '../types';
@@ -27,20 +27,6 @@ const AdminPanel: React.FC = () => {
   const handleManualRefresh = () => {
     setIsRefreshing(true);
     refreshData().then(() => setTimeout(() => setIsRefreshing(false), 500));
-  };
-
-  const handleFinish = async (id: string, method: 'card' | 'cash') => {
-    const booking = bookings.find(b => b.id === id);
-    if (!booking) return;
-    const trainerUser = users.find(u => u.id === booking.trainerId);
-    const rate = trainerUser?.commissionRate || 25;
-    const commAmt = (Number(booking.price) * rate) / 100;
-
-    try {
-      await updateBooking(id, { status: 'completed', paymentMethod: method, commissionAmount: commAmt });
-    } catch (err: any) {
-      alert(`Error: ${err.message}`);
-    }
   };
 
   const handleApproveReview = (id: string) => {
@@ -114,7 +100,7 @@ const AdminPanel: React.FC = () => {
         <div className="flex flex-wrap gap-2 bg-surface p-1.5 rounded-2xl border border-white/5">
             {[
               { id: 'overview', icon: LayoutDashboard, label: 'Overview' },
-              { id: 'bookings', icon: ListFilter, label: 'Reception', badge: awaitingPaymentList.length },
+              { id: 'bookings', icon: ListFilter, label: 'Reception', badge: awaitingPaymentList.length + bookings.filter(b => b.status === 'pending' || b.status === 'confirmed').length },
               { id: 'reviews', icon: MessageSquare, label: 'Moderation', badge: pendingReviews.length },
               { id: 'trainers', icon: Briefcase, label: 'Trainers' },
               { id: 'applications', icon: UserCheck, label: 'Apps', badge: pendingApplications.length },
@@ -155,7 +141,7 @@ const AdminPanel: React.FC = () => {
            </div>
         )}
 
-        {/* UNIFIED TABLE SECTION */}
+        {/* UNIFIED TABLE REGISTRY */}
         {activeTab !== 'overview' && activeTab !== 'reviews' && (
            <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-hidden shadow-2xl animate-in fade-in">
               <div className="p-8 border-b border-white/5 bg-white/5 flex justify-between items-center">
@@ -167,7 +153,7 @@ const AdminPanel: React.FC = () => {
                         {activeTab === 'users' && <Users size={20} />}
                         {activeTab === 'applications' && <UserCheck size={20} />}
                     </div>
-                    <h3 className="text-xl font-black uppercase italic text-white">{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Registry</h3>
+                    <h3 className="text-xl font-black uppercase italic text-white">{activeTab === 'bookings' ? 'Reception' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Registry</h3>
                  </div>
                  {activeTab === 'finance' && (
                     <div className="text-right">
@@ -216,7 +202,7 @@ const AdminPanel: React.FC = () => {
                         )}
                         {activeTab === 'bookings' && (
                            <tr>
-                              <th className="px-8 py-5">Client Request</th>
+                              <th className="px-8 py-5">Client Name</th>
                               <th className="px-8 py-5 text-center">Auth Code</th>
                               <th className="px-8 py-5">Session Schedule</th>
                               <th className="px-8 py-5">Log Status</th>
@@ -230,8 +216,8 @@ const AdminPanel: React.FC = () => {
                               <td className="px-8 py-5 font-medium text-slate-400">{b.date}</td>
                               <td className="px-8 py-5 font-black uppercase italic">{cleanName(users.find(u => u.id === b.trainerId)?.name || 'Coach')}</td>
                               <td className="px-8 py-5 text-slate-400">{b.customerName}</td>
-                              <td className="px-8 py-5 text-right font-black">{b.price.toFixed(2)}</td>
-                              <td className="px-8 py-5 text-right text-brand font-bold">{b.commissionAmount?.toFixed(2)}</td>
+                              <td className="px-8 py-5 text-right font-black">{Number(b.price).toFixed(2)}</td>
+                              <td className="px-8 py-5 text-right text-brand font-bold">{Number(b.commissionAmount).toFixed(2)}</td>
                               <td className="px-8 py-5 text-center"><span className="px-2 py-1 bg-white/10 rounded text-[8px] font-black uppercase italic tracking-widest">{b.paymentMethod}</span></td>
                            </tr>
                         ))}
@@ -281,12 +267,15 @@ const AdminPanel: React.FC = () => {
                               <td className="px-8 py-5 text-right"><button onClick={() => handleEditUserClick(tr)} className="px-4 py-2 bg-white/10 text-white rounded-lg text-[9px] font-black uppercase flex items-center gap-2 hover:bg-brand hover:text-dark transition-all ml-auto"><Eye size={14} /> Profile</button></td>
                            </tr>
                         ))}
-                        {activeTab === 'bookings' && bookings.filter(b => b.status === 'confirmed' || b.status === 'pending').map(b => (
+                        {activeTab === 'bookings' && bookings.filter(b => b.status !== 'completed').map(b => (
                            <tr key={b.id} className="hover:bg-white/5 transition-colors">
-                              <td className="px-8 py-5 font-black uppercase italic leading-none">{b.customerName}</td>
+                              <td className="px-8 py-5">
+                                 <div className="font-black uppercase italic leading-none text-white mb-1">{b.customerName}</div>
+                                 <div className="text-[9px] text-slate-500 uppercase tracking-widest">Coach: {cleanName(users.find(u => u.id === b.trainerId)?.name || 'Team')}</div>
+                              </td>
                               <td className="px-8 py-5 text-center"><span className="px-3 py-1 bg-brand/10 text-brand text-[10px] font-black italic rounded-lg border border-brand/20">{b.checkInCode}</span></td>
                               <td className="px-8 py-5 text-slate-400">{b.date} | <span className="font-bold text-white">{b.time}</span></td>
-                              <td className="px-8 py-5"><span className={`px-2 py-1 ${b.status === 'confirmed' ? 'bg-green-500/10 text-green-500' : 'bg-brand/10 text-brand'} text-[9px] font-black rounded uppercase`}>{b.status}</span></td>
+                              <td className="px-8 py-5"><span className={`px-2 py-1 ${b.status === 'confirmed' ? 'bg-green-500/10 text-green-500' : b.status === 'trainer_completed' ? 'bg-yellow-500/10 text-yellow-500' : 'bg-brand/10 text-brand'} text-[9px] font-black rounded uppercase`}>{b.status.replace('_', ' ')}</span></td>
                               <td className="px-8 py-5 text-right"><button onClick={() => deleteBooking(b.id)} className="p-2 text-slate-600 hover:text-red-500 transition-all"><Trash2 size={16} /></button></td>
                            </tr>
                         ))}
@@ -296,7 +285,6 @@ const AdminPanel: React.FC = () => {
            </div>
         )}
 
-        {/* MODERATION TAB REMAINS GRID BASED FOR CONTENT VISIBILITY */}
         {activeTab === 'reviews' && (
             <div className="space-y-6">
                 <h3 className="text-xl font-black uppercase italic text-white flex items-center gap-3">

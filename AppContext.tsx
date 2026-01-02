@@ -28,7 +28,17 @@ interface AppContextType {
   users: User[];
   login: (email: string, pass: string) => Promise<boolean>;
   register: (name: string, email: string, pass: string) => Promise<boolean>;
-  registerTrainer: (name: string, email: string, pass: string, phone: string, specialty: string) => Promise<{ success: boolean; msg?: string }>;
+  registerTrainer: (data: { 
+    name: string; 
+    email: string; 
+    pass: string; 
+    phone: string; 
+    specialty: string;
+    experience?: string;
+    certs?: string;
+    social?: string;
+    motivation?: string;
+  }) => Promise<{ success: boolean; msg?: string }>;
   requestTrainerUpgrade: (userId: string, currentName: string, phone: string, specialty: string) => Promise<{ success: boolean; msg?: string }>;
   updateUser: (id: string, updates: Partial<User>) => Promise<void>;
   deleteUser: (id: string) => Promise<void>;
@@ -96,9 +106,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const localBookings = localStorage.getItem('classfit_bookings');
       const localUsers = localStorage.getItem('classfit_users');
       const localReviews = localStorage.getItem('classfit_reviews');
-      if (localBookings) setBookings(JSON.parse(localBookings));
-      if (localUsers) setUsers(JSON.parse(localUsers));
-      if (localReviews) setReviews(JSON.parse(localReviews));
+      if (localBookings) setBookings(JSON.parse(localBookings) || []);
+      if (localUsers) setUsers(JSON.parse(localUsers) || []);
+      if (localReviews) setReviews(JSON.parse(localReviews) || []);
       return;
     }
 
@@ -108,22 +118,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       if (bData) {
         setBookings(bData.map((b: any) => ({
           id: String(b.id),
-          checkInCode: b.check_in_code,
+          checkInCode: b.check_in_code || '',
           trainerId: String(b.trainer_id),
           userId: b.user_id ? String(b.user_id) : undefined,
-          customerName: b.customer_name,
+          customerName: b.customer_name || 'Unknown',
           customerPhone: b.customer_phone,
           customerEmail: b.customer_email,
-          date: b.booking_date,
-          time: b.booking_time,
-          duration: b.duration_mins,
-          price: Number(b.price),
-          status: b.status,
+          date: b.booking_date || '',
+          time: b.booking_time || '',
+          duration: b.duration_mins || 60,
+          price: Number(b.price || 0),
+          status: b.status || 'pending',
           paymentMethod: b.payment_method,
-          language: b.language,
+          language: (b.language as Language) || 'bg',
           commissionAmount: Number(b.commission_amount || 0),
           gymAddress: b.gym_address,
-          hasBeenReviewed: b.has_been_reviewed
+          hasBeenReviewed: b.has_been_reviewed || false
         })));
       }
 
@@ -133,14 +143,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setReviews(rData.map((r: any) => ({
           id: String(r.id),
           trainerId: String(r.trainer_id),
-          author: r.author_name,
-          rating: r.rating,
-          text: r.content,
-          time: new Date(r.created_at).toLocaleDateString(),
-          avatar: r.author_name.charAt(0),
-          isAiEnhanced: r.is_ai_enhanced,
-          isPublished: r.is_published,
-          bookingId: String(r.booking_id)
+          author: r.author_name || 'Anonymous',
+          rating: r.rating || 5,
+          text: r.content || '',
+          time: r.created_at ? new Date(r.created_at).toLocaleDateString() : '',
+          avatar: (r.author_name || 'A').charAt(0),
+          isAiEnhanced: r.is_ai_enhanced || false,
+          isPublished: r.is_published || false,
+          bookingId: r.booking_id ? String(r.booking_id) : undefined
         })));
       }
       
@@ -149,14 +159,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       if (uData) {
         setUsers(uData.map((u: any) => ({
           id: String(u.id),
-          name: u.name,
-          email: u.email,
-          password: u.password,
-          role: u.role,
+          name: u.name || 'User',
+          email: u.email || '',
+          password: u.password || '',
+          role: u.role || 'user',
           phone: u.phone,
           image: u.image || DEFAULT_PROFILE_IMAGE, 
           bio: u.bio,     
-          joinedDate: u.joined_date,
+          joinedDate: u.joined_date || new Date().toISOString(),
           approvedBy: u.approved_by,
           commissionRate: u.commission_rate || 0
         })));
@@ -301,7 +311,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }
       return false;
     }
-    const { data } = await supabase.from('users').select('*').eq('email', email).eq('password', pass).single();
+    const { data } = await supabase.from('users').select('*').eq('email', email).eq('password', pass).maybeSingle();
     if (data) {
         const user: User = {
           id: String(data.id),
@@ -339,20 +349,40 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const { error } = await supabase.from('users').insert([{ name, email, password: pass, role: 'user' }]);
     if (error) throw error;
     await refreshData();
-    return true;
+    // After registration, log the user in
+    return login(email, pass);
   };
 
-  const registerTrainer = async (name: string, email: string, pass: string, phone: string, specialty: string): Promise<{ success: boolean; msg?: string }> => {
-    const fullName = `${name} (${specialty})`;
+  const registerTrainer = async (data: { 
+    name: string; 
+    email: string; 
+    pass: string; 
+    phone: string; 
+    specialty: string;
+    experience?: string;
+    certs?: string;
+    social?: string;
+    motivation?: string;
+  }): Promise<{ success: boolean; msg?: string }> => {
+    const fullName = `${data.name} (${data.specialty})`;
+    const bioText = `Experience: ${data.experience || 'N/A'}\nCertifications: ${data.certs || 'N/A'}\nSocial: ${data.social || 'N/A'}\nMotivation: ${data.motivation || 'N/A'}`;
+    
     if (isDemoMode) {
        const newUser: User = { 
         id: Math.random().toString(36).substr(2, 9), 
-        name: fullName, email, password: pass, phone, role: 'trainer_pending', joinedDate: new Date().toISOString(), image: DEFAULT_PROFILE_IMAGE
+        name: fullName, email: data.email, password: data.pass, phone: data.phone, bio: bioText, role: 'trainer_pending', joinedDate: new Date().toISOString(), image: DEFAULT_PROFILE_IMAGE
        };
        setUsers([...users, newUser]);
        return { success: true };
     }
-    const { error } = await supabase.from('users').insert([{ name: fullName, email, phone, password: pass, role: 'trainer_pending' }]);
+    const { error } = await supabase.from('users').insert([{ 
+      name: fullName, 
+      email: data.email, 
+      phone: data.phone, 
+      password: data.pass, 
+      bio: bioText,
+      role: 'trainer_pending' 
+    }]);
     if (error) return { success: false, msg: error.message };
     await refreshData();
     return { success: true };
