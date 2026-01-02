@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, Calendar as CalendarIcon, Clock, User, Phone, X, Mail, Loader2, ChevronLeft, ChevronRight, ArrowLeft, Star, Award, Zap, Quote, ThumbsUp, MapPin } from 'lucide-react';
+import { Check, Calendar as CalendarIcon, Clock, User, Phone, X, Mail, Loader2, ChevronLeft, ChevronRight, ArrowLeft, Star, Award, Zap, Quote, ThumbsUp, MapPin, Target, ShieldCheck } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { getTrainers, TRANSLATIONS, DEFAULT_PROFILE_IMAGE, getTrainerReviews } from '../constants';
 import { Trainer, Booking } from '../types';
@@ -248,8 +248,12 @@ const BookingPage: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="max-w-7xl mx-auto px-6 animate-in slide-in-from-bottom-4 duration-500">
+        <div className="max-w-7xl mx-auto px-6 animate-in slide-in-from-bottom-4 duration-500 relative">
           
+          {/* Subtle Accent Background Blur */}
+          <div className="absolute top-40 right-10 w-96 h-96 bg-brand/5 rounded-full blur-[120px] pointer-events-none -z-10"></div>
+          <div className="absolute bottom-10 left-10 w-96 h-96 bg-brand/5 rounded-full blur-[120px] pointer-events-none -z-10"></div>
+
           <button 
             onClick={() => { setSelectedTrainer(null); setSelectedTime(null); }}
             className="mb-12 flex items-center gap-2 text-slate-500 hover:text-white font-black uppercase tracking-widest text-[9px] transition-all group"
@@ -258,88 +262,131 @@ const BookingPage: React.FC = () => {
             {language === 'bg' ? 'Всички Треньори' : 'All Coaches'}
           </button>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
             
-            {/* LEFT: COACH DETAILS */}
-            <div className="lg:col-span-4 space-y-12">
-               <div className="relative rounded-[2rem] overflow-hidden border border-white/5 bg-surface shadow-2xl">
-                  <img 
-                    src={selectedTrainer.image} 
-                    alt={selectedTrainer.name} 
-                    className="w-full aspect-[4/5] object-cover grayscale-0"
-                  />
-                  {/* Centered Profile Text */}
-                  <div className="p-8 text-center">
-                     <h2 className="text-3xl font-black uppercase italic text-white mb-2 leading-none">{selectedTrainer.name}</h2>
-                     <p className="text-brand text-xs font-black uppercase tracking-[0.2em] mb-6">{selectedTrainer.specialty}</p>
+            {/* LEFT: COACH DETAILS (CENTRAL COLUMN) */}
+            <div className="lg:col-span-4 space-y-8">
+               {/* Image & Basic Info Card */}
+               <div className="relative rounded-[2.5rem] overflow-hidden border border-white/5 bg-surface shadow-2xl">
+                  <div className="aspect-[4/5] relative overflow-hidden">
+                    <img 
+                      src={selectedTrainer.image} 
+                      alt={selectedTrainer.name} 
+                      className="w-full h-full object-cover grayscale-0"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-dark/60 via-transparent to-transparent"></div>
+                  </div>
+                  
+                  <div className="p-10 text-center">
+                     <h2 className="text-4xl font-black uppercase italic text-white mb-2 leading-tight tracking-tighter">{selectedTrainer.name}</h2>
+                     <div className="inline-block px-4 py-1.5 bg-brand text-dark rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-8">
+                        {selectedTrainer.specialty}
+                     </div>
                      
-                     <div className="space-y-4 pt-6 border-t border-white/5 flex flex-col items-center">
-                        <div className="flex items-center gap-4 text-xs font-bold text-slate-400">
-                            <Award className="text-brand" size={16} /> 5+ Years Experience
+                     {/* Refined Experience/Focus Badges */}
+                     <div className="grid grid-cols-1 gap-4 pt-6 border-t border-white/5">
+                        <div className="flex items-center gap-4 px-6 py-5 bg-dark/40 rounded-2xl border border-white/5 group hover:border-brand/40 transition-all duration-300">
+                            <div className="w-12 h-12 bg-brand/10 text-brand rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-brand/5 group-hover:bg-brand group-hover:text-dark transition-colors">
+                                <Award size={24} />
+                            </div>
+                            <div className="text-left">
+                                <p className="text-[11px] font-black uppercase tracking-widest text-white leading-none mb-1">5+ Years</p>
+                                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-tight">Active Coaching</p>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-4 text-xs font-bold text-slate-400">
-                            <Zap className="text-brand" size={16} /> Performance Focused
+                        <div className="flex items-center gap-4 px-6 py-5 bg-dark/40 rounded-2xl border border-white/5 group hover:border-brand/40 transition-all duration-300">
+                            <div className="w-12 h-12 bg-brand/10 text-brand rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-brand/5 group-hover:bg-brand group-hover:text-dark transition-colors">
+                                <Target size={24} />
+                            </div>
+                            <div className="text-left">
+                                <p className="text-[11px] font-black uppercase tracking-widest text-white leading-none mb-1">Performance</p>
+                                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-tight">Focus & Results</p>
+                            </div>
                         </div>
                      </div>
                   </div>
                </div>
 
-               {/* Centered Bio Header & Text */}
-               <div className="px-2 text-center">
-                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-600 mb-6 italic">Background</h3>
-                  <p className="text-slate-400 leading-relaxed font-medium italic text-sm">
-                      {selectedTrainer.bio || 'Professional fitness guidance focused on achieving peak physical results and sustainable health habits.'}
-                  </p>
+               {/* Bio/Background Container - Enhanced Background */}
+               <div className="relative p-10 bg-surface/50 backdrop-blur-xl rounded-[2.5rem] border border-white/10 shadow-2xl overflow-hidden text-center group">
+                  {/* Internal decoration */}
+                  <div className="absolute -top-10 -right-10 w-32 h-32 bg-brand/5 rounded-full blur-2xl transition-all duration-700 group-hover:bg-brand/10"></div>
+                  
+                  <h3 className="text-xs font-black uppercase tracking-[0.4em] text-slate-600 mb-8 italic flex items-center justify-center gap-3">
+                    <span className="w-8 h-px bg-white/5"></span>
+                    Background
+                    <span className="w-8 h-px bg-white/5"></span>
+                  </h3>
+                  
+                  <div className="relative">
+                    <Quote className="absolute -top-6 -left-2 text-brand/10 transform -rotate-12" size={48} />
+                    <p className="text-slate-300 leading-relaxed font-medium italic text-base relative z-10 px-4 mb-4">
+                        {selectedTrainer.bio || 'Professional fitness guidance focused on achieving peak physical results and sustainable health habits.'}
+                    </p>
+                  </div>
+                  
+                  <div className="inline-flex items-center gap-2 mt-4 px-3 py-1 bg-white/5 rounded-lg border border-white/5">
+                     <Check size={10} className="text-brand" />
+                     <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 italic">Varna Certified Coach</span>
+                  </div>
                </div>
             </div>
 
             {/* RIGHT: BOOKING BLOCK */}
             <div className="lg:col-span-8">
-               <div className="bg-surface/30 backdrop-blur-sm rounded-[2.5rem] border border-white/5 p-8 md:p-12 shadow-2xl">
+               <div className="bg-surface/30 backdrop-blur-sm rounded-[3rem] border border-white/5 p-8 md:p-12 shadow-2xl">
                   
                   {/* Calendar Header */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-12">
-                     <h3 className="text-xl font-black uppercase italic text-white">
-                        {language === 'bg' ? 'График' : 'Calendar'}
-                     </h3>
-                     <div className="flex items-center gap-3">
-                         <button onClick={handlePrevMonth} className="w-8 h-8 flex items-center justify-center hover:bg-white/5 rounded-full text-slate-500 hover:text-white transition-all border border-white/5">
-                            <ChevronLeft size={16} />
+                     <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-brand/10 rounded-xl flex items-center justify-center text-brand">
+                            <CalendarIcon size={20} />
+                        </div>
+                        <h3 className="text-2xl font-black uppercase italic text-white tracking-tighter">
+                            {language === 'bg' ? 'График' : 'Session Calendar'}
+                        </h3>
+                     </div>
+                     <div className="flex items-center gap-2">
+                         <button onClick={handlePrevMonth} className="w-10 h-10 flex items-center justify-center hover:bg-white/5 rounded-full text-slate-500 hover:text-white transition-all border border-white/5">
+                            <ChevronLeft size={18} />
                          </button>
-                         <div className="px-4 py-1.5 bg-white/5 rounded-full border border-white/5 min-w-[120px] text-center">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-white">
+                         <div className="px-6 py-2 bg-white/5 rounded-full border border-white/5 min-w-[140px] text-center">
+                            <span className="text-[11px] font-black uppercase tracking-widest text-white">
                                {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
                             </span>
                          </div>
-                         <button onClick={handleNextMonth} className="w-8 h-8 flex items-center justify-center hover:bg-white/5 rounded-full text-slate-500 hover:text-white transition-all border border-white/5">
-                            <ChevronRight size={16} />
+                         <button onClick={handleNextMonth} className="w-10 h-10 flex items-center justify-center hover:bg-white/5 rounded-full text-slate-500 hover:text-white transition-all border border-white/5">
+                            <ChevronRight size={18} />
                          </button>
                      </div>
                   </div>
 
                   {/* Calendar Grid */}
-                  <div className="mb-12">
-                      <div className="grid grid-cols-7 gap-1 mb-4 text-center">
+                  <div className="mb-16">
+                      <div className="grid grid-cols-7 gap-1 mb-6 text-center">
                          {weekDays.map(day => (
-                            <div key={day} className="text-[9px] font-black text-slate-600 uppercase">
+                            <div key={day} className="text-[10px] font-black text-slate-600 uppercase tracking-widest">
                                {day}
                             </div>
                          ))}
                       </div>
-                      <div className="grid grid-cols-7 gap-2 place-items-center">
+                      <div className="grid grid-cols-7 gap-3 place-items-center">
                          {renderCalendar()}
                       </div>
                   </div>
 
                   {/* Slots Grid */}
-                  <div className="pt-10 border-t border-white/5 mb-12">
-                     <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-6 italic">Available Times</h3>
-                     <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                  <div className="pt-12 border-t border-white/5 mb-12">
+                     <div className="flex items-center gap-3 mb-8">
+                        <Clock className="text-brand" size={16} />
+                        <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 italic">Available Time Slots</h3>
+                     </div>
+                     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
                         {selectedTrainer.availability.map(time => (
                            <button
                               key={time}
                               onClick={() => setSelectedTime(time)}
-                              className={`py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${
+                              className={`py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border ${
                                  selectedTime === time
                                     ? 'bg-brand text-dark border-brand shadow-lg shadow-brand/10'
                                     : 'bg-white/5 text-slate-400 border-white/5 hover:border-brand/40'
@@ -352,54 +399,62 @@ const BookingPage: React.FC = () => {
                   </div>
 
                   {/* Summary & Button */}
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-8 pt-6">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-10 pt-10 border-t border-white/5">
                       <div className="text-center sm:text-left">
-                          <p className="text-[9px] font-black uppercase tracking-widest text-slate-600 mb-1">Session Rate</p>
-                          <div className="text-3xl font-black uppercase italic text-white leading-none">
-                              {selectedTrainer.price} <span className="text-sm text-slate-500 font-bold not-italic">BGN</span>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-2">Investment</p>
+                          <div className="text-4xl font-black uppercase italic text-white leading-none tracking-tighter">
+                              {selectedTrainer.price} <span className="text-lg text-brand font-bold not-italic ml-1">BGN</span>
                           </div>
                       </div>
 
                       <button 
                          onClick={initiateBooking}
                          disabled={!selectedTime || isSubmitting}
-                         className={`w-full sm:w-auto px-12 py-5 rounded-full font-black uppercase italic tracking-[0.2em] text-xs transition-all shadow-xl flex items-center justify-center gap-3 ${
+                         className={`w-full sm:w-auto px-16 py-6 rounded-full font-black uppercase italic tracking-[0.2em] text-xs transition-all shadow-xl flex items-center justify-center gap-3 ${
                             selectedTime && !isSubmitting
                                ? 'bg-brand text-dark hover:scale-105 shadow-brand/20'
                                : 'bg-white/5 text-slate-700 cursor-not-allowed shadow-none border border-white/5'
                          }`}
                       >
-                         {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : (language === 'bg' ? 'Запази' : 'Confirm Session')}
+                         {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : (language === 'bg' ? 'Запази час' : 'Confirm Session')}
                       </button>
                   </div>
 
                   {/* CLIENT TESTIMONIALS SECTION */}
-                  <div className="mt-20 pt-12 border-t border-white/5">
-                     <div className="flex items-center justify-between mb-8">
-                        <h3 className="text-xs font-black uppercase italic text-white flex items-center gap-3">
-                           <ThumbsUp size={14} className="text-brand" /> Client Testimonials
-                        </h3>
-                        <div className="flex items-center gap-1">
+                  <div className="mt-24 pt-12 border-t border-white/5">
+                     <div className="flex items-center justify-between mb-10">
+                        <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 bg-brand/5 rounded-xl flex items-center justify-center text-brand">
+                                <ShieldCheck size={20} />
+                            </div>
+                            <h3 className="text-lg font-black uppercase italic text-white tracking-tight">
+                                Client Results & Feedback
+                            </h3>
+                        </div>
+                        <div className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/5">
                             <Star size={12} className="text-brand fill-brand" />
-                            <span className="text-[10px] font-black text-white">5.0 RATING</span>
+                            <span className="text-[10px] font-black text-white uppercase tracking-widest">Top Rated Coach</span>
                         </div>
                      </div>
 
-                     <div className="space-y-6 max-h-[350px] overflow-y-auto custom-scrollbar pr-4">
+                     <div className="space-y-8 max-h-[400px] overflow-y-auto custom-scrollbar pr-6">
                         {trainerReviews.map((review, i) => (
                            <div key={i} className="group relative">
-                              <div className="flex items-start gap-4 mb-2">
-                                 <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center font-black text-[10px] text-brand shrink-0">
+                              <div className="flex items-start gap-6">
+                                 <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center font-black text-xs text-brand shrink-0 group-hover:bg-brand group-hover:text-dark transition-all duration-300">
                                     {review.avatar}
                                  </div>
                                  <div className="flex-1">
-                                    <div className="flex items-center justify-between mb-1">
-                                       <span className="text-[11px] font-black text-white uppercase italic">{review.author}</span>
-                                       <span className="text-[8px] font-bold text-slate-600 uppercase tracking-tighter">{review.time}</span>
+                                    <div className="flex items-center justify-between mb-2">
+                                       <span className="text-xs font-black text-white uppercase italic tracking-wide">{review.author}</span>
+                                       <div className="flex gap-0.5">
+                                          {[...Array(5)].map((_, s) => <Star key={s} size={10} className="text-brand fill-brand" />)}
+                                       </div>
                                     </div>
-                                    <p className="text-xs text-slate-400 font-medium italic leading-relaxed">
+                                    <p className="text-sm text-slate-400 font-medium italic leading-relaxed">
                                        "{review.text}"
                                     </p>
+                                    <div className="mt-2 text-[9px] font-bold text-slate-600 uppercase tracking-tighter">{review.time}</div>
                                  </div>
                               </div>
                            </div>
@@ -417,28 +472,44 @@ const BookingPage: React.FC = () => {
       {/* Guest Modal */}
       {showGuestForm && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-dark/95 backdrop-blur-md animate-in fade-in duration-300">
-           <div className="bg-surface rounded-[2rem] p-8 md:p-10 max-w-sm w-full shadow-2xl relative border border-white/10">
-              <button onClick={() => setShowGuestForm(false)} className="absolute top-6 right-6 text-slate-500 hover:text-white transition-all">
+           <div className="bg-surface rounded-[3rem] p-10 md:p-12 max-w-md w-full shadow-2xl relative border border-white/10 overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1 bg-brand"></div>
+              <button onClick={() => setShowGuestForm(false)} className="absolute top-8 right-8 text-slate-500 hover:text-white transition-all bg-white/5 p-2 rounded-full">
                 <X size={20} />
               </button>
-              <h2 className="text-2xl font-black uppercase italic mb-6 text-white tracking-tighter">{t.finalize}</h2>
+              
+              <div className="mb-8">
+                  <h2 className="text-3xl font-black uppercase italic text-white tracking-tighter mb-2">{t.finalize}</h2>
+                  <p className="text-slate-500 text-xs font-medium">Please provide your contact details to complete the session booking.</p>
+              </div>
+
               <form onSubmit={handleGuestSubmit} className="space-y-4">
-                <input 
-                  type="text" required value={guestName} placeholder={t.name}
-                  onChange={(e) => setGuestName(e.target.value)}
-                  className="w-full bg-dark/50 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white outline-none focus:border-brand"
-                />
-                <input 
-                  type="tel" required value={guestPhone} placeholder={t.phone}
-                  onChange={(e) => setGuestPhone(e.target.value)}
-                  className="w-full bg-dark/50 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white outline-none focus:border-brand"
-                />
-                <input 
-                  type="email" required value={guestEmail} placeholder="Email"
-                  onChange={(e) => setGuestEmail(e.target.value)}
-                  className="w-full bg-dark/50 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white outline-none focus:border-brand"
-                />
-                <button type="submit" className="w-full bg-brand text-dark py-4 rounded-xl font-black uppercase tracking-widest text-xs shadow-lg mt-4">
+                <div className="space-y-1">
+                   <label className="text-[9px] font-black uppercase tracking-widest text-slate-600 ml-2">Full Name</label>
+                   <input 
+                      type="text" required value={guestName} placeholder={t.name}
+                      onChange={(e) => setGuestName(e.target.value)}
+                      className="w-full bg-dark/50 border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white outline-none focus:border-brand transition-all"
+                   />
+                </div>
+                <div className="space-y-1">
+                   <label className="text-[9px] font-black uppercase tracking-widest text-slate-600 ml-2">Phone Number</label>
+                   <input 
+                      type="tel" required value={guestPhone} placeholder={t.phone}
+                      onChange={(e) => setGuestPhone(e.target.value)}
+                      className="w-full bg-dark/50 border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white outline-none focus:border-brand transition-all"
+                   />
+                </div>
+                <div className="space-y-1">
+                   <label className="text-[9px] font-black uppercase tracking-widest text-slate-600 ml-2">Email Address</label>
+                   <input 
+                      type="email" required value={guestEmail} placeholder="Email"
+                      onChange={(e) => setGuestEmail(e.target.value)}
+                      className="w-full bg-dark/50 border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white outline-none focus:border-brand transition-all"
+                   />
+                </div>
+                
+                <button type="submit" className="w-full bg-brand text-dark py-5 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-brand/10 mt-6 hover:scale-[1.02] transition-all">
                    {t.confirmBooking}
                 </button>
               </form>
