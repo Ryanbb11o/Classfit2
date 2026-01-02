@@ -103,6 +103,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
 
     try {
+      // 1. Fetch Bookings
       const { data: bData } = await supabase.from('bookings').select('*').order('created_at', { ascending: false });
       if (bData) {
         setBookings(bData.map((b: any) => ({
@@ -116,19 +117,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           date: b.booking_date,
           time: b.booking_time,
           duration: b.duration_mins,
-          price: b.price,
+          price: Number(b.price),
           status: b.status,
           paymentMethod: b.payment_method,
           language: b.language,
-          commissionAmount: b.commission_amount,
+          commissionAmount: Number(b.commission_amount || 0),
           gymAddress: b.gym_address,
-          hasBeenReviewed: b.has_been_reviewed,
-          rating: b.rating,
-          reviewText: b.review_text,
-          isAiEnhanced: b.is_ai_enhanced
+          hasBeenReviewed: b.has_been_reviewed
         })));
       }
 
+      // 2. Fetch Reviews
       const { data: rData } = await supabase.from('reviews').select('*').order('created_at', { ascending: false });
       if (rData) {
         setReviews(rData.map((r: any) => ({
@@ -145,6 +144,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         })));
       }
       
+      // 3. Fetch Users
       const { data: uData } = await supabase.from('users').select('*').order('joined_date', { ascending: false });
       if (uData) {
         setUsers(uData.map((u: any) => ({

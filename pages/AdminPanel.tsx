@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { LayoutDashboard, ListFilter, MessageSquare, Briefcase, UserCheck, FileSpreadsheet, Users, RefreshCw, Star, CheckSquare, Trash2, Wallet, Banknote, CreditCard, Percent, Eye, Mail, Phone, AlertTriangle, Save, Loader2, X, Check } from 'lucide-react';
+import { LayoutDashboard, ListFilter, MessageSquare, Briefcase, UserCheck, FileSpreadsheet, Users, RefreshCw, Star, CheckSquare, Trash2, Wallet, Banknote, CreditCard, Percent, Eye, Mail, Phone, AlertTriangle, Save, Loader2, X, Check, ArrowUpRight, TrendingUp } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, DEFAULT_PROFILE_IMAGE } from '../constants';
 import { User as UserType, Booking, Review } from '../types';
@@ -132,32 +132,178 @@ const AdminPanel: React.FC = () => {
       <div className="space-y-8">
         {activeTab === 'overview' && (
            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div className="p-8 bg-brand text-dark rounded-[2rem] shadow-xl">
+              <div className="p-8 bg-brand text-dark rounded-[2.5rem] shadow-xl relative overflow-hidden group">
+                 <div className="absolute top-4 right-4 text-dark/20 group-hover:scale-125 transition-transform"><TrendingUp size={48} /></div>
                  <p className="text-[10px] font-black uppercase mb-4 opacity-60 tracking-widest">Gross Revenue</p>
-                 <p className="text-4xl font-black italic">{totalIncome.toFixed(2)} <span className="text-sm">BGN</span></p>
+                 <p className="text-4xl font-black italic">{totalIncome.toFixed(2)} <span className="text-sm font-bold">BGN</span></p>
               </div>
-              <div className="p-8 bg-surface border border-white/5 text-white rounded-[2rem]">
-                 <p className="text-[10px] font-black uppercase mb-4 text-slate-500 tracking-widest">Pending Reviews</p>
+              <div className="p-8 bg-surface border border-white/5 text-white rounded-[2.5rem] relative overflow-hidden group">
+                 <div className="absolute top-4 right-4 text-white/5 group-hover:scale-125 transition-transform"><MessageSquare size={48} /></div>
+                 <p className="text-[10px] font-black uppercase mb-4 text-slate-500 tracking-widest">Moderation Queue</p>
                  <p className="text-4xl font-black italic text-brand">{pendingReviews.length}</p>
               </div>
-              <div className="p-8 bg-surface border border-white/5 text-white rounded-[2rem]">
+              <div className="p-8 bg-surface border border-white/5 text-white rounded-[2.5rem] relative overflow-hidden group">
+                 <div className="absolute top-4 right-4 text-white/5 group-hover:scale-125 transition-transform"><Users size={48} /></div>
                  <p className="text-[10px] font-black uppercase mb-4 text-slate-500 tracking-widest">Active Members</p>
                  <p className="text-4xl font-black italic">{users.filter(u => u.role === 'user').length}</p>
               </div>
-              <div className="p-8 bg-surface border border-white/5 text-white rounded-[2rem]">
-                 <p className="text-[10px] font-black uppercase mb-4 text-slate-500 tracking-widest">Applications</p>
+              <div className="p-8 bg-surface border border-white/5 text-white rounded-[2.5rem] relative overflow-hidden group">
+                 <div className="absolute top-4 right-4 text-white/5 group-hover:scale-125 transition-transform"><UserCheck size={48} /></div>
+                 <p className="text-[10px] font-black uppercase mb-4 text-slate-500 tracking-widest">Coach Requests</p>
                  <p className="text-4xl font-black italic text-yellow-500">{pendingApplications.length}</p>
               </div>
            </div>
         )}
 
+        {/* UNIFIED TABLE SECTION */}
+        {activeTab !== 'overview' && activeTab !== 'reviews' && (
+           <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-hidden shadow-2xl animate-in fade-in">
+              <div className="p-8 border-b border-white/5 bg-white/5 flex justify-between items-center">
+                 <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-brand/10 text-brand rounded-xl flex items-center justify-center">
+                        {activeTab === 'bookings' && <ListFilter size={20} />}
+                        {activeTab === 'trainers' && <Briefcase size={20} />}
+                        {activeTab === 'finance' && <FileSpreadsheet size={20} />}
+                        {activeTab === 'users' && <Users size={20} />}
+                        {activeTab === 'applications' && <UserCheck size={20} />}
+                    </div>
+                    <h3 className="text-xl font-black uppercase italic text-white">{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Registry</h3>
+                 </div>
+                 {activeTab === 'finance' && (
+                    <div className="text-right">
+                       <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Net Profit</p>
+                       <p className="text-2xl font-black italic text-brand">{(totalIncome - totalCommission).toFixed(2)} BGN</p>
+                    </div>
+                 )}
+              </div>
+              
+              <div className="overflow-x-auto">
+                 <table className="w-full text-left">
+                    <thead className="bg-dark/30 text-[9px] font-black uppercase text-slate-500 border-b border-white/5">
+                        {activeTab === 'finance' && (
+                           <tr>
+                              <th className="px-8 py-5">Session Date</th>
+                              <th className="px-8 py-5">Coach Name</th>
+                              <th className="px-8 py-5">Client Name</th>
+                              <th className="px-8 py-5 text-right">Revenue</th>
+                              <th className="px-8 py-5 text-right">Commission</th>
+                              <th className="px-8 py-5 text-center">Mode</th>
+                           </tr>
+                        )}
+                        {activeTab === 'users' && (
+                           <tr>
+                              <th className="px-8 py-5">Full Member Details</th>
+                              <th className="px-8 py-5">Email Address</th>
+                              <th className="px-8 py-5 text-center">Auth Role</th>
+                              <th className="px-8 py-5 text-right">Account Actions</th>
+                           </tr>
+                        )}
+                        {activeTab === 'applications' && (
+                           <tr>
+                              <th className="px-8 py-5">Coach Applicant</th>
+                              <th className="px-8 py-5">Contact Details</th>
+                              <th className="px-8 py-5">Specialty</th>
+                              <th className="px-8 py-5 text-right">Decision</th>
+                           </tr>
+                        )}
+                        {activeTab === 'trainers' && (
+                           <tr>
+                              <th className="px-8 py-5">Professional Profile</th>
+                              <th className="px-8 py-5">Commission Rate</th>
+                              <th className="px-8 py-5">Verification</th>
+                              <th className="px-8 py-5 text-right">Management</th>
+                           </tr>
+                        )}
+                        {activeTab === 'bookings' && (
+                           <tr>
+                              <th className="px-8 py-5">Client Request</th>
+                              <th className="px-8 py-5 text-center">Auth Code</th>
+                              <th className="px-8 py-5">Session Schedule</th>
+                              <th className="px-8 py-5">Log Status</th>
+                              <th className="px-8 py-5 text-right">Ops</th>
+                           </tr>
+                        )}
+                    </thead>
+                    <tbody className="divide-y divide-white/5 text-xs text-white">
+                        {activeTab === 'finance' && completedBookings.map(b => (
+                           <tr key={b.id} className="hover:bg-white/5 transition-colors">
+                              <td className="px-8 py-5 font-medium text-slate-400">{b.date}</td>
+                              <td className="px-8 py-5 font-black uppercase italic">{cleanName(users.find(u => u.id === b.trainerId)?.name || 'Coach')}</td>
+                              <td className="px-8 py-5 text-slate-400">{b.customerName}</td>
+                              <td className="px-8 py-5 text-right font-black">{b.price.toFixed(2)}</td>
+                              <td className="px-8 py-5 text-right text-brand font-bold">{b.commissionAmount?.toFixed(2)}</td>
+                              <td className="px-8 py-5 text-center"><span className="px-2 py-1 bg-white/10 rounded text-[8px] font-black uppercase italic tracking-widest">{b.paymentMethod}</span></td>
+                           </tr>
+                        ))}
+                        {activeTab === 'users' && users.map(u => (
+                           <tr key={u.id} className="hover:bg-white/5 transition-colors">
+                              <td className="px-8 py-5 flex items-center gap-4">
+                                 <div className="w-8 h-8 rounded-lg bg-white/5 overflow-hidden border border-white/5">
+                                    <img src={u.image || DEFAULT_PROFILE_IMAGE} className="w-full h-full object-cover" />
+                                 </div>
+                                 <p className="font-black uppercase italic">{cleanName(u.name)}</p>
+                              </td>
+                              <td className="px-8 py-5 text-slate-400">{u.email}</td>
+                              <td className="px-8 py-5 text-center">
+                                 <span className={`px-2 py-1 rounded text-[8px] font-black uppercase ${u.role === 'admin' ? 'bg-red-500/10 text-red-500' : u.role === 'trainer' ? 'bg-brand/10 text-brand' : 'bg-white/10 text-slate-400'}`}>
+                                    {u.role.replace('_', ' ')}
+                                 </span>
+                              </td>
+                              <td className="px-8 py-5 text-right">
+                                 {u.id !== currentUser?.id && <button onClick={() => deleteUser(u.id)} className="p-2 text-slate-600 hover:text-red-500 transition-all"><Trash2 size={16} /></button>}
+                              </td>
+                           </tr>
+                        ))}
+                        {activeTab === 'applications' && pendingApplications.map(app => (
+                            <tr key={app.id} className="hover:bg-white/5">
+                                <td className="px-8 py-5 font-black uppercase italic text-white leading-none">{cleanName(app.name)}</td>
+                                <td className="px-8 py-5 text-slate-400">{app.email} <br/> <span className="text-[10px]">{app.phone}</span></td>
+                                <td className="px-8 py-5"><span className="text-yellow-500 font-bold uppercase text-[10px]">{app.name.match(/\((.*)\)/)?.[1] || 'Coach'}</span></td>
+                                <td className="px-8 py-5 text-right flex gap-2 justify-end">
+                                    <button onClick={() => handleApproveTrainer(app.id)} className="px-4 py-2 bg-brand text-dark rounded-lg text-[9px] font-black uppercase shadow-lg">Approve</button>
+                                    <button onClick={() => handleRejectTrainer(app.id)} className="px-4 py-2 bg-white/5 text-slate-400 rounded-lg text-[9px] font-black uppercase hover:text-red-500 transition-all">Reject</button>
+                                </td>
+                            </tr>
+                        ))}
+                        {activeTab === 'trainers' && activeTrainers.map(tr => (
+                           <tr key={tr.id} className="hover:bg-white/5 transition-colors">
+                              <td className="px-8 py-5 flex items-center gap-4">
+                                 <div className="w-10 h-10 rounded-xl bg-dark overflow-hidden border border-white/5">
+                                    <img src={tr.image || DEFAULT_PROFILE_IMAGE} className="w-full h-full object-cover" />
+                                 </div>
+                                 <div>
+                                    <p className="font-black uppercase italic leading-none mb-1">{cleanName(tr.name)}</p>
+                                    <p className="text-[9px] text-brand font-black uppercase">{tr.name.match(/\((.*)\)/)?.[1] || 'Club Professional'}</p>
+                                 </div>
+                              </td>
+                              <td className="px-8 py-5"><span className="px-2 py-1 bg-brand text-dark rounded text-[8px] font-black uppercase">{tr.commissionRate}% Share</span></td>
+                              <td className="px-8 py-5"><span className="text-slate-500 text-[10px] font-black uppercase tracking-widest italic">Verified by Admin</span></td>
+                              <td className="px-8 py-5 text-right"><button onClick={() => handleEditUserClick(tr)} className="px-4 py-2 bg-white/10 text-white rounded-lg text-[9px] font-black uppercase flex items-center gap-2 hover:bg-brand hover:text-dark transition-all ml-auto"><Eye size={14} /> Profile</button></td>
+                           </tr>
+                        ))}
+                        {activeTab === 'bookings' && bookings.filter(b => b.status === 'confirmed' || b.status === 'pending').map(b => (
+                           <tr key={b.id} className="hover:bg-white/5 transition-colors">
+                              <td className="px-8 py-5 font-black uppercase italic leading-none">{b.customerName}</td>
+                              <td className="px-8 py-5 text-center"><span className="px-3 py-1 bg-brand/10 text-brand text-[10px] font-black italic rounded-lg border border-brand/20">{b.checkInCode}</span></td>
+                              <td className="px-8 py-5 text-slate-400">{b.date} | <span className="font-bold text-white">{b.time}</span></td>
+                              <td className="px-8 py-5"><span className={`px-2 py-1 ${b.status === 'confirmed' ? 'bg-green-500/10 text-green-500' : 'bg-brand/10 text-brand'} text-[9px] font-black rounded uppercase`}>{b.status}</span></td>
+                              <td className="px-8 py-5 text-right"><button onClick={() => deleteBooking(b.id)} className="p-2 text-slate-600 hover:text-red-500 transition-all"><Trash2 size={16} /></button></td>
+                           </tr>
+                        ))}
+                    </tbody>
+                 </table>
+              </div>
+           </div>
+        )}
+
+        {/* MODERATION TAB REMAINS GRID BASED FOR CONTENT VISIBILITY */}
         {activeTab === 'reviews' && (
             <div className="space-y-6">
                 <h3 className="text-xl font-black uppercase italic text-white flex items-center gap-3">
                     <MessageSquare className="text-brand" /> Review Moderation
                 </h3>
                 {pendingReviews.length === 0 ? (
-                    <div className="p-20 bg-surface/30 rounded-[3rem] border-2 border-dashed border-white/5 text-center text-slate-500 font-bold">All reviews processed.</div>
+                    <div className="p-20 bg-surface/30 rounded-[3rem] border-2 border-dashed border-white/5 text-center text-slate-500 font-black uppercase tracking-widest text-[10px]">All feedback has been processed.</div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {pendingReviews.map(review => (
@@ -166,7 +312,7 @@ const AdminPanel: React.FC = () => {
                                     <div className="flex items-center justify-between mb-6">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 bg-brand text-dark rounded-xl flex items-center justify-center font-black">{review.avatar}</div>
-                                            <p className="text-xs font-black text-white uppercase italic">{review.author}</p>
+                                            <p className="text-xs font-black text-white uppercase italic tracking-tight">{review.author}</p>
                                         </div>
                                         <div className="flex text-brand">
                                             {[...Array(review.rating)].map((_, i) => <Star key={i} size={10} fill="currentColor" />)}
@@ -175,211 +321,13 @@ const AdminPanel: React.FC = () => {
                                     <p className="text-sm text-slate-300 italic mb-8 leading-relaxed">"{review.text}"</p>
                                 </div>
                                 <div className="flex gap-3 pt-6 border-t border-white/5">
-                                    <button onClick={() => handleApproveReview(review.id)} className="flex-1 py-3 bg-brand text-dark rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-white transition-all">Approve</button>
+                                    <button onClick={() => handleApproveReview(review.id)} className="flex-1 py-3 bg-brand text-dark rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-lg">Approve</button>
                                     <button onClick={() => deleteReview(review.id)} className="flex-1 py-3 bg-red-500/10 text-red-500 rounded-xl text-[10px] font-black uppercase border border-red-500/10 hover:bg-red-500 hover:text-white transition-all">Delete</button>
                                 </div>
                             </div>
                         ))}
                     </div>
                 )}
-            </div>
-        )}
-
-        {activeTab === 'finance' && (
-            <div className="bg-surface rounded-[2rem] border border-white/5 overflow-hidden">
-                <div className="p-8 border-b border-white/5 bg-white/5 flex justify-between items-center">
-                    <h3 className="text-xl font-black uppercase italic text-white flex items-center gap-3"><FileSpreadsheet className="text-brand" /> Financial Log</h3>
-                    <div className="flex gap-4">
-                        <div className="text-right"><p className="text-[8px] font-black text-slate-500 uppercase">Club Net</p><p className="text-xl font-black italic">{(totalIncome - totalCommission).toFixed(2)} BGN</p></div>
-                    </div>
-                </div>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead className="bg-dark/30 text-[9px] font-black uppercase text-slate-500">
-                            <tr>
-                                <th className="px-8 py-5">Date</th>
-                                <th className="px-8 py-5">Coach</th>
-                                <th className="px-8 py-5">Client</th>
-                                <th className="px-8 py-5 text-right">Revenue</th>
-                                <th className="px-8 py-5 text-right">Commission</th>
-                                <th className="px-8 py-5 text-center">Type</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/5 text-xs text-white">
-                            {completedBookings.map(b => (
-                                <tr key={b.id} className="hover:bg-white/5">
-                                    <td className="px-8 py-5 text-slate-400">{b.date}</td>
-                                    <td className="px-8 py-5 font-bold italic">{cleanName(users.find(u => u.id === b.trainerId)?.name || 'Coach')}</td>
-                                    <td className="px-8 py-5 text-slate-400">{b.customerName}</td>
-                                    <td className="px-8 py-5 text-right font-black">{b.price.toFixed(2)}</td>
-                                    <td className="px-8 py-5 text-right text-brand font-bold">{b.commissionAmount?.toFixed(2)}</td>
-                                    <td className="px-8 py-5 text-center">
-                                        <span className="px-2 py-1 bg-white/5 rounded text-[8px] font-black uppercase">{b.paymentMethod}</span>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        )}
-
-        {activeTab === 'applications' && (
-            <div className="bg-surface rounded-[2rem] border border-white/5 overflow-hidden">
-                <div className="p-8 bg-white/5 border-b border-white/5 font-black uppercase italic text-white flex items-center gap-3">
-                    <UserCheck className="text-yellow-500" /> Pending Coach Requests
-                </div>
-                {pendingApplications.length === 0 ? (
-                    <div className="p-20 text-center text-slate-500 font-bold italic">No pending applications.</div>
-                ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left">
-                            <thead className="bg-dark/30 text-[9px] font-black uppercase text-slate-500">
-                                <tr>
-                                    <th className="px-8 py-5">Name & Specialty</th>
-                                    <th className="px-8 py-5">Contact Details</th>
-                                    <th className="px-8 py-5 text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-white/5 text-white">
-                                {pendingApplications.map(app => (
-                                    <tr key={app.id}>
-                                        <td className="px-8 py-5 font-bold italic">{app.name}</td>
-                                        <td className="px-8 py-5 text-xs text-slate-400">{app.email} | {app.phone}</td>
-                                        <td className="px-8 py-5 text-right space-x-2">
-                                            <button onClick={() => handleApproveTrainer(app.id)} className="px-4 py-2 bg-brand text-dark rounded-lg text-[9px] font-black uppercase shadow-lg">Approve</button>
-                                            <button onClick={() => handleRejectTrainer(app.id)} className="px-4 py-2 bg-white/5 text-slate-400 rounded-lg text-[9px] font-black uppercase hover:text-red-500 transition-all">Reject</button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-            </div>
-        )}
-
-        {activeTab === 'users' && (
-            <div className="bg-surface rounded-[2rem] border border-white/5 overflow-hidden">
-                <div className="p-8 border-b border-white/5 bg-white/5 flex justify-between items-center">
-                    <h3 className="text-xl font-black uppercase italic text-white flex items-center gap-3"><Users className="text-brand" /> Member Management</h3>
-                    <span className="text-[10px] font-black uppercase text-slate-500">{users.length} Total</span>
-                </div>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead className="bg-dark/30 text-[9px] font-black uppercase text-slate-500">
-                            <tr>
-                                <th className="px-8 py-5">Member</th>
-                                <th className="px-8 py-5">Email</th>
-                                <th className="px-8 py-5 text-center">Status</th>
-                                <th className="px-8 py-5 text-right">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/5 text-white">
-                            {users.map(u => (
-                                <tr key={u.id} className="hover:bg-white/5">
-                                    <td className="px-8 py-5 font-bold italic">{cleanName(u.name)}</td>
-                                    <td className="px-8 py-5 text-xs text-slate-400">{u.email}</td>
-                                    <td className="px-8 py-5 text-center">
-                                        <span className={`px-2 py-1 rounded text-[8px] font-black uppercase ${u.role === 'admin' ? 'bg-red-500/10 text-red-500' : u.role === 'trainer' ? 'bg-brand/10 text-brand' : 'bg-white/10 text-slate-400'}`}>
-                                            {u.role.replace('_', ' ')}
-                                        </span>
-                                    </td>
-                                    <td className="px-8 py-5 text-right">
-                                        {u.id !== currentUser?.id && <button onClick={() => deleteUser(u.id)} className="p-2 text-slate-600 hover:text-red-500 transition-all"><Trash2 size={14} /></button>}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        )}
-
-        {activeTab === 'bookings' && (
-            <div className="space-y-6">
-                {awaitingPaymentList.length > 0 && (
-                    <div className="space-y-4">
-                         <h3 className="text-brand font-black uppercase italic text-sm px-4 flex items-center gap-2">
-                             <AlertTriangle size={16} /> Awaiting Payment Logging
-                         </h3>
-                         {awaitingPaymentList.map(booking => (
-                            <div key={booking.id} className="bg-surface p-6 rounded-[2rem] border border-red-500/30 flex flex-col md:flex-row items-center justify-between gap-6">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 bg-red-500 text-white rounded-2xl flex items-center justify-center shadow-lg"><Wallet size={24} /></div>
-                                    <div><p className="text-xs font-black text-white uppercase italic">{booking.customerName}</p><p className="text-[10px] text-slate-400 font-bold uppercase">{booking.date} @ {booking.time}</p><div className="mt-1 text-brand font-black text-[10px] italic">CODE: {booking.checkInCode}</div></div>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <div className="text-right mr-4"><p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Training Price</p><p className="text-brand font-black italic">{booking.price} BGN</p></div>
-                                    <button onClick={() => handleFinish(booking.id, 'cash')} className="px-5 py-3 bg-green-500 text-white rounded-xl text-[9px] font-black uppercase flex items-center gap-1 hover:scale-105 transition-all"><Banknote size={14} /> Cash</button>
-                                    <button onClick={() => handleFinish(booking.id, 'card')} className="px-5 py-3 bg-blue-500 text-white rounded-xl text-[9px] font-black uppercase flex items-center gap-1 hover:scale-105 transition-all"><CreditCard size={14} /> Card</button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-                <div className="bg-surface rounded-[2rem] border border-white/5 overflow-hidden">
-                   <div className="p-6 border-b border-white/5 bg-white/5 font-black uppercase italic text-xs text-slate-400">Reception Log</div>
-                   <div className="overflow-x-auto">
-                        <table className="w-full text-left">
-                           <thead className="bg-dark/30">
-                              <tr className="text-[10px] font-black uppercase text-slate-500">
-                                 <th className="px-8 py-4">Client</th>
-                                 <th className="px-8 py-4 text-center">Verification</th>
-                                 <th className="px-8 py-4">Date & Time</th>
-                                 <th className="px-8 py-4">Status</th>
-                                 <th className="px-8 py-4 text-right">Action</th>
-                              </tr>
-                           </thead>
-                            <tbody className="divide-y divide-white/5 text-white">
-                                {bookings.filter(b => b.status === 'confirmed' || b.status === 'pending').map(b => (
-                                    <tr key={b.id} className="hover:bg-white/5 transition-colors">
-                                        <td className="px-8 py-5 text-xs font-bold text-white uppercase italic">{b.customerName}</td>
-                                        <td className="px-8 py-5 text-center"><span className="px-3 py-1 bg-brand/10 text-brand text-[10px] font-black italic rounded-lg border border-brand/20">{b.checkInCode}</span></td>
-                                        <td className="px-8 py-5 text-[10px] text-slate-500 font-black uppercase">{b.date} | {b.time}</td>
-                                        <td className="px-8 py-5"><span className={`px-2 py-1 ${b.status === 'confirmed' ? 'bg-green-500/10 text-green-500' : 'bg-brand/10 text-brand'} text-[9px] font-black rounded uppercase`}>{b.status}</span></td>
-                                        <td className="px-8 py-5 text-right"><button onClick={() => deleteBooking(b.id)} className="p-2 text-slate-600 hover:text-red-500 transition-all"><Trash2 size={14} /></button></td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                   </div>
-                </div>
-            </div>
-        )}
-
-        {activeTab === 'trainers' && (
-            <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-hidden">
-                <div className="p-8 border-b border-white/5 bg-white/5 flex items-center justify-between">
-                   <h3 className="text-lg font-black uppercase italic text-white flex items-center gap-2"><Briefcase className="text-brand" size={20} /> Active Coaches</h3>
-                </div>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead>
-                            <tr className="text-[10px] font-black uppercase text-slate-500 border-b border-white/5 bg-dark/20">
-                                <th className="px-8 py-6">Trainer Information</th>
-                                <th className="px-8 py-6">Commission Structure</th>
-                                <th className="px-8 py-6 text-right">Management</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/5 text-white">
-                            {activeTrainers.map(tr => (
-                                <tr key={tr.id} className="hover:bg-white/5 group transition-colors">
-                                    <td className="px-8 py-6 flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-xl overflow-hidden border border-white/5 bg-dark">
-                                            <img src={tr.image || DEFAULT_PROFILE_IMAGE} className="w-full h-full object-cover" />
-                                        </div>
-                                        <div><p className="text-sm font-black text-white uppercase italic leading-none mb-1">{cleanName(tr.name)}</p><p className="text-[9px] text-brand font-bold uppercase tracking-wider">{tr.name.match(/\((.*)\)/)?.[1] || 'Instructor'}</p></div>
-                                    </td>
-                                    <td className="px-8 py-6">
-                                        <div className="flex flex-col gap-1"><span className="inline-flex items-center gap-1.5 px-3 py-1 bg-brand text-dark text-[10px] font-black rounded-full border border-brand/20 w-fit"><Percent size={10} /> {tr.commissionRate}% Gym Share</span><span className="text-[9px] text-slate-500 font-bold ml-1 uppercase italic">Trainer earns {(100 - (tr.commissionRate || 0))}%</span></div>
-                                    </td>
-                                    <td className="px-8 py-6 text-right"><button onClick={() => handleEditUserClick(tr)} className="px-5 py-3 bg-white/5 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-brand hover:text-dark transition-all flex items-center gap-2 ml-auto shadow-sm"><Eye size={14} /> View Details</button></td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
             </div>
         )}
       </div>
@@ -389,19 +337,19 @@ const AdminPanel: React.FC = () => {
              <div className="bg-surface border border-white/10 rounded-[2.5rem] p-10 w-full max-w-lg shadow-2xl relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1 bg-brand"></div>
                 <button onClick={() => setEditingUser(null)} className="absolute top-8 right-8 text-slate-500 hover:text-white transition-colors p-2 bg-white/5 rounded-full"><X size={20} /></button>
-                <h2 className="text-2xl font-black uppercase italic text-white mb-2 leading-none">Trainer Management</h2>
-                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-8">Update profile and commission details</p>
+                <h2 className="text-2xl font-black uppercase italic text-white mb-2 leading-none tracking-tighter">Coach Management</h2>
+                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-8">Update professional profile and financial terms</p>
                 <form onSubmit={handleSaveUser} className="space-y-6">
                     <div className="grid grid-cols-2 gap-4">
                         <div><label className="text-[10px] font-black uppercase text-slate-600 ml-2">Trainer Name</label><input type="text" className="w-full bg-dark/50 border border-white/10 rounded-xl px-4 py-3 text-white font-bold outline-none focus:border-brand" value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})} /></div>
                         <div><label className="text-[10px] font-black uppercase text-slate-600 ml-2">Specialty</label><input type="text" className="w-full bg-dark/50 border border-white/10 rounded-xl px-4 py-3 text-white font-bold outline-none focus:border-brand" value={editForm.specialty} onChange={e => setEditForm({...editForm, specialty: e.target.value})} /></div>
                     </div>
                     <div className="p-6 bg-brand/5 border border-brand/20 rounded-2xl">
-                        <div className="flex items-center justify-between mb-4"><label className="text-[10px] font-black uppercase text-brand">Gym Share</label><span className="text-[10px] font-black text-slate-500">Current: {editingUser.commissionRate}%</span></div>
+                        <div className="flex items-center justify-between mb-4"><label className="text-[10px] font-black uppercase text-brand">Club Commission Share</label><span className="text-[10px] font-black text-slate-500">Current: {editingUser.commissionRate}%</span></div>
                         <div className="relative"><input type="number" min="0" max="100" className="w-full bg-dark/50 border border-white/10 rounded-xl px-4 py-4 text-white font-black text-xl outline-none focus:border-brand pr-12" value={editForm.commissionRate} onChange={e => setEditForm({...editForm, commissionRate: parseInt(e.target.value) || 0})} /><Percent size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-brand" /></div>
                     </div>
-                    <div><label className="text-[10px] font-black uppercase text-slate-600 ml-2">Image URL</label><input type="text" className="w-full bg-dark/50 border border-white/10 rounded-xl px-4 py-3 text-white font-bold outline-none focus:border-brand" value={editForm.image} onChange={e => setEditForm({...editForm, image: e.target.value})} /></div>
-                    <button type="submit" disabled={isSavingUser} className="w-full py-5 bg-brand text-dark rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-white transition-all">{isSavingUser ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} Save Changes</button>
+                    <div><label className="text-[10px] font-black uppercase text-slate-600 ml-2">Public Image Link</label><input type="text" className="w-full bg-dark/50 border border-white/10 rounded-xl px-4 py-3 text-white font-bold outline-none focus:border-brand" value={editForm.image} onChange={e => setEditForm({...editForm, image: e.target.value})} /></div>
+                    <button type="submit" disabled={isSavingUser} className="w-full py-5 bg-brand text-dark rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-white transition-all shadow-xl shadow-brand/10">{isSavingUser ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} Commit Changes</button>
                 </form>
              </div>
           </div>
