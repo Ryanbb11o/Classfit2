@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { LayoutDashboard, ListFilter, MessageSquare, Briefcase, UserCheck, FileSpreadsheet, Users, RefreshCw, Star, Trash2, Percent, Eye, X, Save, Loader2, TrendingUp, QrCode, Calendar, User, Mail, Shield, Languages, Check } from 'lucide-react';
+import { LayoutDashboard, ListFilter, MessageSquare, Briefcase, UserCheck, FileSpreadsheet, Users, RefreshCw, Star, Trash2, Percent, Eye, X, Save, Loader2, TrendingUp, QrCode, Calendar, User, Mail, Shield, Languages, Check, Phone, FileText, Award, Sparkles, ExternalLink } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, DEFAULT_PROFILE_IMAGE } from '../constants';
 import { User as UserType, Booking, Review } from '../types';
@@ -12,6 +12,7 @@ const AdminPanel: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'trainers' | 'finance' | 'users' | 'applications' | 'reviews'>('overview');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [editingUser, setEditingUser] = useState<UserType | null>(null);
+  const [viewingApplication, setViewingApplication] = useState<UserType | null>(null);
   const [editForm, setEditForm] = useState({ name: '', phone: '', bio: '', image: '', specialty: '', commissionRate: 0, languages: [] as string[] });
   const [isSavingUser, setIsSavingUser] = useState(false);
 
@@ -43,7 +44,10 @@ const AdminPanel: React.FC = () => {
     confirmAction({
       title: 'Approve Trainer',
       message: 'This member will be promoted to professional coach status.',
-      onConfirm: async () => await updateUser(id, { role: 'trainer', commissionRate: 25, approvedBy: currentUser?.name || 'Admin' })
+      onConfirm: async () => {
+        await updateUser(id, { role: 'trainer', commissionRate: 25, approvedBy: currentUser?.name || 'Admin' });
+        setViewingApplication(null);
+      }
     });
   };
 
@@ -51,7 +55,10 @@ const AdminPanel: React.FC = () => {
     confirmAction({
       title: 'Reject Application',
       message: 'Remove this pending trainer request?',
-      onConfirm: async () => await deleteUser(id)
+      onConfirm: async () => {
+        await deleteUser(id);
+        setViewingApplication(null);
+      }
     });
   };
 
@@ -99,6 +106,14 @@ const AdminPanel: React.FC = () => {
   };
 
   const cleanName = (name: string) => name.split('(')[0].trim();
+
+  // Helper to parse bio for viewing
+  const getBioSection = (bio: string | undefined, label: string) => {
+      if (!bio) return 'N/A';
+      const regex = new RegExp(`${label}: (.*)(\\n|$)`, 'i');
+      const match = bio.match(regex);
+      return match ? match[1].trim() : 'N/A';
+  };
 
   if (!isAdmin) return <div className="p-20 text-center text-white">{t.accessDenied}</div>;
 
@@ -261,7 +276,7 @@ const AdminPanel: React.FC = () => {
                             <tr key={app.id} className="hover:bg-white/5">
                                 <td className="px-8 py-5">
                                    <div className="font-black uppercase italic text-white leading-none mb-1">{cleanName(app.name)}</div>
-                                   <div className="text-[9px] text-brand font-black uppercase italic">Exp: {app.bio?.match(/Experience: (.*)/)?.[1] || 'New'}</div>
+                                   <div className="text-[9px] text-brand font-black uppercase italic">Exp: {getBioSection(app.bio, 'Experience')}</div>
                                 </td>
                                 <td className="px-8 py-5 text-slate-400">{app.email} <br/> <span className="text-[10px]">{app.phone}</span></td>
                                 <td className="px-8 py-5 flex flex-wrap gap-1 max-w-[150px]">
@@ -270,8 +285,8 @@ const AdminPanel: React.FC = () => {
                                    ))}
                                 </td>
                                 <td className="px-8 py-5 text-right flex gap-2 justify-end">
+                                    <button onClick={() => setViewingApplication(app)} className="px-4 py-2 bg-white/10 text-white rounded-lg text-[9px] font-black uppercase hover:bg-white hover:text-dark transition-all">{t.details}</button>
                                     <button onClick={() => handleApproveTrainer(app.id)} className="px-4 py-2 bg-brand text-dark rounded-lg text-[9px] font-black uppercase shadow-lg">{t.confirm}</button>
-                                    <button onClick={() => handleRejectTrainer(app.id)} className="px-4 py-2 bg-white/5 text-slate-400 rounded-lg text-[9px] font-black uppercase hover:text-red-500 transition-all">{t.cancel}</button>
                                 </td>
                             </tr>
                         ))}
@@ -393,6 +408,92 @@ const AdminPanel: React.FC = () => {
                     <div><label className="text-[10px] font-black uppercase text-slate-600 ml-2">Public Image Link</label><input type="text" className="w-full bg-dark/50 border border-white/10 rounded-xl px-4 py-3 text-white font-bold outline-none focus:border-brand" value={editForm.image} onChange={e => setEditForm({...editForm, image: e.target.value})} /></div>
                     <button type="submit" disabled={isSavingUser} className="w-full py-5 bg-brand text-dark rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-white transition-all shadow-xl shadow-brand/10">{isSavingUser ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} Commit Changes</button>
                 </form>
+             </div>
+          </div>
+      )}
+
+      {/* NEW: APPLICATION DETAILS MODAL */}
+      {viewingApplication && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-dark/98 backdrop-blur-xl animate-in fade-in duration-300">
+             <div className="bg-surface border border-white/10 rounded-[3rem] w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl relative flex flex-col md:flex-row">
+                <div className="absolute top-0 left-0 w-full h-1 bg-brand"></div>
+                <button onClick={() => setViewingApplication(null)} className="absolute top-6 right-6 text-slate-500 hover:text-white transition-colors p-2 bg-white/5 rounded-full z-10"><X size={20} /></button>
+
+                {/* Left Panel: Profile Quick Look */}
+                <div className="md:w-1/3 bg-dark/50 p-10 border-r border-white/5 flex flex-col items-center text-center">
+                    <div className="w-32 h-32 rounded-[2.5rem] bg-brand/10 p-1 border-2 border-brand/20 mb-8 overflow-hidden">
+                        <img src={viewingApplication.image || DEFAULT_PROFILE_IMAGE} className="w-full h-full object-cover grayscale opacity-50" />
+                    </div>
+                    <h2 className="text-3xl font-black uppercase italic text-white leading-none mb-2 tracking-tighter">{cleanName(viewingApplication.name)}</h2>
+                    <span className="px-4 py-1.5 bg-brand text-dark rounded-full text-[10px] font-black uppercase tracking-widest mb-10">
+                        {viewingApplication.name.match(/\((.*)\)/)?.[1] || 'Coach Applicant'}
+                    </span>
+
+                    <div className="w-full space-y-4">
+                        <div className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-brand/40 transition-all text-left group">
+                            <Mail size={16} className="text-slate-500 group-hover:text-brand" />
+                            <div className="overflow-hidden"><p className="text-[8px] font-black uppercase text-slate-600 mb-0.5 tracking-widest">{t.email}</p><p className="text-xs text-white truncate font-bold">{viewingApplication.email}</p></div>
+                        </div>
+                        <div className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-brand/40 transition-all text-left group">
+                            <Phone size={16} className="text-slate-500 group-hover:text-brand" />
+                            <div><p className="text-[8px] font-black uppercase text-slate-600 mb-0.5 tracking-widest">{t.phone}</p><p className="text-xs text-white font-bold">{viewingApplication.phone}</p></div>
+                        </div>
+                        <div className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-brand/40 transition-all text-left group">
+                            <ExternalLink size={16} className="text-slate-500 group-hover:text-brand" />
+                            <div className="overflow-hidden"><p className="text-[8px] font-black uppercase text-slate-600 mb-0.5 tracking-widest">Social Presence</p><p className="text-xs text-brand truncate font-bold italic">{getBioSection(viewingApplication.bio, 'Social')}</p></div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right Panel: Detailed Dossier */}
+                <div className="flex-1 p-10 md:p-12 overflow-y-auto custom-scrollbar">
+                    <div className="space-y-12">
+                        {/* Section: Experience & Languages */}
+                        <div className="grid grid-cols-2 gap-8">
+                            <div>
+                                <div className="flex items-center gap-2 mb-4"><History size={14} className="text-brand" /><h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Industry Tenure</h4></div>
+                                <p className="text-3xl font-black italic text-white">{getBioSection(viewingApplication.bio, 'Experience')} <span className="text-xs text-slate-600 not-italic uppercase">{t.years}</span></p>
+                            </div>
+                            <div>
+                                <div className="flex items-center gap-2 mb-4"><Languages size={14} className="text-brand" /><h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">{t.trainerLanguagesSpoken}</h4></div>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {(viewingApplication.languages || []).map(l => (
+                                        <span key={l} className="px-2 py-1 bg-white/10 text-white rounded-lg text-[9px] font-black uppercase border border-white/10">{l}</span>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Section: Certs */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2 border-b border-white/5 pb-2"><Award size={14} className="text-brand" /><h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">{t.trainerCerts}</h4></div>
+                            <p className="text-sm text-slate-300 font-medium italic leading-relaxed">{getBioSection(viewingApplication.bio, 'Certifications')}</p>
+                        </div>
+
+                        {/* Section: Motivation */}
+                        <div className="p-8 bg-brand/5 rounded-3xl border border-brand/10 relative overflow-hidden group hover:border-brand/30 transition-all">
+                            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform"><Sparkles size={48} className="text-brand" /></div>
+                            <div className="flex items-center gap-2 mb-4"><FileText size={14} className="text-brand" /><h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-brand">{t.trainerMotivation}</h4></div>
+                            <p className="text-sm text-white font-medium italic leading-relaxed relative z-10">"{getBioSection(viewingApplication.bio, 'Motivation')}"</p>
+                        </div>
+
+                        {/* Decision Bar */}
+                        <div className="flex gap-4 pt-6">
+                            <button 
+                                onClick={() => handleApproveTrainer(viewingApplication.id)} 
+                                className="flex-1 py-5 bg-brand text-dark rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-white transition-all shadow-2xl shadow-brand/20"
+                            >
+                                {t.confirm} Application
+                            </button>
+                            <button 
+                                onClick={() => handleRejectTrainer(viewingApplication.id)} 
+                                className="flex-1 py-5 bg-red-500/10 text-red-500 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-red-500 hover:text-white transition-all border border-red-500/10"
+                            >
+                                {t.cancel}
+                            </button>
+                        </div>
+                    </div>
+                </div>
              </div>
           </div>
       )}
