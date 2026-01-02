@@ -268,11 +268,12 @@ const BookingPage: React.FC = () => {
                     alt={selectedTrainer.name} 
                     className="w-full aspect-[4/5] object-cover grayscale-0"
                   />
-                  <div className="p-8">
+                  {/* Centered Profile Text */}
+                  <div className="p-8 text-center">
                      <h2 className="text-3xl font-black uppercase italic text-white mb-2 leading-none">{selectedTrainer.name}</h2>
                      <p className="text-brand text-xs font-black uppercase tracking-[0.2em] mb-6">{selectedTrainer.specialty}</p>
                      
-                     <div className="space-y-4 pt-6 border-t border-white/5">
+                     <div className="space-y-4 pt-6 border-t border-white/5 flex flex-col items-center">
                         <div className="flex items-center gap-4 text-xs font-bold text-slate-400">
                             <Award className="text-brand" size={16} /> 5+ Years Experience
                         </div>
@@ -283,7 +284,8 @@ const BookingPage: React.FC = () => {
                   </div>
                </div>
 
-               <div className="px-2">
+               {/* Centered Bio Header & Text */}
+               <div className="px-2 text-center">
                   <h3 className="text-xs font-black uppercase tracking-widest text-slate-600 mb-6 italic">Background</h3>
                   <p className="text-slate-400 leading-relaxed font-medium italic text-sm">
                       {selectedTrainer.bio || 'Professional fitness guidance focused on achieving peak physical results and sustainable health habits.'}
