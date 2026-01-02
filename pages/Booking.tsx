@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, Calendar as CalendarIcon, Clock, User, Phone, X, Mail, Loader2, ChevronLeft, ChevronRight, ArrowLeft, Star, Award, Zap, Quote, ThumbsUp, MapPin, Target, ShieldCheck, CalendarPlus } from 'lucide-react';
+import { Check, Calendar as CalendarIcon, Clock, User, Phone, X, Mail, Loader2, ChevronLeft, ChevronRight, ArrowLeft, Star, Award, Zap, Quote, ThumbsUp, MapPin, Target, ShieldCheck, CalendarPlus, MessageSquare } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { getTrainers, TRANSLATIONS, DEFAULT_PROFILE_IMAGE, getTrainerReviews } from '../constants';
 import { Trainer, Booking } from '../types';
@@ -27,7 +27,7 @@ const BookingPage: React.FC = () => {
           price: 20, 
           image: u.image || DEFAULT_PROFILE_IMAGE, 
           phone: u.phone || '',
-          bio: u.bio || '',
+          bio: u.bio || (language === 'bg' ? 'Професионален инструктор с богат опит.' : 'Professional instructor with extensive experience.'),
           availability: ['08:00', '09:00', '10:00', '14:00', '15:00', '16:00', '17:00']
         };
       });
@@ -164,7 +164,6 @@ const BookingPage: React.FC = () => {
     const localDate = new Date(selectedDate.getTime() - (offset*60*1000));
     const formattedDate = localDate.toISOString().split('T')[0];
 
-    // Generate code
     const bookingId = Math.random().toString(36).substr(2, 9).toUpperCase();
     
     const newBooking: Booking = {
@@ -191,18 +190,7 @@ const BookingPage: React.FC = () => {
       setIsSuccess(true);
     } catch (error: any) {
       console.error("Booking caught error:", error);
-      const errorMsg = error?.message || "Check connection or SQL tables.";
-      
-      // Better instructions for the user if they see the UUID error
-      if (errorMsg.includes('uuid')) {
-          alert(language === 'bg' 
-            ? 'Грешка в базата данни (UUID). Трябва да промените колоната ID на TEXT в Supabase. Вижте предоставения SQL скрипт.' 
-            : 'Database error (UUID mismatch). You must change the ID column to TEXT in Supabase SQL editor.');
-      } else {
-          alert(language === 'bg' 
-            ? `Грешка: ${errorMsg}. Моля уверете се, че сте изпълнили SQL скрипта в Supabase.` 
-            : `Error: ${errorMsg}. Please ensure you have run the provided SQL setup in Supabase.`);
-      }
+      alert(language === 'bg' ? 'Грешка при резервация.' : 'Booking error.');
     } finally {
       setIsSubmitting(false);
     }
@@ -239,7 +227,6 @@ const BookingPage: React.FC = () => {
                 <span className="text-[10px] font-black uppercase tracking-widest">{t.emailConfirmMsg}</span>
             </div>
             <p className="text-white font-bold text-sm underline decoration-brand/50 underline-offset-4">{lastBooking.customerEmail}</p>
-            <p className="text-[10px] text-slate-500 mt-3 font-medium">Please check your inbox for details. Location: ClassFit (Mir stop).</p>
         </div>
 
         <div className="bg-surface border border-white/5 rounded-[2.5rem] p-8 mb-10 shadow-2xl relative overflow-hidden group">
@@ -257,20 +244,6 @@ const BookingPage: React.FC = () => {
                     </div>
                  </div>
                  <a href={`tel:${selectedTrainer.phone}`} className="p-3 bg-brand text-dark rounded-full hover:scale-110 transition-transform shadow-lg shadow-brand/10">
-                    <Phone size={18} />
-                 </a>
-              </div>
-              <div className="flex items-center justify-between group/row">
-                 <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-slate-400 group-hover/row:text-brand transition-colors">
-                       <MapPin size={18} />
-                    </div>
-                    <div>
-                       <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">{t.gymPhoneLabel}</p>
-                       <p className="text-white font-bold text-sm uppercase italic">ClassFit Varna (Mir Stop)</p>
-                    </div>
-                 </div>
-                 <a href={`tel:${t.gymPhone}`} className="p-3 bg-white/10 text-white rounded-full hover:scale-110 transition-transform border border-white/10">
                     <Phone size={18} />
                  </a>
               </div>
@@ -337,21 +310,69 @@ const BookingPage: React.FC = () => {
             {language === 'bg' ? 'Всички Треньори' : 'All Coaches'}
           </button>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+            
+            {/* Left Column: Profile, Bio, Experience & Reviews */}
             <div className="lg:col-span-4 space-y-8">
                <div className="relative rounded-[2.5rem] overflow-hidden border border-white/5 bg-surface shadow-2xl">
                   <div className="aspect-[4/5] relative overflow-hidden"><img src={selectedTrainer.image} className="w-full h-full object-cover grayscale-0" /></div>
-                  <div className="p-10 text-center">
-                     <h2 className="text-4xl font-black uppercase italic text-white mb-2 leading-tight tracking-tighter">{selectedTrainer.name}</h2>
-                     <div className="inline-block px-4 py-1.5 bg-brand text-dark rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-8">{selectedTrainer.specialty}</div>
-                     <div className="grid grid-cols-1 gap-4 pt-6 border-t border-white/5">
-                        <div className="flex items-center gap-4 px-6 py-5 bg-dark/40 rounded-2xl border border-white/5 group hover:border-brand/40 transition-all duration-300">
-                            <div className="w-12 h-12 bg-brand/10 text-brand rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-brand/5 group-hover:bg-brand group-hover:text-dark transition-colors"><Award size={24} /></div>
-                            <div className="text-left"><p className="text-[11px] font-black uppercase tracking-widest text-white leading-none mb-1">Expert</p><p className="text-[9px] font-bold text-slate-500 uppercase tracking-tight">Active Coaching</p></div>
+                  <div className="p-10">
+                     <div className="text-center mb-8">
+                        <h2 className="text-4xl font-black uppercase italic text-white mb-2 leading-tight tracking-tighter">{selectedTrainer.name}</h2>
+                        <div className="inline-block px-4 py-1.5 bg-brand text-dark rounded-full text-[10px] font-black uppercase tracking-[0.2em]">{selectedTrainer.specialty}</div>
+                     </div>
+                     
+                     {/* Bio / Experience Section */}
+                     <div className="space-y-6 pt-6 border-t border-white/5">
+                        <div className="flex items-start gap-4">
+                            <div className="w-10 h-10 bg-brand/10 text-brand rounded-xl flex items-center justify-center shrink-0">
+                                <Award size={20} />
+                            </div>
+                            <div>
+                                <h4 className="text-[10px] font-black uppercase tracking-widest text-white mb-1">Professional Bio</h4>
+                                <p className="text-xs text-slate-400 font-medium italic leading-relaxed">
+                                    {selectedTrainer.bio}
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Trainer Reviews Preview */}
+                        <div className="pt-6 border-t border-white/5">
+                           <div className="flex items-center justify-between mb-4 px-1">
+                              <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
+                                 <MessageSquare size={14} className="text-brand" /> Member Reviews
+                              </h4>
+                              <span className="text-brand text-[10px] font-black uppercase tracking-widest">
+                                 {trainerReviews.length} Total
+                              </span>
+                           </div>
+                           
+                           <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                              {trainerReviews.map((review, i) => (
+                                 <div key={i} className="p-4 bg-dark/40 rounded-2xl border border-white/5 space-y-2">
+                                    <div className="flex items-center justify-between">
+                                       <div className="flex items-center gap-2">
+                                          <div className="w-6 h-6 rounded-full bg-brand text-dark text-[8px] font-black flex items-center justify-center">{review.avatar}</div>
+                                          <span className="text-[10px] font-bold text-white uppercase italic">{review.author}</span>
+                                       </div>
+                                       <div className="flex gap-0.5">
+                                          {[...Array(review.rating)].map((_, j) => (
+                                             <Star key={j} size={8} className="text-brand fill-brand" />
+                                          ))}
+                                       </div>
+                                    </div>
+                                    <p className="text-[10px] text-slate-400 font-medium italic leading-relaxed">
+                                       "{review.text}"
+                                    </p>
+                                 </div>
+                              ))}
+                           </div>
                         </div>
                      </div>
                   </div>
                </div>
             </div>
+
+            {/* Right Column: Calendar and Booking */}
             <div className="lg:col-span-8">
                <div className="bg-surface/30 backdrop-blur-sm rounded-[3rem] border border-white/5 p-8 md:p-12 shadow-2xl">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-12">
@@ -396,7 +417,7 @@ const BookingPage: React.FC = () => {
               <div className="absolute top-0 left-0 w-full h-1 bg-brand"></div>
               <button onClick={() => setShowGuestForm(false)} className="absolute top-8 right-8 text-slate-500 hover:text-white transition-all bg-white/5 p-2 rounded-full"><X size={20} /></button>
               <div className="mb-8"><h2 className="text-3xl font-black uppercase italic text-white tracking-tighter mb-2">{t.finalize}</h2><p className="text-slate-500 text-xs font-medium">Please provide contact details to finalize your ClassFit booking.</p></div>
-              <form onSubmit={handleGuestSubmit} className="space-y-4">
+              <form handleGuestSubmit={handleGuestSubmit} className="space-y-4">
                 <div className="space-y-1"><label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-2">Name</label><input type="text" required value={guestName} onChange={(e) => setGuestName(e.target.value)} className="w-full bg-dark/50 border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white outline-none focus:border-brand transition-all" /></div>
                 <div className="space-y-1"><label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-2">Phone</label><input type="tel" required value={guestPhone} onChange={(e) => setGuestPhone(e.target.value)} className="w-full bg-dark/50 border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white outline-none focus:border-brand transition-all" /></div>
                 <div className="space-y-1"><label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-2">Email</label><input type="email" required value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} className="w-full bg-dark/50 border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white outline-none focus:border-brand transition-all" /></div>
