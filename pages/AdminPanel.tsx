@@ -105,14 +105,18 @@ const AdminPanel: React.FC = () => {
     }
   };
 
-  const cleanName = (name: string) => name.split('(')[0].trim();
+  const cleanName = (name: string) => (name || '').split('(')[0].trim();
 
-  // Helper to parse bio for viewing
+  // Robust parsing helper
   const getBioSection = (bio: string | undefined, label: string) => {
       if (!bio) return 'N/A';
-      const regex = new RegExp(`${label}: (.*)(\\n|$)`, 'i');
-      const match = bio.match(regex);
-      return match ? match[1].trim() : 'N/A';
+      try {
+        const regex = new RegExp(`${label}: (.*)(\\n|$)`, 'i');
+        const match = bio.match(regex);
+        return match ? match[1].trim() : 'N/A';
+      } catch (e) {
+        return 'N/A';
+      }
   };
 
   if (!isAdmin) return <div className="p-20 text-center text-white">{t.accessDenied}</div>;
@@ -133,9 +137,9 @@ const AdminPanel: React.FC = () => {
             {[
               { id: 'overview', icon: LayoutDashboard, label: t.tabOverview },
               { id: 'bookings', icon: ListFilter, label: t.tabBookings, badge: awaitingPaymentList.length + bookings.filter(b => b.status === 'pending' || b.status === 'confirmed').length },
-              { id: 'reviews', icon: MessageSquare, label: 'Moderation', badge: pendingReviews.length },
+              { id: 'reviews', icon: MessageSquare, label: t.tabModeration, badge: pendingReviews.length },
               { id: 'trainers', icon: Briefcase, label: t.trainer },
-              { id: 'applications', icon: UserCheck, label: 'Apps', badge: pendingApplications.length },
+              { id: 'applications', icon: UserCheck, label: t.tabRecruitment, badge: pendingApplications.length },
               { id: 'finance', icon: FileSpreadsheet, label: t.tabAnalysis },
               { id: 'users', icon: Users, label: t.tabUsers }
             ].map(tab => (
@@ -157,7 +161,7 @@ const AdminPanel: React.FC = () => {
               </div>
               <div className="p-8 bg-surface border border-white/5 text-white rounded-[2.5rem] relative overflow-hidden group">
                  <div className="absolute top-4 right-4 text-white/5 group-hover:scale-125 transition-transform"><MessageSquare size={48} /></div>
-                 <p className="text-[10px] font-black uppercase mb-4 text-slate-500 tracking-widest">Moderation Queue</p>
+                 <p className="text-[10px] font-black uppercase mb-4 text-slate-500 tracking-widest">{t.tabModeration}</p>
                  <p className="text-4xl font-black italic text-brand">{pendingReviews.length}</p>
               </div>
               <div className="p-8 bg-surface border border-white/5 text-white rounded-[2.5rem] relative overflow-hidden group">
@@ -167,91 +171,63 @@ const AdminPanel: React.FC = () => {
               </div>
               <div className="p-8 bg-surface border border-white/5 text-white rounded-[2.5rem] relative overflow-hidden group">
                  <div className="absolute top-4 right-4 text-white/5 group-hover:scale-125 transition-transform"><UserCheck size={48} /></div>
-                 <p className="text-[10px] font-black uppercase mb-4 text-slate-500 tracking-widest">Coach Requests</p>
+                 <p className="text-[10px] font-black uppercase mb-4 text-slate-500 tracking-widest">{t.tabRecruitment}</p>
                  <p className="text-4xl font-black italic text-yellow-500">{pendingApplications.length}</p>
               </div>
            </div>
         )}
 
-        {/* APPLICATIONS TAB: NEW HIGH-END DESIGN */}
+        {/* CLEANER APPLICATIONS TAB DESIGN */}
         {activeTab === 'applications' && (
-           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-              <div className="flex items-center justify-between px-4">
-                 <h3 className="text-xl font-black uppercase italic text-white flex items-center gap-3">
-                    <UserPlus className="text-brand" /> Onboarding Pipeline
-                 </h3>
-                 <span className="text-[10px] font-black uppercase text-slate-500 tracking-[0.2em]">Pending Review: {pendingApplications.length}</span>
+           <div className="animate-in slide-in-from-bottom-2 duration-500">
+              <div className="flex items-center gap-4 mb-10">
+                 <div className="w-12 h-12 bg-brand/10 text-brand rounded-2xl flex items-center justify-center">
+                    <UserPlus size={24} />
+                 </div>
+                 <div>
+                    <h3 className="text-2xl font-black uppercase italic text-white leading-none tracking-tighter">{t.tabRecruitment}</h3>
+                    <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">ClassFit Professional Onboarding</p>
+                 </div>
               </div>
 
               {pendingApplications.length === 0 ? (
-                 <div className="p-32 bg-surface/30 rounded-[3rem] border-2 border-dashed border-white/5 text-center">
-                    <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-700">
-                       <UserCheck size={32} />
-                    </div>
-                    <p className="text-slate-500 font-black uppercase tracking-widest text-[10px]">The recruitment queue is currently empty.</p>
+                 <div className="p-32 bg-surface/30 rounded-[3rem] border-2 border-dashed border-white/5 text-center flex flex-col items-center">
+                    <UserCheck className="text-slate-700 mb-6" size={48} />
+                    <p className="text-slate-500 font-black uppercase tracking-widest text-[10px]">No pending coach applications in the queue.</p>
                  </div>
               ) : (
-                 <div className="grid grid-cols-1 gap-4">
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {pendingApplications.map(app => (
-                       <div key={app.id} className="group relative bg-surface hover:bg-surface/80 border border-white/5 rounded-[2rem] p-6 flex flex-col md:flex-row items-center justify-between gap-8 transition-all duration-300 hover:shadow-2xl hover:shadow-brand/5 hover:-translate-y-1">
-                          <div className="flex items-center gap-6 w-full md:w-auto">
-                             <div className="relative shrink-0">
-                                <div className="w-16 h-16 rounded-2xl bg-dark border border-white/10 overflow-hidden">
-                                   <img src={app.image || DEFAULT_PROFILE_IMAGE} className="w-full h-full object-cover grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500" />
-                                </div>
-                                <div className="absolute -bottom-2 -right-2 bg-brand text-dark p-1.5 rounded-lg shadow-lg">
-                                   <Briefcase size={12} />
-                                </div>
+                       <div key={app.id} className="bg-surface border border-white/5 rounded-[2rem] p-8 hover:border-brand/40 transition-all duration-300 group">
+                          <div className="flex items-center gap-4 mb-8">
+                             <div className="w-16 h-16 rounded-2xl bg-dark overflow-hidden border border-white/10 shrink-0">
+                                <img src={app.image || DEFAULT_PROFILE_IMAGE} className="w-full h-full object-cover grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 transition-all" />
                              </div>
                              <div className="overflow-hidden">
-                                <h4 className="text-lg font-black uppercase italic text-white leading-none mb-2 tracking-tight truncate">{cleanName(app.name)}</h4>
-                                <div className="flex flex-wrap gap-2">
-                                   <span className="text-[8px] font-black uppercase tracking-widest bg-brand/10 text-brand px-2 py-0.5 rounded-md border border-brand/20">
-                                      {app.name.match(/\((.*)\)/)?.[1] || 'Instructor'}
-                                   </span>
-                                   <span className="text-[8px] font-black uppercase tracking-widest bg-white/5 text-slate-400 px-2 py-0.5 rounded-md">
-                                      Exp: {getBioSection(app.bio, 'Experience')} {t.years}
-                                   </span>
-                                </div>
+                                <h4 className="text-lg font-black uppercase italic text-white leading-none truncate">{cleanName(app.name)}</h4>
+                                <span className="inline-block mt-2 text-[9px] font-black uppercase text-brand tracking-widest bg-brand/10 px-2 py-0.5 rounded">
+                                   {app.name.match(/\((.*)\)/)?.[1] || 'Coach'}
+                                </span>
                              </div>
                           </div>
 
-                          <div className="hidden lg:flex items-center gap-12 flex-1 px-8 border-x border-white/5">
-                             <div className="space-y-1">
-                                <p className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-600 italic">Linguistic Profile</p>
-                                <div className="flex flex-wrap gap-1">
-                                   {(app.languages || []).slice(0, 3).map(l => (
-                                      <span key={l} className="text-[8px] font-bold text-slate-400">{l}</span>
-                                   ))}
-                                   {(app.languages || []).length > 3 && <span className="text-[8px] font-bold text-slate-600">+{app.languages!.length - 3}</span>}
-                                </div>
+                          <div className="space-y-4 mb-8">
+                             <div className="flex items-center justify-between text-[10px] font-black uppercase italic tracking-widest text-slate-500">
+                                <span>Experience</span>
+                                <span className="text-white">{getBioSection(app.bio, 'Experience')} {t.years}</span>
                              </div>
-                             <div className="space-y-1 max-w-[200px]">
-                                <p className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-600 italic">Philosophy Preview</p>
-                                <p className="text-[10px] text-slate-500 italic truncate">"{getBioSection(app.bio, 'Motivation')}"</p>
+                             <div className="flex items-center justify-between text-[10px] font-black uppercase italic tracking-widest text-slate-500">
+                                <span>Linguistic</span>
+                                <span className="text-white">{(app.languages || []).slice(0, 2).join(', ')}</span>
                              </div>
                           </div>
 
-                          <div className="flex items-center gap-3 w-full md:w-auto shrink-0">
-                             <button 
-                                onClick={() => setViewingApplication(app)}
-                                className="flex-1 md:flex-none px-6 py-4 bg-white/5 hover:bg-white/10 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-white/10 flex items-center justify-center gap-2 group/btn"
-                             >
-                                <Eye size={14} className="group-hover/btn:text-brand transition-colors" /> {t.details}
-                             </button>
-                             <button 
-                                onClick={() => handleApproveTrainer(app.id)}
-                                className="flex-1 md:flex-none px-8 py-4 bg-brand hover:bg-white text-dark rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-brand/10 flex items-center justify-center gap-2"
-                             >
-                                <Check size={14} strokeWidth={3} /> {t.confirm}
-                             </button>
-                             <button 
-                                onClick={() => handleRejectTrainer(app.id)}
-                                className="p-4 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-xl transition-all border border-red-500/10"
-                             >
-                                <Trash2 size={16} />
-                             </button>
-                          </div>
+                          <button 
+                             onClick={() => setViewingApplication(app)}
+                             className="w-full py-4 bg-white/5 hover:bg-brand hover:text-dark text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-white/5 flex items-center justify-center gap-2"
+                          >
+                             <Eye size={14} /> {t.details}
+                          </button>
                        </div>
                     ))}
                  </div>
@@ -270,7 +246,7 @@ const AdminPanel: React.FC = () => {
                         {activeTab === 'finance' && <FileSpreadsheet size={20} />}
                         {activeTab === 'users' && <Users size={20} />}
                     </div>
-                    <h3 className="text-xl font-black uppercase italic text-white">{activeTab === 'bookings' ? t.tabBookings : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Registry</h3>
+                    <h3 className="text-xl font-black uppercase italic text-white">{activeTab === 'bookings' ? t.tabBookings : t[activeTab as keyof typeof t] || activeTab} {t.registry}</h3>
                  </div>
                  {activeTab === 'finance' && (
                     <div className="text-right">
@@ -392,7 +368,7 @@ const AdminPanel: React.FC = () => {
         {activeTab === 'reviews' && (
             <div className="space-y-6">
                 <h3 className="text-xl font-black uppercase italic text-white flex items-center gap-3">
-                    <MessageSquare className="text-brand" /> Review Moderation
+                    <MessageSquare className="text-brand" /> {t.tabModeration}
                 </h3>
                 {pendingReviews.length === 0 ? (
                     <div className="p-20 bg-surface/30 rounded-[3rem] border-2 border-dashed border-white/5 text-center text-slate-500 font-black uppercase tracking-widest text-[10px]">All feedback has been processed.</div>
@@ -471,7 +447,7 @@ const AdminPanel: React.FC = () => {
           </div>
       )}
 
-      {/* APPLICATION DETAILS MODAL */}
+      {/* RE-ENGINEERED APPLICATION DETAILS MODAL */}
       {viewingApplication && (
           <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-dark/98 backdrop-blur-xl animate-in fade-in duration-300">
              <div className="bg-surface border border-white/10 rounded-[3rem] w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl relative flex flex-col md:flex-row">
@@ -485,7 +461,7 @@ const AdminPanel: React.FC = () => {
                     </div>
                     <h2 className="text-3xl font-black uppercase italic text-white leading-none mb-2 tracking-tighter">{cleanName(viewingApplication.name)}</h2>
                     <span className="px-4 py-1.5 bg-brand text-dark rounded-full text-[10px] font-black uppercase tracking-widest mb-10">
-                        {viewingApplication.name.match(/\((.*)\)/)?.[1] || 'Coach Applicant'}
+                        {(viewingApplication.name || '').match(/\((.*)\)/)?.[1] || 'Coach Applicant'}
                     </span>
 
                     <div className="w-full space-y-4">
