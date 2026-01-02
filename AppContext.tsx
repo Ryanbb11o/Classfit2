@@ -4,6 +4,14 @@ import { Language, Booking, User } from './types';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 import { DEFAULT_PROFILE_IMAGE } from './constants';
 
+interface ConfirmConfig {
+  title: string;
+  message: string;
+  onConfirm: () => void;
+  confirmText?: string;
+  cancelText?: string;
+}
+
 interface AppContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
@@ -24,6 +32,9 @@ interface AppContextType {
   refreshData: () => Promise<void>;
   isLoading: boolean;
   isDemoMode: boolean;
+  confirmAction: (config: ConfirmConfig) => void;
+  confirmState: ConfirmConfig | null;
+  closeConfirm: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -34,9 +45,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [users, setUsers] = useState<User[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [confirmState, setConfirmState] = useState<ConfirmConfig | null>(null);
 
   const isAdmin = currentUser?.role === 'admin';
   const isDemoMode = !isSupabaseConfigured;
+
+  const confirmAction = (config: ConfirmConfig) => setConfirmState(config);
+  const closeConfirm = () => setConfirmState(null);
 
   useEffect(() => {
     const init = async () => {
@@ -271,14 +286,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
        const newUser: User = { 
         id: Math.random().toString(36).substr(2, 9), 
         name: `${name} (${specialty})`, 
-        email, password: pass, phone, role: 'trainer_pending', joinedDate: new Date().toISOString(), image: DEFAULT_PROFILE_IMAGE, commissionRate: 20
+        email, password: pass, phone, role: 'trainer_pending', joinedDate: new Date().toISOString(), image: DEFAULT_PROFILE_IMAGE, commissionRate: 25
        };
        const newUsers = [...users, newUser];
        localStorage.setItem('classfit_users', JSON.stringify(newUsers));
        setUsers(newUsers);
        return { success: true };
     }
-    const { error } = await supabase.from('users').insert([{ name: `${name} (${specialty})`, email, phone, password: pass, role: 'trainer_pending', commission_rate: 20 }]).select().single();
+    const { error } = await supabase.from('users').insert([{ name: `${name} (${specialty})`, email, phone, password: pass, role: 'trainer_pending', commission_rate: 25 }]).select().single();
     if (error) return { success: false, msg: error.message };
     await refreshData();
     return { success: true };
@@ -287,12 +302,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const requestTrainerUpgrade = async (userId: string, currentName: string, phone: string, specialty: string): Promise<{ success: boolean; msg?: string }> => {
     const formattedName = `${currentName} (${specialty})`;
     if (isDemoMode) {
-        const newUsers = users.map(u => u.id === userId ? { ...u, role: 'trainer_pending' as const, phone, name: formattedName, commissionRate: 20 } : u);
+        const newUsers = users.map(u => u.id === userId ? { ...u, role: 'trainer_pending' as const, phone, name: formattedName, commissionRate: 25 } : u);
         setUsers(newUsers);
         localStorage.setItem('classfit_users', JSON.stringify(newUsers));
         return { success: true };
     }
-    const { error } = await supabase.from('users').update({ role: 'trainer_pending', name: formattedName, phone, commission_rate: 20 }).eq('id', userId);
+    const { error } = await supabase.from('users').update({ role: 'trainer_pending', name: formattedName, phone, commission_rate: 25 }).eq('id', userId);
     if (error) return { success: false, msg: error.message };
     await refreshData();
     return { success: true };
@@ -311,7 +326,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   return (
     <AppContext.Provider value={{ 
-      language, setLanguage, bookings, addBooking, updateBooking, deleteBooking, isAdmin, currentUser, users, login, register, registerTrainer, requestTrainerUpgrade, updateUser, deleteUser, logout, refreshData, isLoading, isDemoMode
+      language, setLanguage, bookings, addBooking, updateBooking, deleteBooking, isAdmin, currentUser, users, login, register, registerTrainer, requestTrainerUpgrade, updateUser, deleteUser, logout, refreshData, isLoading, isDemoMode, confirmAction, confirmState, closeConfirm
     }}>
       {children}
     </AppContext.Provider>

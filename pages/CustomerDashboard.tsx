@@ -7,30 +7,23 @@ import { useNavigate } from 'react-router-dom';
 import { Trainer, Booking } from '../types';
 
 const CustomerDashboard: React.FC = () => {
-  const { language, bookings, updateBooking, deleteBooking, currentUser, logout, users, requestTrainerUpgrade } = useAppContext();
+  const { language, bookings, updateBooking, deleteBooking, currentUser, logout, users, requestTrainerUpgrade, confirmAction } = useAppContext();
   const t = TRANSLATIONS[language];
   const navigate = useNavigate();
-  const [cancellingId, setCancellingId] = useState<string | null>(null);
 
-  // Upgrade Modal State
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeSpecialty, setUpgradeSpecialty] = useState('');
   const [upgradePhone, setUpgradePhone] = useState(currentUser?.phone || '');
   const [isUpgrading, setIsUpgrading] = useState(false);
 
-  // 1. COMBINE STATIC AND DYNAMIC TRAINERS
   const allTrainers = useMemo(() => {
     const staticTrainers = getTrainers(language);
-    
-    // Convert users with role 'trainer' into Trainer objects
     const dynamicTrainers: Trainer[] = users
       .filter(u => u.role === 'trainer')
       .map(u => {
-        // STRICT PARSING: Separate Name from Specialty
         const match = u.name.match(/^(.*)\s\((.*)\)$/);
         const displayName = match ? match[1] : u.name;
         const displaySpecialty = match ? match[2] : (language === 'bg' ? 'Фитнес инструктор' : 'Fitness Instructor');
-
         return {
           id: u.id,
           name: displayName,
@@ -41,317 +34,109 @@ const CustomerDashboard: React.FC = () => {
           availability: []
         };
       });
-
     return [...staticTrainers, ...dynamicTrainers];
   }, [language, users]);
 
-  if (!currentUser) {
-    return (
-        <div className="min-h-screen flex items-center justify-center bg-dark">
-            <div className="text-center">
-                <p className="mb-4 text-slate-400 font-bold">Please log in to view your dashboard.</p>
-                <button onClick={() => navigate('/login')} className="px-6 py-3 bg-brand text-dark font-black uppercase rounded-xl hover:bg-white transition-all">{t.login}</button>
-            </div>
-        </div>
-    )
-  }
-
-  // Helper to generate Google Calendar Link
-  const getGoogleCalendarUrl = (booking: Booking, trainer?: Trainer) => {
-    const [year, month, day] = booking.date.split('-');
-    const [hour, minute] = booking.time.split(':');
-    const startDate = `${year}${month}${day}T${hour}${minute}00`;
-    const endHour = (parseInt(hour) + 1).toString().padStart(2, '0');
-    const endDate = `${year}${month}${day}T${endHour}${minute}00`;
-    
-    const text = encodeURIComponent(`Training: ${trainer?.specialty || 'Fitness'} with ${trainer?.name}`);
-    const details = encodeURIComponent(`Activity: ${trainer?.specialty}\nTrainer: ${trainer?.name}\nLocation: ClassFit Varna`);
-    const location = encodeURIComponent(`ул. "Студентска" 1А, Varna, Bulgaria`);
-    
-    return `https://www.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${startDate}/${endDate}&details=${details}&location=${location}`;
-  };
+  if (!currentUser) return null;
 
   const myBookings = bookings.filter(b => b.userId === currentUser.id);
 
-  const handleCancelRequest = async (id: string) => {
-    try {
-      await updateBooking(id, { status: 'cancelled' });
-      setCancellingId(null);
-    } catch (e) {
-      console.error(e);
-      alert(language === 'bg' ? 'Неуспешна отмяна.' : 'Failed to cancel.');
-    }
+  const handleCancelRequest = (id: string) => {
+    confirmAction({
+      title: 'Cancel Training',
+      message: 'Are you sure you want to cancel this session?',
+      onConfirm: async () => {
+        await updateBooking(id, { status: 'cancelled' });
+      }
+    });
   };
 
-  const handleDelete = async (id: string) => {
-      if (window.confirm(language === 'bg' ? 'Сигурни ли сте, че искате да премахнете този запис?' : 'Are you sure you want to remove this session from your history?')) {
-          await deleteBooking(id);
+  const handleDelete = (id: string) => {
+    confirmAction({
+      title: 'Remove from History',
+      message: 'Are you sure you want to remove this session from your dashboard?',
+      onConfirm: async () => {
+        await deleteBooking(id);
       }
+    });
   };
 
   const handleLogout = () => {
     logout();
     navigate('/');
-  }
+  };
 
   const handleUpgradeSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
       if (!currentUser) return;
       setIsUpgrading(true);
-      
       try {
-          // Attempt upgrade
-          const { success, msg } = await requestTrainerUpgrade(
-              currentUser.id,
-              currentUser.name, // Pass current name, backend appends specialty
-              upgradePhone,
-              upgradeSpecialty
-          );
-          
+          const { success, msg } = await requestTrainerUpgrade(currentUser.id, currentUser.name, upgradePhone, upgradeSpecialty);
           if (success) {
-              alert(language === 'bg' ? 'Заявката е изпратена успешно!' : 'Application sent successfully!');
+              alert(language === 'bg' ? 'Заявката е изпратена!' : 'Application sent!');
               setShowUpgradeModal(false);
-          } else {
-              alert('Error: ' + msg);
           }
-      } catch (error) {
-          console.error(error);
-          alert('System error occurred.');
       } finally {
           setIsUpgrading(false);
       }
   };
 
-  const getTrainerImage = (trainer?: Trainer) => {
-      if (!trainer || !trainer.image) return DEFAULT_PROFILE_IMAGE;
-      return trainer.image;
-  };
-
-  // Helper to clean display name
+  const getTrainerImage = (trainer?: Trainer) => trainer?.image || DEFAULT_PROFILE_IMAGE;
   const displayName = currentUser.name.split('(')[0].trim();
-
-  // Determine Role Label
-  const getRoleLabel = () => {
-    if (currentUser.role === 'trainer') return t.trainer;
-    if (currentUser.role === 'admin') return t.admin;
-    if (currentUser.role === 'trainer_pending') return t.roleTrainerPending;
-    return t.clubMember;
-  };
-
-  // Determine Role Styles
-  const getRoleStyles = () => {
-    if (currentUser.role === 'admin') {
-        return 'text-red-500 bg-red-500/10 border border-red-500/20';
-    }
-    if (currentUser.role === 'trainer_pending') {
-        return 'text-yellow-500 bg-yellow-500/10 border border-yellow-500/20';
-    }
-    return 'text-brand bg-brand/10';
-  };
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-24 animate-in fade-in slide-in-from-bottom-2 duration-500">
       
-      {/* Profile Header */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-8 bg-surface p-8 rounded-[2.5rem] border border-white/5 shadow-2xl">
          <div className="flex items-center gap-6">
             <div className="w-24 h-24 rounded-full p-1 border-2 border-brand/50">
-                <img 
-                    src={currentUser.image || DEFAULT_PROFILE_IMAGE} 
-                    alt="Profile" 
-                    className="w-full h-full object-cover rounded-full bg-dark"
-                />
+                <img src={currentUser.image || DEFAULT_PROFILE_IMAGE} alt="Profile" className="w-full h-full object-cover rounded-full bg-dark" />
             </div>
             <div className="text-center md:text-left">
-                <h1 className="text-3xl font-black uppercase italic text-white leading-none mb-2">
-                    {displayName}
-                </h1>
-                <div className="flex flex-col md:flex-row gap-2 items-center justify-center md:justify-start">
-                    <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${getRoleStyles()}`}>
-                        {getRoleLabel()}
-                    </span>
-                    <span className="text-slate-500 text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1">
-                        <Mail size={12} /> {currentUser.email}
-                    </span>
-                </div>
+                <h1 className="text-3xl font-black uppercase italic text-white leading-none mb-2">{displayName}</h1>
+                <span className="text-brand bg-brand/10 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full">{currentUser.role.toUpperCase()}</span>
             </div>
          </div>
-         <button 
-           onClick={handleLogout}
-           className="flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 hover:text-white text-slate-400 rounded-xl text-xs font-black uppercase tracking-widest transition-all"
-         >
+         <button onClick={handleLogout} className="flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 hover:text-white text-slate-400 rounded-xl text-xs font-black uppercase tracking-widest transition-all">
            <LogOut size={16} /> {t.logout}
          </button>
       </div>
 
-      {/* BECOME A TRAINER CTA (Only for standard users) */}
       {currentUser.role === 'user' && (
-          <div className="mb-12 p-8 bg-gradient-to-r from-surface to-brand/5 rounded-[2.5rem] border border-brand/20 relative overflow-hidden group">
-              <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-                  <div className="flex items-center gap-6">
-                      <div className="w-16 h-16 bg-brand text-dark rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-brand/20">
-                          <Briefcase size={28} />
-                      </div>
-                      <div className="text-center md:text-left">
-                          <h3 className="text-2xl font-black uppercase italic text-white mb-1">Join Our Team</h3>
-                          <p className="text-slate-400 font-medium text-sm">Become a trainer at ClassFit and grow your business.</p>
-                      </div>
+          <div className="mb-12 p-8 bg-brand/5 rounded-[2.5rem] border border-brand/20 flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="flex items-center gap-6">
+                  <div className="w-16 h-16 bg-brand text-dark rounded-2xl flex items-center justify-center shadow-lg"><Briefcase size={28} /></div>
+                  <div className="text-center md:text-left">
+                      <h3 className="text-2xl font-black uppercase italic text-white mb-1">Become a Trainer</h3>
+                      <p className="text-slate-400 font-medium text-sm">Join ClassFit and manage your own clients.</p>
                   </div>
-                  <button 
-                    onClick={() => setShowUpgradeModal(true)}
-                    className="px-8 py-4 bg-brand text-dark rounded-full font-black uppercase tracking-widest hover:bg-white transition-all shadow-xl shadow-brand/10 whitespace-nowrap"
-                  >
-                      Apply Now
-                  </button>
               </div>
-              <div className="absolute top-0 right-0 w-64 h-full bg-brand/5 -skew-x-12 transform translate-x-10 pointer-events-none"></div>
+              <button onClick={() => setShowUpgradeModal(true)} className="px-8 py-4 bg-brand text-dark rounded-full font-black uppercase tracking-widest hover:bg-white transition-all shadow-xl shadow-brand/10">Apply Now</button>
           </div>
       )}
 
-      {/* PENDING STATUS MESSAGE */}
-      {currentUser.role === 'trainer_pending' && (
-           <div className="mb-12 p-6 bg-yellow-500/10 border border-yellow-500/20 rounded-[2rem] flex items-center gap-4">
-              <div className="p-3 bg-yellow-500 text-dark rounded-xl shrink-0"><AlertCircle size={24} /></div>
-              <div>
-                  <h3 className="text-white font-black uppercase italic text-lg">Application Pending</h3>
-                  <p className="text-slate-400 text-sm">Your request to become a trainer is under review by the administration.</p>
-              </div>
-           </div>
-      )}
-
-      <div className="flex items-center justify-between mb-8 px-2">
-          <h2 className="text-2xl font-black uppercase italic tracking-tighter text-white">{t.myBookings}</h2>
-          <span className="bg-brand text-dark text-xs font-black px-3 py-1 rounded-full">{myBookings.length}</span>
-      </div>
-
       <div className="grid grid-cols-1 gap-6">
         {myBookings.length === 0 ? (
-            <div className="text-center py-24 bg-surface rounded-[2rem] border border-white/5 border-dashed">
-                <p className="text-slate-500 font-medium mb-6">{t.noBookings}</p>
-                <button onClick={() => navigate('/booking')} className="px-8 py-4 bg-brand text-dark rounded-full font-black uppercase text-xs tracking-widest hover:bg-white transition-all shadow-xl shadow-brand/20">
-                    {t.makeFirst}
-                </button>
+            <div className="text-center py-20 bg-surface rounded-[2rem] border border-white/5 border-dashed">
+                <p className="text-slate-500 font-medium">{t.noBookings}</p>
             </div>
         ) : (
             myBookings.map(booking => {
                 const trainer = allTrainers.find(tr => tr.id === booking.trainerId);
-                const isPending = booking.status === 'pending';
-                const isConfirmed = booking.status === 'confirmed';
-                const isCancelled = booking.status === 'cancelled';
-                const isCompleted = booking.status === 'completed';
-
+                const isActive = booking.status === 'pending' || booking.status === 'confirmed';
                 return (
-                    <div key={booking.id} className="bg-surface border border-white/5 rounded-[2rem] p-8 hover:border-brand/30 transition-all group relative overflow-hidden">
-                        
-                        <div className="flex flex-col md:flex-row gap-8">
-                            
-                            {/* 1. Left Side: Trainer Image & Big Status */}
-                            <div className="flex flex-col items-center md:items-start gap-4 md:w-48 shrink-0">
-                                <div className="w-32 h-32 rounded-2xl overflow-hidden bg-slate-700 shadow-lg border border-white/5">
-                                    <img 
-                                        src={getTrainerImage(trainer)} 
-                                        alt={trainer?.name || 'Trainer'} 
-                                        className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" 
-                                    />
-                                </div>
-                                <div className={`w-full py-2 rounded-xl text-center text-[10px] font-black uppercase tracking-widest border ${
-                                    isConfirmed ? 'bg-green-500/10 text-green-500 border-green-500/20' :
-                                    isPending ? 'bg-brand/10 text-brand border-brand/20' :
-                                    isCancelled ? 'bg-red-500/10 text-red-500 border-red-500/20' :
-                                    'bg-slate-700/50 text-slate-400 border-white/5'
-                                }`}>
-                                    {isConfirmed && "Confirmed"}
-                                    {isPending && "Pending"}
-                                    {isCancelled && "Cancelled"}
-                                    {isCompleted && "Completed"}
-                                </div>
-                            </div>
-
-                            {/* 2. Middle: Details Grid (Filling the space) */}
-                            <div className="flex-1 flex flex-col justify-center">
-                                <div className="mb-6 text-center md:text-left">
-                                    <h3 className="font-black uppercase italic text-2xl text-white leading-tight mb-2">{trainer?.name || 'Unknown Trainer'}</h3>
-                                    <div className="inline-flex items-center gap-2 bg-brand/10 text-brand px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider">
-                                        <Activity size={14} />
-                                        <span>{trainer?.specialty || 'Training'}</span>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-white/5 p-6 rounded-2xl border border-white/5">
-                                    <div className="flex items-center gap-3 text-slate-300">
-                                        <div className="p-2 bg-dark rounded-lg text-brand"><Calendar size={18} /></div>
-                                        <div>
-                                            <p className="text-[10px] uppercase text-slate-500 font-bold tracking-wider">Date</p>
-                                            <p className="font-bold text-white">{booking.date}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-3 text-slate-300">
-                                        <div className="p-2 bg-dark rounded-lg text-brand"><Clock size={18} /></div>
-                                        <div>
-                                            <p className="text-[10px] uppercase text-slate-500 font-bold tracking-wider">Time</p>
-                                            <p className="font-bold text-white">{booking.time}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-3 text-slate-300 sm:col-span-2">
-                                        <div className="p-2 bg-dark rounded-lg text-brand"><MapPin size={18} /></div>
-                                        <div>
-                                            <p className="text-[10px] uppercase text-slate-500 font-bold tracking-wider">Location</p>
-                                            <p className="font-bold text-white">ClassFit Varna (Studentska 1A)</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* 3. Right: Action Buttons */}
-                            <div className="flex flex-col justify-center gap-3 md:w-48 shrink-0 border-t md:border-t-0 md:border-l border-white/5 pt-6 md:pt-0 md:pl-6">
-                                {isConfirmed && (
-                                    <>
-                                        <a 
-                                            href={getGoogleCalendarUrl(booking, trainer)}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="w-full py-3 bg-white/5 hover:bg-white text-slate-400 hover:text-dark rounded-xl transition-all flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest"
-                                        >
-                                            <CalendarPlus size={16} /> Calendar
-                                        </a>
-                                        {trainer?.phone && (
-                                            <a href={`tel:${trainer.phone}`} className="w-full py-3 bg-white/5 hover:bg-green-500 text-slate-400 hover:text-white rounded-xl transition-all flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest">
-                                                <Phone size={16} /> Call
-                                            </a>
-                                        )}
-                                    </>
-                                )}
-
-                                {(isPending || isConfirmed) && (
-                                    cancellingId === booking.id ? (
-                                        <div className="flex flex-col gap-2 p-2 bg-red-500/10 rounded-xl border border-red-500/20">
-                                            <p className="text-center text-[10px] text-red-400 font-bold uppercase mb-1">Are you sure?</p>
-                                            <button onClick={() => handleCancelRequest(booking.id)} className="w-full py-2 bg-red-500 text-white rounded-lg text-xs font-black uppercase hover:bg-red-600 transition-colors">
-                                                Yes, Cancel
-                                            </button>
-                                            <button onClick={() => setCancellingId(null)} className="w-full py-2 bg-dark text-slate-400 rounded-lg text-xs font-black uppercase hover:text-white transition-colors">
-                                                No, Keep
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <button 
-                                            onClick={() => setCancellingId(booking.id)}
-                                            className="w-full py-3 bg-white/5 hover:bg-red-500/20 text-slate-400 hover:text-red-500 rounded-xl transition-all flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest border border-transparent hover:border-red-500/30"
-                                        >
-                                            <Trash2 size={16} /> Cancel
-                                        </button>
-                                    )
-                                )}
-                                
-                                {(isCompleted || isCancelled) && (
-                                     <button 
-                                        onClick={() => handleDelete(booking.id)}
-                                        className="w-full py-3 bg-white/5 hover:bg-red-500/10 text-slate-500 hover:text-red-500 rounded-xl transition-all flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest border border-transparent hover:border-red-500/20"
-                                     >
-                                         <Trash2 size={16} /> {language === 'bg' ? 'Изчисти' : 'Clear'}
-                                     </button>
-                                )}
-                            </div>
+                    <div key={booking.id} className="bg-surface border border-white/5 rounded-[2rem] p-8 hover:border-brand/30 transition-all flex flex-col md:flex-row gap-8 items-center">
+                        <img src={getTrainerImage(trainer)} className="w-24 h-24 rounded-2xl object-cover" />
+                        <div className="flex-1 text-center md:text-left">
+                            <h3 className="font-black uppercase italic text-xl text-white mb-1">{trainer?.name || 'Trainer'}</h3>
+                            <p className="text-[10px] text-slate-500 font-bold uppercase">{booking.date} @ {booking.time}</p>
+                        </div>
+                        <div className="flex gap-2">
+                             {isActive ? (
+                                 <button onClick={() => handleCancelRequest(booking.id)} className="p-3 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all"><Trash2 size={20} /></button>
+                             ) : (
+                                 <button onClick={() => handleDelete(booking.id)} className="p-3 bg-white/5 text-slate-500 rounded-xl hover:text-red-500 transition-all"><X size={20} /></button>
+                             )}
                         </div>
                     </div>
                 )
@@ -359,56 +144,15 @@ const CustomerDashboard: React.FC = () => {
         )}
       </div>
 
-      {/* MODAL: UPGRADE TO TRAINER */}
       {showUpgradeModal && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-dark/90 backdrop-blur-md animate-in fade-in duration-300">
               <div className="bg-surface rounded-[2.5rem] border border-white/10 p-8 w-full max-w-md shadow-2xl relative animate-in zoom-in-95 duration-300">
-                  <button 
-                    onClick={() => setShowUpgradeModal(false)}
-                    className="absolute top-6 right-6 p-2 bg-white/5 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
-                  >
-                      <X size={20} />
-                  </button>
-
-                  <div className="text-center mb-8">
-                      <div className="w-16 h-16 bg-brand text-dark rounded-2xl flex items-center justify-center mx-auto mb-4">
-                          <Briefcase size={28} />
-                      </div>
-                      <h2 className="text-2xl font-black uppercase italic text-white mb-2">Become a Trainer</h2>
-                      <p className="text-slate-400 text-sm">Please confirm your specialty and contact number.</p>
-                  </div>
-
+                  <button onClick={() => setShowUpgradeModal(false)} className="absolute top-6 right-6 p-2 bg-white/5 rounded-full text-slate-400 hover:text-white"><X size={20} /></button>
+                  <h2 className="text-2xl font-black uppercase italic text-white mb-6 text-center">Trainer Application</h2>
                   <form onSubmit={handleUpgradeSubmit} className="space-y-4">
-                      <div>
-                          <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Specialty</label>
-                          <input 
-                            type="text" 
-                            required
-                            className="w-full bg-dark/50 border border-white/5 rounded-xl px-5 py-4 text-white font-bold outline-none focus:border-brand placeholder-slate-600"
-                            placeholder="e.g. Yoga, CrossFit, Boxing"
-                            value={upgradeSpecialty}
-                            onChange={(e) => setUpgradeSpecialty(e.target.value)}
-                          />
-                      </div>
-                      <div>
-                          <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Phone Number</label>
-                          <input 
-                            type="tel" 
-                            required
-                            className="w-full bg-dark/50 border border-white/5 rounded-xl px-5 py-4 text-white font-bold outline-none focus:border-brand placeholder-slate-600"
-                            placeholder="+359..."
-                            value={upgradePhone}
-                            onChange={(e) => setUpgradePhone(e.target.value)}
-                          />
-                      </div>
-                      
-                      <button 
-                        type="submit"
-                        disabled={isUpgrading}
-                        className="w-full py-4 bg-brand text-dark rounded-xl font-black uppercase tracking-widest hover:bg-white transition-all mt-4 flex items-center justify-center gap-2"
-                      >
-                          {isUpgrading ? <Loader2 className="animate-spin" /> : 'Submit Application'}
-                      </button>
+                      <input type="text" required className="w-full bg-dark/50 border border-white/5 rounded-xl px-5 py-4 text-white outline-none focus:border-brand" placeholder="Specialty" value={upgradeSpecialty} onChange={e => setUpgradeSpecialty(e.target.value)} />
+                      <input type="tel" required className="w-full bg-dark/50 border border-white/5 rounded-xl px-5 py-4 text-white outline-none focus:border-brand" placeholder="Phone" value={upgradePhone} onChange={e => setUpgradePhone(e.target.value)} />
+                      <button type="submit" disabled={isUpgrading} className="w-full py-4 bg-brand text-dark rounded-xl font-black uppercase tracking-widest flex items-center justify-center gap-2">{isUpgrading ? <Loader2 className="animate-spin" /> : 'Submit'}</button>
                   </form>
               </div>
           </div>

@@ -6,7 +6,7 @@ import { useAppContext } from '../AppContext';
 import { TRANSLATIONS } from '../constants';
 
 const Login: React.FC = () => {
-  const { login, language } = useAppContext();
+  const { login, language, confirmAction } = useAppContext();
   const navigate = useNavigate();
   const t = TRANSLATIONS[language];
   const [email, setEmail] = useState('');
@@ -24,10 +24,15 @@ const Login: React.FC = () => {
   };
 
   const handleHardReset = () => {
-    if (window.confirm('Reset App? This will delete all accounts and bookings on this device.')) {
-      localStorage.clear();
-      window.location.reload();
-    }
+    confirmAction({
+      title: 'Reset Application?',
+      message: 'This will delete all local accounts and booking data stored on this device. This action cannot be undone.',
+      confirmText: 'Reset Now',
+      onConfirm: () => {
+        localStorage.clear();
+        window.location.reload();
+      }
+    });
   };
 
   return (

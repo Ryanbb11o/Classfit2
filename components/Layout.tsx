@@ -1,11 +1,62 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Menu, X, ShieldCheck, User as UserIcon, Home, Info, Calendar, Dumbbell, ShoppingBag, LogIn, LogOut, Phone, Briefcase, Bell, Mail, Star, MessageSquare, Check, Loader2 } from 'lucide-react';
+import { Menu, X, ShieldCheck, User as UserIcon, Home, Info, Calendar, Dumbbell, ShoppingBag, LogIn, LogOut, Phone, Briefcase, Bell, Mail, Star, MessageSquare, Check, Loader2, AlertTriangle } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS } from '../constants';
 import LanguageSwitcher from './LanguageSwitcher';
 import { Booking } from '../types';
+
+const ConfirmModal: React.FC = () => {
+  const { confirmState, closeConfirm, language } = useAppContext();
+  if (!confirmState) return null;
+
+  const isDelete = confirmState.title?.toLowerCase().includes('delete') || 
+                   confirmState.title?.toLowerCase().includes('reset') || 
+                   confirmState.title?.toLowerCase().includes('cancel') ||
+                   confirmState.title?.toLowerCase().includes('отказ') ||
+                   confirmState.title?.toLowerCase().includes('изтрий');
+
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-dark/90 backdrop-blur-md animate-in fade-in duration-300">
+       <div className="bg-surface rounded-[2.5rem] border border-white/10 p-10 w-full max-w-sm shadow-[0_0_50px_rgba(0,0,0,0.5)] relative animate-in zoom-in-95 duration-300 text-center overflow-hidden">
+          {/* Subtle background glow */}
+          <div className={`absolute -top-20 -left-20 w-40 h-40 rounded-full blur-[80px] ${isDelete ? 'bg-red-500/20' : 'bg-brand/20'}`}></div>
+          
+          <div className={`w-20 h-20 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-xl ${isDelete ? 'bg-red-500/10 text-red-500 shadow-red-500/10' : 'bg-brand/10 text-brand shadow-brand/10'}`}>
+             {isDelete ? <AlertTriangle size={40} /> : <Check size={40} strokeWidth={3} />}
+          </div>
+          
+          <h2 className="text-2xl font-black uppercase italic text-white mb-3 tracking-tighter leading-none">
+            {confirmState.title || (language === 'bg' ? 'Сигурни ли сте?' : 'Are you sure?')}
+          </h2>
+          
+          <p className="text-slate-400 text-sm mb-10 leading-relaxed font-medium italic">
+            {confirmState.message}
+          </p>
+          
+          <div className="flex flex-col gap-3">
+             <button 
+                onClick={() => { confirmState.onConfirm(); closeConfirm(); }}
+                className={`w-full py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg active:scale-95 ${
+                  isDelete 
+                    ? 'bg-red-500 text-white hover:bg-red-600 shadow-red-500/20' 
+                    : 'bg-brand text-dark hover:bg-white shadow-brand/20'
+                }`}
+             >
+                {confirmState.confirmText || (language === 'bg' ? 'Потвърди' : 'Confirm')}
+             </button>
+             <button 
+                onClick={closeConfirm}
+                className="w-full py-5 bg-white/5 text-slate-500 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-white/10 hover:text-white transition-all active:scale-95"
+             >
+                {confirmState.cancelText || (language === 'bg' ? 'Отказ' : 'Cancel')}
+             </button>
+          </div>
+       </div>
+    </div>
+  );
+};
 
 const ReviewModal: React.FC<{ 
   booking: Booking | null; 
@@ -21,7 +72,6 @@ const ReviewModal: React.FC<{
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    // Simulate API call
     setTimeout(() => {
       onSubmit(booking.id);
       setIsSubmitting(false);
@@ -93,7 +143,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
 
-  // Review System State
   const [reviewedBookingIds, setReviewedBookingIds] = useState<string[]>(() => {
     const saved = localStorage.getItem('classfit_reviewed_bookings');
     return saved ? JSON.parse(saved) : [];
@@ -103,7 +152,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const t = TRANSLATIONS[language];
   const navigate = useNavigate();
 
-  // Close notifications if clicked outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
@@ -122,21 +170,17 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     alert("Thank you! Your review has been submitted.");
   };
 
-  // --- Notification Logic ---
   const isTrainer = currentUser?.role === 'trainer';
   const isUser = currentUser?.role === 'user';
   
-  // 1. Admin: Pending Trainer Apps
   const pendingApplications = isAdmin ? users.filter(u => u.role === 'trainer_pending') : [];
   
-  // 2. Admin/Trainer: Pending Bookings
   const pendingBookings = isAdmin 
     ? bookings.filter(b => b.status === 'pending')
     : isTrainer 
       ? bookings.filter(b => b.trainerId === currentUser?.id && b.status === 'pending')
       : [];
 
-  // 3. Customer: Completed bookings that haven't been reviewed yet
   const pendingReviews = isUser 
     ? bookings.filter(b => 
         b.userId === currentUser?.id && 
@@ -171,29 +215,21 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     }
   };
 
-  // Helper to clean name (remove specialty in parens)
   const getDisplayName = (name: string) => name.split('(')[0].trim();
 
   return (
     <div className="min-h-screen flex flex-col bg-dark text-white font-sans selection:bg-brand selection:text-dark">
-      {/* Navigation Header */}
       <header className="fixed top-0 left-0 right-0 bg-dark/80 backdrop-blur-xl z-50 border-b border-white/5">
         <div className="max-w-[1600px] mx-auto px-6 h-20 flex items-center justify-between">
-          
-          {/* Far Left: Logo */}
           <NavLink to="/" className="flex items-center gap-3 shrink-0">
             <span className="text-2xl font-black tracking-tighter uppercase italic leading-none text-white">
               CLASS<span className="text-brand">FIT</span>
             </span>
           </NavLink>
 
-          {/* Center Space */}
           <div className="flex-grow"></div>
 
-          {/* Far Right: Auth + Menu */}
           <div className="flex items-center gap-6">
-            
-            {/* Desktop Auth Links + Language */}
             <div className="hidden md:flex items-center gap-6">
                {currentUser ? (
                  <div className="flex items-center gap-4">
@@ -232,7 +268,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                <LanguageSwitcher />
             </div>
 
-            {/* NOTIFICATIONS (Global) */}
             {currentUser && (
                  <div className="relative flex items-center" ref={notifRef}>
                     <button 
@@ -245,7 +280,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                       )}
                     </button>
 
-                    {/* Dropdown */}
                     {showNotifications && (
                       <div className="absolute top-full right-0 mt-4 w-80 bg-surface rounded-2xl border border-white/10 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 z-[70]">
                          <div className="p-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
@@ -259,7 +293,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                                </div>
                             ) : (
                               <>
-                                {/* Pending Reviews (Customers) */}
                                 {pendingReviews.map(b => (
                                   <div 
                                     key={b.id}
@@ -280,7 +313,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                                   </div>
                                 ))}
 
-                                {/* Trainer Applications (Admin Only) */}
                                 {pendingApplications.map(u => (
                                   <div 
                                     key={u.id}
@@ -299,7 +331,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                                   </div>
                                 ))}
 
-                                {/* Bookings */}
                                 {pendingBookings.map(b => (
                                   <div 
                                     key={b.id}
@@ -336,7 +367,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                  </div>
             )}
 
-            {/* Hamburger Menu Icon */}
             <button 
               onClick={() => setIsMenuOpen(!isMenuOpen)} 
               className="p-2 text-white hover:bg-white/10 rounded-full transition-all duration-200 relative"
@@ -348,7 +378,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         </div>
       </header>
 
-      {/* Slide-in Mobile/Sidebar Menu */}
       <div 
         className={`fixed inset-0 z-[60] bg-dark/80 backdrop-blur-sm transition-opacity duration-300 ${isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
         onClick={closeMenu}
@@ -386,7 +415,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             
             <div className="h-px bg-white/10 my-4"></div>
 
-            {/* Mobile Auth Links */}
             {currentUser ? (
               <>
                  <NavLink onClick={closeMenu} to="/profile" className="flex items-center gap-4 text-xl font-bold uppercase tracking-widest text-white hover:text-brand transition-all duration-200">
@@ -466,7 +494,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         </div>
       </footer>
 
-      {/* Review Modal */}
       {bookingToReview && (
          <ReviewModal 
             booking={bookingToReview}
@@ -474,6 +501,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             onSubmit={handleReviewSubmit}
          />
       )}
+
+      <ConfirmModal />
     </div>
   );
 };
