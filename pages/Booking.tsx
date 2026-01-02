@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, Calendar as CalendarIcon, Clock, User, Phone, X, Mail, Loader2, ChevronLeft, ChevronRight, ArrowLeft, Star, Award, Zap, Quote, ThumbsUp, MapPin, Target, ShieldCheck } from 'lucide-react';
+import { Check, Calendar as CalendarIcon, Clock, User, Phone, X, Mail, Loader2, ChevronLeft, ChevronRight, ArrowLeft, Star, Award, Zap, Quote, ThumbsUp, MapPin, Target, ShieldCheck, CalendarPlus } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { getTrainers, TRANSLATIONS, DEFAULT_PROFILE_IMAGE, getTrainerReviews } from '../constants';
 import { Trainer, Booking } from '../types';
@@ -41,7 +41,6 @@ const BookingPage: React.FC = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [isSuccess, setIsSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [customerEmail, setCustomerEmail] = useState<string | undefined>(undefined);
   const [lastBooking, setLastBooking] = useState<Booking | null>(null);
   const [showGuestForm, setShowGuestForm] = useState(false);
   const [guestName, setGuestName] = useState('');
@@ -179,7 +178,6 @@ const BookingPage: React.FC = () => {
     try {
       await addBooking(newBooking);
       setLastBooking(newBooking);
-      setCustomerEmail(email);
       setShowGuestForm(false);
       setIsSuccess(true);
     } catch (error) {
@@ -190,21 +188,88 @@ const BookingPage: React.FC = () => {
     }
   };
 
-  if (isSuccess && lastBooking) {
+  const getGoogleCalendarUrl = (booking: Booking, trainer?: Trainer) => {
+    const [year, month, day] = booking.date.split('-');
+    const [hour, minute] = booking.time.split(':');
+    const startDate = `${year}${month}${day}T${hour.replace(':','')}${minute.replace(':','')}00`;
+    const endHour = (parseInt(hour) + 1).toString().padStart(2, '0');
+    const endDate = `${year}${month}${day}T${endHour}${minute}00`;
+    
+    const text = encodeURIComponent(`ClassFit Session with ${trainer?.name}`);
+    const details = encodeURIComponent(`Trainer: ${trainer?.name}\nSpecialty: ${trainer?.specialty}\nLocation: ClassFit Varna (near Bus Stop Mir)`);
+    const location = encodeURIComponent(`1A Studentska Str., Varna, Bulgaria`);
+    
+    return `https://www.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${startDate}/${endDate}&details=${details}&location=${location}`;
+  };
+
+  if (isSuccess && lastBooking && selectedTrainer) {
     return (
-      <div className="max-w-xl mx-auto py-32 px-4 text-center animate-in zoom-in-95 duration-500">
-        <div className="w-16 h-16 bg-brand text-dark rounded-full flex items-center justify-center mx-auto mb-6">
-          <Check size={32} strokeWidth={3} />
+      <div className="max-w-xl mx-auto py-32 px-4 animate-in zoom-in-95 duration-500">
+        <div className="text-center mb-10">
+          <div className="w-20 h-20 bg-brand text-dark rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-brand/20">
+            <Check size={40} strokeWidth={3} />
+          </div>
+          <h2 className="text-4xl font-black uppercase italic mb-4 text-white tracking-tighter leading-none">{t.reqSent}</h2>
+          <p className="text-slate-400 mb-8 text-sm max-w-sm mx-auto">{t.confirmText}</p>
         </div>
-        <h2 className="text-3xl font-black uppercase italic mb-4 text-white tracking-tighter">{t.reqSent}</h2>
-        <p className="text-slate-400 mb-8 text-sm">{t.confirmText}</p>
+
+        {/* Contact Information Block */}
+        <div className="bg-surface border border-white/5 rounded-[2.5rem] p-8 mb-10 shadow-2xl relative overflow-hidden group">
+           <div className="absolute top-0 right-0 w-32 h-32 bg-brand/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+           
+           <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-brand mb-6 italic">Contact Information</h3>
+           
+           <div className="space-y-6">
+              <div className="flex items-center justify-between group/row">
+                 <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-slate-400 group-hover/row:text-brand transition-colors">
+                       <User size={18} />
+                    </div>
+                    <div>
+                       <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">{t.trainerPhoneLabel}</p>
+                       <p className="text-white font-bold text-sm uppercase italic">{selectedTrainer.name}</p>
+                    </div>
+                 </div>
+                 <a href={`tel:${selectedTrainer.phone}`} className="p-3 bg-brand text-dark rounded-full hover:scale-110 transition-transform shadow-lg shadow-brand/10">
+                    <Phone size={18} />
+                 </a>
+              </div>
+
+              <div className="flex items-center justify-between group/row">
+                 <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-slate-400 group-hover/row:text-brand transition-colors">
+                       <MapPin size={18} />
+                    </div>
+                    <div>
+                       <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">{t.gymPhoneLabel}</p>
+                       <p className="text-white font-bold text-sm uppercase italic">ClassFit Varna</p>
+                    </div>
+                 </div>
+                 <a href={`tel:${t.gymPhone}`} className="p-3 bg-white/10 text-white rounded-full hover:scale-110 transition-transform border border-white/10">
+                    <Phone size={18} />
+                 </a>
+              </div>
+           </div>
+
+           <div className="mt-10 pt-8 border-t border-white/5 flex flex-col sm:flex-row gap-4">
+              <a 
+                href={getGoogleCalendarUrl(lastBooking, selectedTrainer)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 py-4 bg-white/5 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 hover:bg-white hover:text-dark transition-all"
+              >
+                <CalendarPlus size={16} /> {t.saveToCalendar}
+              </a>
+           </div>
+        </div>
+
         <div className="flex flex-col gap-3 max-w-xs mx-auto">
           {currentUser && (
             <button onClick={() => navigate('/profile')} className="w-full py-4 bg-white text-dark rounded-full font-black uppercase tracking-widest text-xs hover:bg-brand transition-all">
               {t.myBookings}
             </button>
           )}
-          <button onClick={() => { setIsSuccess(false); setSelectedTrainer(null); }} className="w-full py-4 bg-surface text-white rounded-full font-black uppercase tracking-widest text-xs hover:bg-white/10 transition-all">
+          <button onClick={() => { setIsSuccess(false); setSelectedTrainer(null); }} className="w-full py-4 bg-surface text-white rounded-full font-black uppercase tracking-widest text-xs hover:bg-white/10 transition-all border border-white/5">
             {t.newBooking}
           </button>
         </div>
@@ -283,7 +348,7 @@ const BookingPage: React.FC = () => {
                         {selectedTrainer.specialty}
                      </div>
                      
-                     {/* Refined Experience/Focus Badges */}
+                     {/* Experience & Focus Badges - Re-added as requested */}
                      <div className="grid grid-cols-1 gap-4 pt-6 border-t border-white/5">
                         <div className="flex items-center gap-4 px-6 py-5 bg-dark/40 rounded-2xl border border-white/5 group hover:border-brand/40 transition-all duration-300">
                             <div className="w-12 h-12 bg-brand/10 text-brand rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-brand/5 group-hover:bg-brand group-hover:text-dark transition-colors">
@@ -307,7 +372,7 @@ const BookingPage: React.FC = () => {
                   </div>
                </div>
 
-               {/* Bio/Background Container - Enhanced Background */}
+               {/* Bio/Background Container - Enhanced Background for Cohesion */}
                <div className="relative p-10 bg-surface/50 backdrop-blur-xl rounded-[2.5rem] border border-white/10 shadow-2xl overflow-hidden text-center group">
                   {/* Internal decoration */}
                   <div className="absolute -top-10 -right-10 w-32 h-32 bg-brand/5 rounded-full blur-2xl transition-all duration-700 group-hover:bg-brand/10"></div>

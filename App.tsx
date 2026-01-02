@@ -26,7 +26,8 @@ interface ErrorBoundaryState {
 
 // Fix: Explicitly inherit from React.Component with typed generics to ensure state and props are correctly identified by the compiler.
 class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  // Fix: Declare state property explicitly on the class to resolve TypeScript property existence errors.
+  // Fix: Declare props and state properties explicitly on the class to resolve TypeScript property existence errors.
+  public props: ErrorBoundaryProps;
   public state: ErrorBoundaryState;
 
   constructor(props: ErrorBoundaryProps) {

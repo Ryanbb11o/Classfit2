@@ -1,10 +1,9 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Calendar, Clock, User, Check, X, ShieldAlert, CheckCircle2, DollarSign, CreditCard, Banknote, LayoutDashboard, ListFilter, FileSpreadsheet, TrendingUp, Phone, Loader2, Trash2, Users, Shield, RefreshCw, History, Briefcase, CheckCircle, ArrowRight, AlertTriangle, Mail, Edit, ChevronDown, Save } from 'lucide-react';
+import { Calendar, Clock, User, Check, X, ShieldAlert, CheckCircle2, DollarSign, CreditCard, Banknote, LayoutDashboard, ListFilter, FileSpreadsheet, TrendingUp, Phone, Loader2, Trash2, Users, Shield, RefreshCw, History, Briefcase, CheckCircle, ArrowRight, AlertTriangle, Mail, Edit, ChevronDown, Save, CreditCard as CardIcon, Wallet } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, getTrainers, DEFAULT_PROFILE_IMAGE } from '../constants';
-import emailjs from '@emailjs/browser';
-import { Trainer, User as UserType } from '../types';
+import { Trainer, User as UserType, Booking } from '../types';
 import { useLocation } from 'react-router-dom';
 
 const AdminPanel: React.FC = () => {
@@ -62,6 +61,7 @@ const AdminPanel: React.FC = () => {
   }, [activeTab]);
 
   const activeBookingsList = bookings.filter(b => b.status === 'pending' || b.status === 'confirmed');
+  const awaitingPaymentList = bookings.filter(b => b.status === 'trainer_completed');
   const historyBookingsList = bookings.filter(b => b.status === 'completed' || b.status === 'cancelled');
   const completedBookings = bookings.filter(b => b.status === 'completed');
   const pendingApplications = users.filter(u => u.role === 'trainer_pending');
@@ -92,6 +92,7 @@ const AdminPanel: React.FC = () => {
   });
 
   const pendingCount = bookings.filter(b => b.status === 'pending').length;
+  const paymentNeededCount = awaitingPaymentList.length;
   const appCount = pendingApplications.length;
 
   const handleManualRefresh = () => {
@@ -136,8 +137,6 @@ const AdminPanel: React.FC = () => {
 
   const handleEditUserClick = (u: UserType) => {
       setEditingUser(u);
-      
-      // Parse name if trainer
       const match = u.name.match(/^(.*)\s\((.*)\)$/);
       if (match) {
           setEditForm({
@@ -184,20 +183,7 @@ const AdminPanel: React.FC = () => {
   const handleConfirm = async (bookingId: string) => {
     const booking = bookings.find(b => b.id === bookingId);
     if (!booking) return;
-
     setProcessingId(bookingId);
-
-    const bookingLang = booking.language || 'bg'; 
-    const bookingTrainers = getTrainers(bookingLang);
-    const trainer = bookingTrainers.find(tr => tr.id === booking.trainerId);
-    const currentT = TRANSLATIONS[bookingLang];
-    
-    if (booking.customerEmail && trainer) {
-      // Email logic simplified for brevity - assumes already working
-      const dateObj = new Date(booking.date);
-      // ... same email logic ...
-    }
-
     await updateBooking(bookingId, { status: 'confirmed' });
     setProcessingId(null);
   };
@@ -240,7 +226,7 @@ const AdminPanel: React.FC = () => {
             <FileSpreadsheet size={14} className="inline mr-2" />{t.tabAnalysis}
           </button>
           <button onClick={() => setActiveTab('bookings')} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'bookings' ? 'bg-brand text-dark' : 'text-slate-400'}`}>
-            <ListFilter size={14} className="inline mr-2" />{t.tabBookings} {pendingCount > 0 && <span className="ml-1 px-1.5 py-0.5 bg-brand text-dark rounded text-[8px]">{pendingCount}</span>}
+            <ListFilter size={14} className="inline mr-2" />{t.tabBookings} {(pendingCount + paymentNeededCount) > 0 && <span className="ml-1 px-1.5 py-0.5 bg-brand text-dark rounded text-[8px]">{pendingCount + paymentNeededCount}</span>}
           </button>
           <button onClick={() => setActiveTab('applications')} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'applications' ? 'bg-brand text-dark' : 'text-slate-400'}`}>
             <Briefcase size={14} className="inline mr-2" /> Trainer Apps {appCount > 0 && <span className="ml-1 px-1.5 py-0.5 bg-white text-dark rounded text-[8px]">{appCount}</span>}
@@ -252,26 +238,25 @@ const AdminPanel: React.FC = () => {
       </div>
 
       <div className="min-h-[400px]">
-        {/* ... (Overview, Finance, Bookings, Applications tabs same as before) ... */}
         {activeTab === 'overview' && (
           <div className="animate-in fade-in slide-in-from-bottom-4">
-             {/* ... (Overview Content) ... */}
-             {pendingApplications.length > 0 && (
-                <div className="mb-8 p-6 bg-yellow-500/10 border border-yellow-500/20 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-4">
+             {paymentNeededCount > 0 && (
+                <div className="mb-8 p-6 bg-brand/10 border border-brand/20 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
-                    <div className="p-3 bg-yellow-500 text-dark rounded-xl">
-                        <AlertTriangle size={24} />
+                    <div className="p-3 bg-brand text-dark rounded-xl">
+                        <Wallet size={24} />
                     </div>
                     <div>
-                        <h3 className="text-xl font-black uppercase italic text-white">Action Required</h3>
-                        <p className="text-slate-400 font-medium">{pendingApplications.length} pending trainer application(s).</p>
+                        <h3 className="text-xl font-black uppercase italic text-white">Payment Confirmation</h3>
+                        <p className="text-slate-400 font-medium">{paymentNeededCount} training sessions need payment verification.</p>
                     </div>
                   </div>
-                  <button onClick={() => setActiveTab('applications')} className="px-6 py-3 bg-yellow-500 text-dark rounded-xl font-black uppercase tracking-widest hover:bg-white transition-all flex items-center gap-2">
-                    Review Now <ArrowRight size={16} />
+                  <button onClick={() => setActiveTab('bookings')} className="px-6 py-3 bg-brand text-dark rounded-xl font-black uppercase tracking-widest hover:bg-white transition-all flex items-center gap-2">
+                    Verify Now <ArrowRight size={16} />
                   </button>
                 </div>
             )}
+
              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-16">
               <div className="p-10 bg-brand text-dark rounded-[2.5rem] shadow-xl relative overflow-hidden group">
                  <div className="relative z-10">
@@ -301,7 +286,6 @@ const AdminPanel: React.FC = () => {
 
         {activeTab === 'finance' && (
           <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-hidden animate-in fade-in slide-in-from-bottom-4">
-             {/* ... (Finance Table) ... */}
              <div className="p-8 border-b border-white/5 bg-white/5"><h3 className="text-lg font-black uppercase italic text-white"><TrendingUp size={18} className="inline mr-2 text-brand" /> {t.financialAnalysis}</h3></div>
              <div className="overflow-x-auto">
                <table className="w-full text-left">
@@ -341,62 +325,117 @@ const AdminPanel: React.FC = () => {
         )}
 
         {activeTab === 'bookings' && (
-          <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-hidden">
-            <div className="p-8 border-b border-white/5 bg-white/5"><h3 className="text-lg font-black uppercase italic text-white">{t.allBookings}</h3></div>
-            <div className="overflow-x-auto">
-              {/* ... Bookings Table ... */}
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="border-b border-white/5 text-[10px] font-black uppercase text-slate-500">
-                    <th className="px-8 py-6">{t.client}</th>
-                    <th className="px-8 py-6">{t.trainer}</th>
-                    <th className="px-8 py-6">{t.details}</th>
-                    <th className="px-8 py-6">{t.status}</th>
-                    <th className="px-8 py-6 text-right">{t.action}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {activeBookingsList.map(booking => {
-                       const trainer = trainers.find(tr => tr.id === booking.trainerId);
-                       const bookingUser = users.find(u => u.id === booking.userId);
-                       const isConfirmed = booking.status === 'confirmed';
-                       const isPending = booking.status === 'pending';
-                       const isProcessing = processingId === booking.id;
-                       return (
-                        <tr key={booking.id} className="hover:bg-white/5">
-                          <td className="px-8 py-6 flex items-center gap-3">
-                            <img src={bookingUser?.image || DEFAULT_PROFILE_IMAGE} alt="Client" className="w-10 h-10 rounded-xl object-cover bg-dark" />
-                            <div>
-                                <span className="font-black italic uppercase text-xs text-white">{cleanName(booking.customerName)}</span>
-                                {booking.customerPhone && <span className="block text-[9px] text-slate-500">{booking.customerPhone}</span>}
-                            </div>
-                          </td>
-                          <td className="px-8 py-6 text-slate-400 font-bold uppercase text-[10px]">{trainer?.name ? cleanName(trainer.name) : 'Unknown'}</td>
-                          <td className="px-8 py-6 text-[10px] font-black uppercase text-white">{booking.date} | {booking.time}</td>
-                          <td className="px-8 py-6"><span className={`text-[9px] font-black uppercase px-3 py-1.5 rounded-lg ${isConfirmed ? 'bg-green-500/10 text-green-400' : 'bg-brand text-dark'}`}>{booking.status}</span></td>
-                          <td className="px-8 py-6 text-right">
-                             {/* ... Actions ... */}
-                             <div className="flex items-center justify-end gap-2">
-                                {isPending && (
-                                  <>
-                                    <button onClick={() => handleConfirm(booking.id)} disabled={isProcessing} className="p-2 bg-green-500/10 text-green-500 rounded-lg hover:bg-green-500 hover:text-white transition-all">
-                                      {isProcessing ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
-                                    </button>
-                                    <button onClick={() => updateBooking(booking.id, { status: 'cancelled' })} className="p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all"><X size={16} /></button>
-                                  </>
-                                )}
-                                {isConfirmed && (
-                                    <button onClick={() => setCompletingId(booking.id)} className="px-4 py-2 bg-brand text-dark rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-white transition-all flex items-center gap-1">
-                                        <CheckCircle2 size={14} /> {t.finish}
-                                    </button>
-                                )}
-                            </div>
-                          </td>
-                        </tr>
-                       )
-                  })}
-                </tbody>
-              </table>
+          <div className="space-y-8">
+            {/* AWAITING PAYMENT SUB-SECTION */}
+            {awaitingPaymentList.length > 0 && (
+                <div className="bg-surface rounded-[2.5rem] border border-brand/20 overflow-hidden animate-in zoom-in-95 duration-300 shadow-2xl shadow-brand/5">
+                    <div className="p-8 border-b border-white/5 bg-brand/5 flex items-center justify-between">
+                        <h3 className="text-lg font-black uppercase italic text-brand flex items-center gap-2">
+                           <Wallet size={20} /> Verify Payment Method
+                        </h3>
+                        <span className="bg-brand text-dark text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">{awaitingPaymentList.length} Sessions</span>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left">
+                            <tbody className="divide-y divide-white/5">
+                                {awaitingPaymentList.map(booking => {
+                                    const trainer = trainers.find(tr => tr.id === booking.trainerId);
+                                    return (
+                                        <tr key={booking.id} className="hover:bg-white/5 group">
+                                            <td className="px-8 py-6">
+                                                <div className="flex flex-col">
+                                                    <span className="font-black uppercase italic text-xs text-white">{cleanName(booking.customerName)}</span>
+                                                    <span className="text-[10px] text-slate-500 font-bold">{booking.customerPhone}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-6">
+                                                <div className="text-[10px] font-black uppercase text-slate-400 italic">With {trainer?.name ? cleanName(trainer.name) : 'Trainer'}</div>
+                                            </td>
+                                            <td className="px-8 py-6">
+                                                <div className="text-[10px] font-black uppercase text-white">{booking.date} @ {booking.time}</div>
+                                            </td>
+                                            <td className="px-8 py-6">
+                                                <div className="text-brand font-black italic">{booking.price} BGN</div>
+                                            </td>
+                                            <td className="px-8 py-6 text-right">
+                                                {completingId === booking.id ? (
+                                                    <div className="flex items-center justify-end gap-2 animate-in slide-in-from-right-2">
+                                                        <button onClick={() => handleFinish(booking.id, 'cash')} className="px-4 py-2 bg-green-500 text-white rounded-lg text-[9px] font-black uppercase flex items-center gap-1 hover:scale-105 transition-all">
+                                                            <Banknote size={14} /> Cash
+                                                        </button>
+                                                        <button onClick={() => handleFinish(booking.id, 'card')} className="px-4 py-2 bg-blue-500 text-white rounded-lg text-[9px] font-black uppercase flex items-center gap-1 hover:scale-105 transition-all">
+                                                            <CardIcon size={14} /> Card
+                                                        </button>
+                                                        <button onClick={() => setCompletingId(null)} className="p-2 text-slate-500 hover:text-white"><X size={16} /></button>
+                                                    </div>
+                                                ) : (
+                                                    <button onClick={() => setCompletingId(booking.id)} className="px-6 py-3 bg-brand text-dark rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-xl shadow-brand/10">
+                                                        Log Payment
+                                                    </button>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
+
+            <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-hidden">
+                <div className="p-8 border-b border-white/5 bg-white/5"><h3 className="text-lg font-black uppercase italic text-white">{t.allBookings}</h3></div>
+                <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                    <thead>
+                    <tr className="border-b border-white/5 text-[10px] font-black uppercase text-slate-500">
+                        <th className="px-8 py-6">{t.client}</th>
+                        <th className="px-8 py-6">{t.trainer}</th>
+                        <th className="px-8 py-6">{t.details}</th>
+                        <th className="px-8 py-6">{t.status}</th>
+                        <th className="px-8 py-6 text-right">{t.action}</th>
+                    </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                    {activeBookingsList.map(booking => {
+                        const trainer = trainers.find(tr => tr.id === booking.trainerId);
+                        const bookingUser = users.find(u => u.id === booking.userId);
+                        const isConfirmed = booking.status === 'confirmed';
+                        const isPending = booking.status === 'pending';
+                        const isProcessing = processingId === booking.id;
+                        return (
+                            <tr key={booking.id} className="hover:bg-white/5">
+                            <td className="px-8 py-6 flex items-center gap-3">
+                                <img src={bookingUser?.image || DEFAULT_PROFILE_IMAGE} alt="Client" className="w-10 h-10 rounded-xl object-cover bg-dark" />
+                                <div>
+                                    <span className="font-black italic uppercase text-xs text-white">{cleanName(booking.customerName)}</span>
+                                    {booking.customerPhone && <span className="block text-[9px] text-slate-500">{booking.customerPhone}</span>}
+                                </div>
+                            </td>
+                            <td className="px-8 py-6 text-slate-400 font-bold uppercase text-[10px]">{trainer?.name ? cleanName(trainer.name) : 'Unknown'}</td>
+                            <td className="px-8 py-6 text-[10px] font-black uppercase text-white">{booking.date} | {booking.time}</td>
+                            <td className="px-8 py-6"><span className={`text-[9px] font-black uppercase px-3 py-1.5 rounded-lg ${isConfirmed ? 'bg-green-500/10 text-green-400' : 'bg-brand text-dark'}`}>{t[`status${booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}`] || booking.status}</span></td>
+                            <td className="px-8 py-6 text-right">
+                                <div className="flex items-center justify-end gap-2">
+                                    {isPending && (
+                                    <>
+                                        <button onClick={() => handleConfirm(booking.id)} disabled={isProcessing} className="p-2 bg-green-500/10 text-green-500 rounded-lg hover:bg-green-500 hover:text-white transition-all">
+                                        {isProcessing ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
+                                        </button>
+                                        <button onClick={() => updateBooking(booking.id, { status: 'cancelled' })} className="p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all"><X size={16} /></button>
+                                    </>
+                                    )}
+                                    {isConfirmed && (
+                                        <div className="text-[10px] font-black uppercase text-slate-600 italic">Confirmed by Admin</div>
+                                    )}
+                                </div>
+                            </td>
+                            </tr>
+                        )
+                    })}
+                    </tbody>
+                </table>
+                </div>
             </div>
           </div>
         )}
@@ -408,7 +447,6 @@ const AdminPanel: React.FC = () => {
                    <Briefcase className="text-brand" size={20} /> Pending Trainer Applications
                 </h3>
              </div>
-             {/* ... Applications Table ... */}
              <div className="overflow-x-auto">
                <table className="w-full text-left">
                  <thead>

@@ -68,7 +68,6 @@ const Home: React.FC = () => {
              <Reveal delay={700}>
                <div className="relative aspect-[4/5] rounded-[3rem] overflow-hidden shadow-2xl z-10 border-4 border-white/5 bg-surface group">
                   <img 
-                    // Updated to a gym interior that matches the user's description (dark, neon green vibes)
                     src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop" 
                     alt="Lifting" 
                     className="w-full h-full object-cover grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:scale-105"
@@ -129,14 +128,14 @@ const Home: React.FC = () => {
                   В СЪРЦЕТО НА <span className="text-brand">ВАРНА</span>
                 </h2>
                 <p className="text-slate-400 font-medium italic mb-8 leading-relaxed">
-                  Намираме се на удобна локация на <span className="text-white font-bold">ул. "Студентска" 1А</span>, непосредствено до Лидл. Лесен достъп с автомобил и градски транспорт.
+                  Намираме се на ул. „Студентска“ 1А, непосредствено до <span className="text-white font-bold">сп. „Мир“</span>. Лесен достъп с автомобил и градски транспорт в една от най-комуникативните точки на града.
                 </p>
                 <div className="space-y-4">
                   <div className="flex items-center gap-4 text-white font-black uppercase italic tracking-widest text-xs">
-                    <Navigation className="text-brand" size={20} /> ул. "Студентска" 1А
+                    <Navigation className="text-brand" size={20} /> ул. „Студентска“ 1А
                   </div>
                   <div className="flex items-center gap-4 text-white font-black uppercase italic tracking-widest text-xs">
-                    <MapPin className="text-brand" size={20} /> Варна, до Лидл
+                    <MapPin className="text-brand" size={20} /> Варна, до сп. „Мир“
                   </div>
                 </div>
                 <a 

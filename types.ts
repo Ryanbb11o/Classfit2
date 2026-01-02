@@ -24,7 +24,7 @@ export interface Trainer {
   availability: string[]; // Mocked available hours e.g., ["09:00", "10:00"]
 }
 
-export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed';
+export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'trainer_completed';
 
 export interface Booking {
   id: string;

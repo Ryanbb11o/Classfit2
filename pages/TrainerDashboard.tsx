@@ -99,8 +99,12 @@ const TrainerDashboard: React.FC = () => {
       }
   };
 
-  const handleAction = async (bookingId: string, action: 'confirmed' | 'cancelled' | 'completed') => {
-    if (window.confirm(`Mark this booking as ${action}?`)) {
+  const handleAction = async (bookingId: string, action: 'confirmed' | 'cancelled' | 'trainer_completed') => {
+    const confirmMsg = action === 'trainer_completed' 
+        ? (language === 'bg' ? 'Маркиране като приключена? Администратор ще потвърди плащането.' : 'Mark as completed? An admin will confirm payment.')
+        : `Mark this booking as ${action}?`;
+
+    if (window.confirm(confirmMsg)) {
        await updateBooking(bookingId, { status: action });
     }
   };
@@ -287,7 +291,7 @@ const TrainerDashboard: React.FC = () => {
                                  </td>
                                  <td className="px-8 py-6 text-right">
                                     <button 
-                                      onClick={() => handleAction(booking.id, 'completed')}
+                                      onClick={() => handleAction(booking.id, 'trainer_completed')}
                                       className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white hover:text-dark rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-300 transition-all"
                                     >
                                        <CheckCircle size={14} /> Mark Done
@@ -390,7 +394,7 @@ const TrainerDashboard: React.FC = () => {
             {activeTab === 'profile' && (
                 <div className="p-8 md:p-12 animate-in fade-in">
                     <div className="flex flex-col lg:flex-row gap-12">
-                        {/* Preview Side - Updated to match Booking Page Design */}
+                        {/* Preview Side */}
                         <div className="w-full lg:w-1/3 flex flex-col items-center">
                             <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-6 w-full text-center">Live Preview (Public)</h3>
                             <div className="w-full relative rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white/5 bg-surface group">
