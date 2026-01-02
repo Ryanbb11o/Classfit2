@@ -159,7 +159,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const addBooking = async (booking: Booking) => {
-    // Generate code from the ID passed during booking
     const checkInCode = booking.id.substring(0, 6).toUpperCase();
     const gymAddress = 'бул. „Осми приморски полк“ 128 (Спирка МИР)';
     
@@ -198,6 +197,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       localStorage.setItem('classfit_bookings', JSON.stringify(newBookings));
       return;
     }
+    
+    // Explicitly map keys to match DB columns exactly
     const dbUpdates: any = {};
     if (updates.status) dbUpdates.status = updates.status;
     if (updates.paymentMethod) dbUpdates.payment_method = updates.paymentMethod;
@@ -208,7 +209,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     const { error } = await supabase.from('bookings').update(dbUpdates).eq('id', id);
     if (error) {
-      console.error("DB Update Error:", error);
+      console.error("Supabase update error:", error);
       throw error;
     }
     await refreshData();

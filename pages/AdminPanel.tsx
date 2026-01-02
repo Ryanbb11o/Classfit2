@@ -23,8 +23,8 @@ const AdminPanel: React.FC = () => {
   const pendingApplications = users.filter(u => u.role === 'trainer_pending');
   const completedBookings = bookings.filter(b => b.status === 'completed');
 
-  const totalIncome = completedBookings.reduce((sum, b) => sum + b.price, 0);
-  const totalCommission = completedBookings.reduce((sum, b) => sum + (b.commissionAmount || 0), 0);
+  const totalIncome = completedBookings.reduce((sum, b) => sum + (Number(b.price) || 0), 0);
+  const totalCommission = completedBookings.reduce((sum, b) => sum + (Number(b.commissionAmount) || 0), 0);
 
   const handleManualRefresh = () => {
     setIsRefreshing(true);
@@ -36,20 +36,23 @@ const AdminPanel: React.FC = () => {
     if (!booking) return;
     
     // Find trainer to get their current commission rate
-    const trainer = users.find(u => u.id === booking.trainerId);
-    const rate = trainer?.commissionRate || 25;
-    const commAmt = (booking.price * rate) / 100;
+    const trainerUser = users.find(u => u.id === booking.trainerId);
+    const rate = trainerUser?.commissionRate || 25;
+    const commAmt = (Number(booking.price) * rate) / 100;
 
     try {
+      // Force status to 'completed' and ensure all payment fields are sent
       await updateBooking(id, { 
           status: 'completed', 
           paymentMethod: method,
           commissionAmount: commAmt
       });
-      console.log("Payment successfully logged for booking:", id);
-    } catch (err) {
-      console.error("Failed to update booking status:", err);
-      alert("Error saving payment. Check console.");
+      console.log("Payment logged successfully for booking:", id);
+    } catch (err: any) {
+      console.error("Critical: Admin Finish Payment Failed", err);
+      // Detailed error for the user to help them fix their DB
+      const errorMsg = err?.message || "Unknown DB Error";
+      alert(`Error saving payment: ${errorMsg}\n\nPlease verify you have run the provided SQL setup in Supabase SQL Editor.`);
     }
   };
 
@@ -141,7 +144,7 @@ const AdminPanel: React.FC = () => {
         <div className="flex flex-wrap gap-2 bg-surface p-1.5 rounded-2xl border border-white/5">
             {[
               { id: 'overview', icon: LayoutDashboard, label: t.tabOverview },
-              { id: 'bookings', icon: ListFilter, label: 'Bookings', badge: awaitingPaymentList.length },
+              { id: 'bookings', icon: ListFilter, label: 'Front Desk', badge: awaitingPaymentList.length },
               { id: 'trainers', icon: Briefcase, label: 'Trainers', badge: activeTrainers.length },
               { id: 'applications', icon: UserCheck, label: 'Apps', badge: pendingApplications.length },
               { id: 'finance', icon: FileSpreadsheet, label: 'Finance' },
@@ -164,11 +167,11 @@ const AdminPanel: React.FC = () => {
            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div className="p-8 bg-brand text-dark rounded-[2rem] shadow-xl">
                  <p className="text-[10px] font-black uppercase mb-4 opacity-60 tracking-widest">Total Revenue</p>
-                 <p className="text-4xl font-black italic">{totalIncome} <span className="text-sm">BGN</span></p>
+                 <p className="text-4xl font-black italic">{totalIncome.toFixed(2)} <span className="text-sm">BGN</span></p>
               </div>
               <div className="p-8 bg-surface border border-white/5 text-white rounded-[2rem]">
                  <p className="text-[10px] font-black uppercase mb-4 text-slate-500 tracking-widest">Club Commission</p>
-                 <p className="text-4xl font-black italic text-brand">{totalCommission.toFixed(0)} <span className="text-sm text-slate-500">BGN</span></p>
+                 <p className="text-4xl font-black italic text-brand">{totalCommission.toFixed(2)} <span className="text-sm text-slate-500">BGN</span></p>
               </div>
               {awaitingPaymentList.length > 0 && (
                 <div className="md:col-span-2 p-8 bg-red-500/10 border border-red-500/30 rounded-[2rem] flex items-center justify-between shadow-2xl">
@@ -178,7 +181,7 @@ const AdminPanel: React.FC = () => {
                       </div>
                       <div>
                         <h3 className="text-xl font-black uppercase italic text-white mb-1">Pay Requests Sent</h3>
-                        <p className="text-slate-400 text-xs font-medium">{awaitingPaymentList.length} sessions waiting for payment method.</p>
+                        <p className="text-slate-400 text-xs font-medium">{awaitingPaymentList.length} customers marked session done.</p>
                       </div>
                    </div>
                    <button onClick={() => setActiveTab('bookings')} className="px-6 py-3 bg-red-500 text-white rounded-xl text-[10px] font-black uppercase hover:bg-white hover:text-red-500 transition-all">Verify Now</button>
@@ -218,13 +221,13 @@ const AdminPanel: React.FC = () => {
                 )}
 
                 <div className="bg-surface rounded-[2rem] border border-white/5 overflow-hidden">
-                   <div className="p-6 border-b border-white/5 bg-white/5 font-black uppercase italic text-xs text-slate-400">Upcoming Schedule</div>
+                   <div className="p-6 border-b border-white/5 bg-white/5 font-black uppercase italic text-xs text-slate-400">Reception Log</div>
                    <div className="overflow-x-auto">
                         <table className="w-full text-left">
                            <thead className="bg-dark/30">
                               <tr className="text-[10px] font-black uppercase text-slate-500">
                                  <th className="px-8 py-4">Client</th>
-                                 <th className="px-8 py-4 text-center">Check-in Code</th>
+                                 <th className="px-8 py-4 text-center">Verification</th>
                                  <th className="px-8 py-4">Date & Time</th>
                                  <th className="px-8 py-4">Status</th>
                                  <th className="px-8 py-4 text-right">Action</th>
@@ -252,7 +255,7 @@ const AdminPanel: React.FC = () => {
                 </div>
             </div>
         )}
-
+        
         {activeTab === 'trainers' && (
             <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-hidden">
                 <div className="p-8 border-b border-white/5 bg-white/5 flex items-center justify-between">
@@ -263,7 +266,6 @@ const AdminPanel: React.FC = () => {
                         <thead>
                             <tr className="text-[10px] font-black uppercase text-slate-500 border-b border-white/5 bg-dark/20">
                                 <th className="px-8 py-6">Trainer Information</th>
-                                <th className="px-8 py-6">Approval Tracker</th>
                                 <th className="px-8 py-6">Commission Structure</th>
                                 <th className="px-8 py-6 text-right">Management</th>
                             </tr>
@@ -279,13 +281,6 @@ const AdminPanel: React.FC = () => {
                                             <p className="text-sm font-black text-white uppercase italic leading-none mb-1">{cleanName(tr.name)}</p>
                                             <p className="text-[9px] text-brand font-bold uppercase tracking-wider">{tr.name.match(/\((.*)\)/)?.[1] || 'Club Instructor'}</p>
                                         </div>
-                                    </td>
-                                    <td className="px-8 py-6">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <Shield size={12} className="text-blue-400" />
-                                            <span className="text-[10px] font-black uppercase text-slate-300">Approved by: <span className="text-white">{tr.approvedBy || 'System'}</span></span>
-                                        </div>
-                                        <p className="text-[9px] text-slate-500 font-bold uppercase">Joined: {new Date(tr.joinedDate).toLocaleDateString()}</p>
                                     </td>
                                     <td className="px-8 py-6">
                                         <div className="flex flex-col gap-1">
@@ -348,7 +343,7 @@ const AdminPanel: React.FC = () => {
                             />
                             <Percent size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-brand" />
                         </div>
-                        <p className="text-[9px] text-slate-500 mt-3 font-medium italic">This is the percentage of each booking that goes to the gym. New trainers default to 25%.</p>
+                        <p className="text-[9px] text-slate-500 mt-3 font-medium italic">Gym's percentage per booking. New trainers default to 25%.</p>
                     </div>
 
                     <div>
