@@ -1,13 +1,13 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, Calendar as CalendarIcon, Clock, User, Phone, X, Mail, Loader2, ChevronLeft, ChevronRight, ArrowLeft, Star, Award, Zap, Quote, ThumbsUp, MapPin, Target, ShieldCheck, CalendarPlus, MessageSquare } from 'lucide-react';
+import { Check, Calendar as CalendarIcon, Clock, User, Phone, X, Mail, Loader2, ChevronLeft, ChevronRight, ArrowLeft, Star, Award, Zap, Quote, ThumbsUp, MapPin, Target, ShieldCheck, CalendarPlus, MessageSquare, Sparkles } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { getTrainers, TRANSLATIONS, DEFAULT_PROFILE_IMAGE, getTrainerReviews } from '../constants';
 import { Trainer, Booking } from '../types';
 
 const BookingPage: React.FC = () => {
-  const { language, addBooking, currentUser, users } = useAppContext();
+  const { language, addBooking, currentUser, users, bookings, reviews: liveReviews } = useAppContext();
   const navigate = useNavigate();
   const t = TRANSLATIONS[language];
   
@@ -47,10 +47,19 @@ const BookingPage: React.FC = () => {
   const [guestPhone, setGuestPhone] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
 
-  const trainerReviews = useMemo(() => {
+  // Combined real-time and demo reviews, filtered for published status
+  const allTrainerReviews = useMemo(() => {
     if (!selectedTrainer) return [];
-    return getTrainerReviews(selectedTrainer.id, language);
-  }, [selectedTrainer, language]);
+    
+    // 1. Get real reviews from the live reviews state, only those that are published
+    const realReviews = liveReviews.filter(r => r.trainerId === selectedTrainer.id && r.isPublished);
+    
+    // 2. Fallback to demo reviews (these are always considered "published")
+    const demoReviews = getTrainerReviews(selectedTrainer.id, language);
+    
+    // 3. Combine and limit
+    return [...realReviews, ...demoReviews].slice(0, 10);
+  }, [selectedTrainer, language, liveReviews]);
 
   useEffect(() => {
     if (selectedTrainer) {
@@ -150,6 +159,11 @@ const BookingPage: React.FC = () => {
   const handleGuestSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (guestName && guestPhone && guestEmail) {
+      const nameParts = guestName.trim().split(/\s+/);
+      if (nameParts.length < 2) {
+        alert(language === 'bg' ? 'Моля въведете име и фамилия (напр. Иван Петров).' : 'Please enter your first and last name (e.g. John Doe).');
+        return;
+      }
       await finalizeBooking(guestName, guestPhone, undefined, guestEmail);
     } else {
       alert(language === 'bg' ? 'Моля попълнете всички полета.' : 'Please fill all fields.');
@@ -309,9 +323,10 @@ const BookingPage: React.FC = () => {
             <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
             {language === 'bg' ? 'Всички Треньори' : 'All Coaches'}
           </button>
+          
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
             
-            {/* Left Column: Profile, Bio, Experience & Reviews */}
+            {/* Left Column: Profile & Bio */}
             <div className="lg:col-span-4 space-y-8">
                <div className="relative rounded-[2.5rem] overflow-hidden border border-white/5 bg-surface shadow-2xl">
                   <div className="aspect-[4/5] relative overflow-hidden"><img src={selectedTrainer.image} className="w-full h-full object-cover grayscale-0" /></div>
@@ -321,7 +336,6 @@ const BookingPage: React.FC = () => {
                         <div className="inline-block px-4 py-1.5 bg-brand text-dark rounded-full text-[10px] font-black uppercase tracking-[0.2em]">{selectedTrainer.specialty}</div>
                      </div>
                      
-                     {/* Bio / Experience Section */}
                      <div className="space-y-6 pt-6 border-t border-white/5">
                         <div className="flex items-start gap-4">
                             <div className="w-10 h-10 bg-brand/10 text-brand rounded-xl flex items-center justify-center shrink-0">
@@ -334,46 +348,13 @@ const BookingPage: React.FC = () => {
                                 </p>
                             </div>
                         </div>
-
-                        {/* Trainer Reviews Preview */}
-                        <div className="pt-6 border-t border-white/5">
-                           <div className="flex items-center justify-between mb-4 px-1">
-                              <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
-                                 <MessageSquare size={14} className="text-brand" /> Member Reviews
-                              </h4>
-                              <span className="text-brand text-[10px] font-black uppercase tracking-widest">
-                                 {trainerReviews.length} Total
-                              </span>
-                           </div>
-                           
-                           <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                              {trainerReviews.map((review, i) => (
-                                 <div key={i} className="p-4 bg-dark/40 rounded-2xl border border-white/5 space-y-2">
-                                    <div className="flex items-center justify-between">
-                                       <div className="flex items-center gap-2">
-                                          <div className="w-6 h-6 rounded-full bg-brand text-dark text-[8px] font-black flex items-center justify-center">{review.avatar}</div>
-                                          <span className="text-[10px] font-bold text-white uppercase italic">{review.author}</span>
-                                       </div>
-                                       <div className="flex gap-0.5">
-                                          {[...Array(review.rating)].map((_, j) => (
-                                             <Star key={j} size={8} className="text-brand fill-brand" />
-                                          ))}
-                                       </div>
-                                    </div>
-                                    <p className="text-[10px] text-slate-400 font-medium italic leading-relaxed">
-                                       "{review.text}"
-                                    </p>
-                                 </div>
-                              ))}
-                           </div>
-                        </div>
                      </div>
                   </div>
                </div>
             </div>
 
-            {/* Right Column: Calendar and Booking */}
-            <div className="lg:col-span-8">
+            {/* Right Column: Calendar, Booking & Reviews */}
+            <div className="lg:col-span-8 space-y-12">
                <div className="bg-surface/30 backdrop-blur-sm rounded-[3rem] border border-white/5 p-8 md:p-12 shadow-2xl">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-12">
                      <div className="flex items-center gap-4">
@@ -407,18 +388,80 @@ const BookingPage: React.FC = () => {
                       </button>
                   </div>
                </div>
+
+               {/* REVIEWS SECTION - MOVED UNDERNEATH MAIN BOOKING BLOCK */}
+               <div className="bg-surface/10 rounded-[3rem] border border-white/5 p-8 md:p-12 animate-in slide-in-from-bottom-4 duration-1000">
+                  <div className="flex items-center justify-between mb-10">
+                     <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-brand/10 rounded-xl flex items-center justify-center text-brand"><MessageSquare size={20} /></div>
+                        <div>
+                          <h3 className="text-2xl font-black uppercase italic text-white tracking-tighter leading-none mb-1">Coach Feedback</h3>
+                          <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Verified Member Experiences</p>
+                        </div>
+                     </div>
+                     <div className="bg-white/5 px-4 py-2 rounded-xl border border-white/5 flex items-center gap-3">
+                        <div className="flex text-brand">
+                           {[1,2,3,4,5].map(i => <Star key={i} size={10} fill="currentColor" />)}
+                        </div>
+                        <span className="text-[10px] font-black text-white">{allTrainerReviews.length} Reviews</span>
+                     </div>
+                  </div>
+
+                  {allTrainerReviews.length === 0 ? (
+                    <div className="text-center py-12 border-2 border-dashed border-white/5 rounded-[2rem]">
+                       <p className="text-slate-500 font-black uppercase tracking-widest text-[10px]">No reviews yet. Be the first!</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                       {allTrainerReviews.map((review: any, i) => (
+                          <div key={i} className="p-6 bg-dark/40 rounded-[2rem] border border-white/5 space-y-4 hover:border-brand/20 transition-all group animate-in slide-in-from-bottom-2 duration-500" style={{ transitionDelay: `${i * 100}ms` }}>
+                             <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                   <div className="w-8 h-8 rounded-xl bg-brand text-dark text-[10px] font-black flex items-center justify-center shadow-lg shadow-brand/10">{review.avatar || 'C'}</div>
+                                   <div>
+                                      <p className="text-[11px] font-black text-white uppercase italic tracking-tight">{review.author}</p>
+                                      <p className="text-[8px] font-black uppercase text-slate-600 tracking-widest">{review.time}</p>
+                                   </div>
+                                </div>
+                                <div className="flex gap-0.5">
+                                   {[...Array(review.rating)].map((_, j) => (
+                                      <Star key={j} size={10} className="text-brand fill-brand" />
+                                   ))}
+                                </div>
+                             </div>
+                             
+                             <div className="relative">
+                                <p className="text-xs text-slate-400 font-medium italic leading-relaxed">
+                                   "{review.text}"
+                                </p>
+                                {review.isAiEnhanced && (
+                                   <div className="mt-4 flex items-center gap-1.5">
+                                      <Sparkles size={10} className="text-brand" />
+                                      <span className="text-[8px] font-black uppercase tracking-widest text-brand/60">Polished by AI</span>
+                                   </div>
+                                )}
+                             </div>
+                          </div>
+                       ))}
+                    </div>
+                  )}
+               </div>
             </div>
           </div>
         </div>
       )}
+      
       {showGuestForm && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-dark/95 backdrop-blur-md animate-in fade-in duration-300">
            <div className="bg-surface rounded-[3rem] p-10 md:p-12 max-w-md w-full shadow-2xl relative border border-white/10 overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-brand"></div>
               <button onClick={() => setShowGuestForm(false)} className="absolute top-8 right-8 text-slate-500 hover:text-white transition-all bg-white/5 p-2 rounded-full"><X size={20} /></button>
               <div className="mb-8"><h2 className="text-3xl font-black uppercase italic text-white tracking-tighter mb-2">{t.finalize}</h2><p className="text-slate-500 text-xs font-medium">Please provide contact details to finalize your ClassFit booking.</p></div>
-              <form handleGuestSubmit={handleGuestSubmit} className="space-y-4">
-                <div className="space-y-1"><label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-2">Name</label><input type="text" required value={guestName} onChange={(e) => setGuestName(e.target.value)} className="w-full bg-dark/50 border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white outline-none focus:border-brand transition-all" /></div>
+              <form onSubmit={handleGuestSubmit} className="space-y-4">
+                <div className="space-y-1">
+                   <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-2">First & Last Name</label>
+                   <input type="text" required value={guestName} onChange={(e) => setGuestName(e.target.value)} className="w-full bg-dark/50 border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white outline-none focus:border-brand transition-all" />
+                </div>
                 <div className="space-y-1"><label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-2">Phone</label><input type="tel" required value={guestPhone} onChange={(e) => setGuestPhone(e.target.value)} className="w-full bg-dark/50 border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white outline-none focus:border-brand transition-all" /></div>
                 <div className="space-y-1"><label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-2">Email</label><input type="email" required value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} className="w-full bg-dark/50 border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white outline-none focus:border-brand transition-all" /></div>
                 <button type="submit" disabled={isSubmitting} className="w-full bg-brand text-dark py-5 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-brand/10 mt-6 hover:scale-[1.02] transition-all">

@@ -16,9 +16,17 @@ const Register: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Strict Name Validation: Check for at least two words (First and Last)
+    const nameParts = name.trim().split(/\s+/);
+    if (nameParts.length < 2) {
+      setError(language === 'bg' ? 'Моля въведете име и фамилия (напр. Иван Петров).' : 'Please enter your first and last name (e.g. John Doe).');
+      return;
+    }
+
     const success = await register(name, email, password);
     if (success) {
-      navigate('/booking'); // Auto login and redirect
+      navigate('/booking'); 
     } else {
       setError(t.emailTaken);
     }
@@ -43,14 +51,19 @@ const Register: React.FC = () => {
           )}
           
           <div className="space-y-1.5">
-            <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-2">{t.nameSurname}</label>
+            <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-2">
+              {language === 'bg' ? 'Име и Фамилия' : 'First & Last Name'}
+            </label>
             <input 
               type="text" 
               required
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value);
+                if (error) setError('');
+              }}
               className="w-full bg-dark/50 border border-white/5 focus:border-brand focus:bg-dark rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all text-white placeholder-slate-600"
-              placeholder="Ivan Petrov"
+              placeholder="e.g. Ivan Petrov"
             />
           </div>
 

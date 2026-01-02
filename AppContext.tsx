@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Language, Booking, User } from './types';
+import { Language, Booking, User, Review } from './types';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 import { DEFAULT_PROFILE_IMAGE } from './constants';
 
@@ -16,7 +16,11 @@ interface AppContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
   bookings: Booking[];
+  reviews: Review[];
   addBooking: (booking: Booking) => Promise<void>;
+  addReview: (review: Omit<Review, 'id' | 'time'>) => Promise<void>;
+  updateReview: (id: string, updates: Partial<Review>) => Promise<void>;
+  deleteReview: (id: string) => Promise<void>;
   updateBooking: (id: string, updates: Partial<Booking>) => Promise<void>;
   deleteBooking: (id: string) => Promise<void>;
   isAdmin: boolean;
@@ -42,6 +46,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [language, setLanguage] = useState<Language>('bg');
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -62,8 +67,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         } else {
           const localBookings = localStorage.getItem('classfit_bookings');
           const localUsers = localStorage.getItem('classfit_users');
+          const localReviews = localStorage.getItem('classfit_reviews');
           if (localBookings) setBookings(JSON.parse(localBookings));
           if (localUsers) setUsers(JSON.parse(localUsers));
+          if (localReviews) setReviews(JSON.parse(localReviews));
         }
         const savedUser = localStorage.getItem('classfit_user');
         if (savedUser) {
@@ -88,18 +95,19 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (isDemoMode) {
       const localBookings = localStorage.getItem('classfit_bookings');
       const localUsers = localStorage.getItem('classfit_users');
+      const localReviews = localStorage.getItem('classfit_reviews');
       if (localBookings) setBookings(JSON.parse(localBookings));
       if (localUsers) setUsers(JSON.parse(localUsers));
+      if (localReviews) setReviews(JSON.parse(localReviews));
       return;
     }
 
     try {
-      const { data: bData, error: bError } = await supabase.from('bookings').select('*').order('created_at', { ascending: false });
-      if (bError) throw bError;
+      const { data: bData } = await supabase.from('bookings').select('*').order('created_at', { ascending: false });
       if (bData) {
         setBookings(bData.map((b: any) => ({
           id: String(b.id),
-          checkInCode: b.check_in_code || String(b.id).substring(0, 6).toUpperCase(),
+          checkInCode: b.check_in_code,
           trainerId: String(b.trainer_id),
           userId: b.user_id ? String(b.user_id) : undefined,
           customerName: b.customer_name,
@@ -107,24 +115,39 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           customerEmail: b.customer_email,
           date: b.booking_date,
           time: b.booking_time,
-          duration: b.duration_mins || 60,
+          duration: b.duration_mins,
           price: b.price,
           status: b.status,
           paymentMethod: b.payment_method,
           language: b.language,
           commissionAmount: b.commission_amount,
-          gymAddress: b.gym_address || 'бул. „Осми приморски полк“ 128 (Спирка МИР)',
-          hasBeenReviewed: b.has_been_reviewed || false,
+          gymAddress: b.gym_address,
+          hasBeenReviewed: b.has_been_reviewed,
           rating: b.rating,
           reviewText: b.review_text,
-          isAiEnhanced: b.is_ai_enhanced || false
+          isAiEnhanced: b.is_ai_enhanced
+        })));
+      }
+
+      const { data: rData } = await supabase.from('reviews').select('*').order('created_at', { ascending: false });
+      if (rData) {
+        setReviews(rData.map((r: any) => ({
+          id: String(r.id),
+          trainerId: String(r.trainer_id),
+          author: r.author_name,
+          rating: r.rating,
+          text: r.content,
+          time: new Date(r.created_at).toLocaleDateString(),
+          avatar: r.author_name.charAt(0),
+          isAiEnhanced: r.is_ai_enhanced,
+          isPublished: r.is_published,
+          bookingId: r.booking_id
         })));
       }
       
-      const { data: uData, error: uError } = await supabase.from('users').select('*');
-      if (uError) throw uError;
+      const { data: uData } = await supabase.from('users').select('*');
       if (uData) {
-        const mappedUsers = uData.map((u: any) => ({
+        setUsers(uData.map((u: any) => ({
           id: String(u.id),
           name: u.name,
           email: u.email,
@@ -136,8 +159,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           joinedDate: u.joined_date,
           approvedBy: u.approved_by,
           commissionRate: u.commission_rate || 0
-        }));
-        setUsers(mappedUsers);
+        })));
       }
     } catch (e) {
       console.error("Refresh failed:", e);
@@ -146,38 +168,78 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const addBooking = async (booking: Booking) => {
     const checkInCode = booking.id.substring(0, 6).toUpperCase();
-    const gymAddress = 'бул. „Осми приморски полк“ 128 (Спирка МИР)';
-    
     if (isDemoMode) {
-      const bookingWithCode = { ...booking, checkInCode, gymAddress };
-      const newBookings = [bookingWithCode, ...bookings];
+      const newBookings = [{ ...booking, checkInCode }, ...bookings];
       setBookings(newBookings);
       localStorage.setItem('classfit_bookings', JSON.stringify(newBookings));
       return;
     }
-
-    const payload = {
-      id: String(booking.id), // Ensure it's a string
+    const { error } = await supabase.from('bookings').insert([{
+      id: booking.id,
       check_in_code: checkInCode,
-      trainer_id: String(booking.trainerId),
-      user_id: booking.userId ? String(booking.userId) : null,
+      trainer_id: booking.trainerId,
+      user_id: booking.userId,
       customer_name: booking.customerName,
-      customer_phone: booking.customerPhone || null,
-      customer_email: booking.customerEmail || null,
+      customer_phone: booking.customerPhone,
+      customer_email: booking.customerEmail,
       booking_date: booking.date,
       booking_time: booking.time,
-      duration_mins: booking.duration || 60,
+      duration_mins: booking.duration,
       price: booking.price,
-      status: booking.status || 'pending',
-      language: booking.language || 'bg',
-      gym_address: gymAddress
-    };
+      status: booking.status,
+      language: booking.language,
+      gym_address: booking.gymAddress
+    }]);
+    if (error) throw error;
+    await refreshData();
+  };
 
-    const { error } = await supabase.from('bookings').insert([payload]);
-    if (error) {
-      console.error("Booking Error Details:", error.message, error.details);
-      throw new Error(error.message || "Database Insert Failed");
+  const addReview = async (review: Omit<Review, 'id' | 'time'>) => {
+    if (isDemoMode) {
+      const newReview: Review = {
+        ...review,
+        id: Math.random().toString(36).substr(2, 9),
+        time: new Date().toLocaleDateString(),
+        avatar: review.avatar || review.author.charAt(0),
+        isPublished: false
+      };
+      const newReviews = [newReview, ...reviews];
+      setReviews(newReviews);
+      localStorage.setItem('classfit_reviews', JSON.stringify(newReviews));
+      return;
     }
+    const { error } = await supabase.from('reviews').insert([{
+      trainer_id: review.trainerId,
+      author_name: review.author,
+      rating: review.rating,
+      content: review.text,
+      is_ai_enhanced: review.isAiEnhanced,
+      booking_id: review.bookingId,
+      is_published: false
+    }]);
+    if (error) throw error;
+    await refreshData();
+  };
+
+  const updateReview = async (id: string, updates: Partial<Review>) => {
+    if (isDemoMode) {
+      setReviews(reviews.map(r => r.id === id ? { ...r, ...updates } : r));
+      return;
+    }
+    const dbUpdates: any = {};
+    if (updates.isPublished !== undefined) dbUpdates.is_published = updates.isPublished;
+    
+    const { error } = await supabase.from('reviews').update(dbUpdates).eq('id', id);
+    if (error) throw error;
+    await refreshData();
+  };
+
+  const deleteReview = async (id: string) => {
+    if (isDemoMode) {
+      setReviews(reviews.filter(r => r.id !== id));
+      return;
+    }
+    await supabase.from('reviews').delete().eq('id', id);
     await refreshData();
   };
 
@@ -188,21 +250,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       localStorage.setItem('classfit_bookings', JSON.stringify(newBookings));
       return;
     }
-    
     const dbUpdates: any = {};
     if (updates.status) dbUpdates.status = updates.status;
     if (updates.paymentMethod) dbUpdates.payment_method = updates.paymentMethod;
-    if (updates.commissionAmount !== undefined) dbUpdates.commission_amount = updates.commissionAmount;
     if (updates.hasBeenReviewed !== undefined) dbUpdates.has_been_reviewed = updates.hasBeenReviewed;
-    if (updates.rating !== undefined) dbUpdates.rating = updates.rating;
-    if (updates.reviewText !== undefined) dbUpdates.review_text = updates.reviewText;
-    if (updates.isAiEnhanced !== undefined) dbUpdates.is_ai_enhanced = updates.isAiEnhanced;
-
+    
     const { error } = await supabase.from('bookings').update(dbUpdates).eq('id', id);
-    if (error) {
-      console.error("Booking Update Error:", error);
-      throw error;
-    }
+    if (error) throw error;
     await refreshData();
   };
 
@@ -211,21 +265,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         const newUsers = users.map(u => u.id === id ? { ...u, ...updates } : u);
         setUsers(newUsers);
         localStorage.setItem('classfit_users', JSON.stringify(newUsers));
-        if (currentUser?.id === id) {
-           const updatedUser = { ...currentUser, ...updates };
-           setCurrentUser(updatedUser);
-           localStorage.setItem('classfit_user', JSON.stringify(updatedUser));
-        }
         return;
     }
     const dbUpdates: any = {};
-    if (updates.role !== undefined) dbUpdates.role = updates.role;
-    if (updates.name !== undefined) dbUpdates.name = updates.name;
-    if (updates.phone !== undefined) dbUpdates.phone = updates.phone;
-    if (updates.image !== undefined) dbUpdates.image = updates.image;
-    if (updates.bio !== undefined) dbUpdates.bio = updates.bio;
-    if (updates.approvedBy !== undefined) dbUpdates.approved_by = updates.approvedBy;
-    if (updates.commissionRate !== undefined) dbUpdates.commission_rate = updates.commissionRate;
+    if (updates.role) dbUpdates.role = updates.role;
+    if (updates.name) dbUpdates.name = updates.name;
+    if (updates.phone) dbUpdates.phone = updates.phone;
+    if (updates.image) dbUpdates.image = updates.image;
+    if (updates.bio) dbUpdates.bio = updates.bio;
     
     const { error } = await supabase.from('users').update(dbUpdates).eq('id', id);
     if (error) throw error;
@@ -234,9 +281,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const deleteUser = async (id: string) => {
     if (isDemoMode) {
-      const newUsers = users.filter(u => u.id !== id);
-      setUsers(newUsers);
-      localStorage.setItem('classfit_users', JSON.stringify(newUsers));
+      setUsers(users.filter(u => u.id !== id));
       return;
     }
     await supabase.from('users').delete().eq('id', id);
@@ -270,7 +315,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         };
         setCurrentUser(user);
         localStorage.setItem('classfit_user', JSON.stringify(user));
-        await refreshData();
         return true;
     }
     return false;
@@ -289,25 +333,23 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
        localStorage.setItem('classfit_user', JSON.stringify(mockUser));
        return true;
     }
-    const { data, error } = await supabase.from('users').insert([{ name, email, password: pass, role: 'user' }]).select().single();
+    const { error } = await supabase.from('users').insert([{ name, email, password: pass, role: 'user' }]);
     if (error) throw error;
     await refreshData();
     return true;
   };
 
   const registerTrainer = async (name: string, email: string, pass: string, phone: string, specialty: string): Promise<{ success: boolean; msg?: string }> => {
+    const fullName = `${name} (${specialty})`;
     if (isDemoMode) {
        const newUser: User = { 
         id: Math.random().toString(36).substr(2, 9), 
-        name: `${name} (${specialty})`, 
-        email, password: pass, phone, role: 'trainer_pending', joinedDate: new Date().toISOString(), image: DEFAULT_PROFILE_IMAGE, commissionRate: 25
+        name: fullName, email, password: pass, phone, role: 'trainer_pending', joinedDate: new Date().toISOString(), image: DEFAULT_PROFILE_IMAGE
        };
-       const newUsers = [...users, newUser];
-       localStorage.setItem('classfit_users', JSON.stringify(newUsers));
-       setUsers(newUsers);
+       setUsers([...users, newUser]);
        return { success: true };
     }
-    const { error } = await supabase.from('users').insert([{ name: `${name} (${specialty})`, email, phone, password: pass, role: 'trainer_pending', commission_rate: 25 }]).select().single();
+    const { error } = await supabase.from('users').insert([{ name: fullName, email, phone, password: pass, role: 'trainer_pending' }]);
     if (error) return { success: false, msg: error.message };
     await refreshData();
     return { success: true };
@@ -316,12 +358,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const requestTrainerUpgrade = async (userId: string, currentName: string, phone: string, specialty: string): Promise<{ success: boolean; msg?: string }> => {
     const formattedName = `${currentName} (${specialty})`;
     if (isDemoMode) {
-        const newUsers = users.map(u => u.id === userId ? { ...u, role: 'trainer_pending' as const, phone, name: formattedName, commissionRate: 25 } : u);
-        setUsers(newUsers);
-        localStorage.setItem('classfit_users', JSON.stringify(newUsers));
+        setUsers(users.map(u => u.id === userId ? { ...u, role: 'trainer_pending' as const, phone, name: formattedName } : u));
         return { success: true };
     }
-    const { error } = await supabase.from('users').update({ role: 'trainer_pending', name: formattedName, phone, commission_rate: 25 }).eq('id', userId);
+    const { error } = await supabase.from('users').update({ role: 'trainer_pending', name: formattedName, phone }).eq('id', userId);
     if (error) return { success: false, msg: error.message };
     await refreshData();
     return { success: true };
@@ -329,9 +369,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const deleteBooking = async (id: string) => {
     if (isDemoMode) {
-      const newBookings = bookings.filter(b => b.id !== id);
-      setBookings(newBookings);
-      localStorage.setItem('classfit_bookings', JSON.stringify(newBookings));
+      setBookings(bookings.filter(b => b.id !== id));
       return;
     }
     await supabase.from('bookings').delete().eq('id', id);
@@ -340,7 +378,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   return (
     <AppContext.Provider value={{ 
-      language, setLanguage, bookings, addBooking, updateBooking, deleteBooking, isAdmin, currentUser, users, login, register, registerTrainer, requestTrainerUpgrade, updateUser, deleteUser, logout, refreshData, isLoading, isDemoMode, confirmAction, confirmState, closeConfirm
+      language, setLanguage, bookings, reviews, addBooking, addReview, updateReview, deleteReview, updateBooking, deleteBooking, isAdmin, currentUser, users, login, register, registerTrainer, requestTrainerUpgrade, updateUser, deleteUser, logout, refreshData, isLoading, isDemoMode, confirmAction, confirmState, closeConfirm
     }}>
       {children}
     </AppContext.Provider>

@@ -78,5 +78,8 @@ export interface Review {
   rating: number;
   text: string;
   time: string;
-  avatar: string;
+  avatar?: string;
+  isAiEnhanced?: boolean;
+  bookingId?: string;
+  isPublished?: boolean;
 }

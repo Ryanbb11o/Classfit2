@@ -1,13 +1,13 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Calendar, Clock, User, Check, X, ShieldAlert, CheckCircle2, DollarSign, CreditCard, Banknote, LayoutDashboard, ListFilter, FileSpreadsheet, TrendingUp, Phone, Loader2, Trash2, Users, Shield, RefreshCw, History, Briefcase, CheckCircle, ArrowRight, AlertTriangle, Mail, Edit, ChevronDown, Save, CreditCard as CardIcon, Wallet, Percent, UserCheck, Eye, QrCode } from 'lucide-react';
+import { Calendar, Clock, User, Check, X, ShieldAlert, CheckCircle2, DollarSign, CreditCard, Banknote, LayoutDashboard, ListFilter, FileSpreadsheet, TrendingUp, Phone, Loader2, Trash2, Users, Shield, RefreshCw, History, Briefcase, CheckCircle, ArrowRight, AlertTriangle, Mail, Edit, ChevronDown, Save, CreditCard as CardIcon, Wallet, Percent, UserCheck, Eye, QrCode, MessageSquare, Star, CheckSquare } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, getTrainers, DEFAULT_PROFILE_IMAGE } from '../constants';
-import { Trainer, User as UserType, Booking } from '../types';
+import { Trainer, User as UserType, Booking, Review } from '../types';
 import { useLocation } from 'react-router-dom';
 
 const AdminPanel: React.FC = () => {
-  const { language, bookings, updateBooking, deleteBooking, isAdmin, users, deleteUser, updateUser, currentUser, refreshData, confirmAction } = useAppContext();
+  const { language, bookings, reviews, updateReview, deleteReview, updateBooking, deleteBooking, isAdmin, users, deleteUser, updateUser, currentUser, refreshData, confirmAction } = useAppContext();
   const t = TRANSLATIONS[language];
   const location = useLocation();
   
@@ -15,12 +15,13 @@ const AdminPanel: React.FC = () => {
   const [editForm, setEditForm] = useState({ name: '', phone: '', bio: '', image: '', specialty: '', commissionRate: 0 });
   const [isSavingUser, setIsSavingUser] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'trainers' | 'finance' | 'users' | 'applications'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'trainers' | 'finance' | 'users' | 'applications' | 'reviews'>('overview');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const awaitingPaymentList = bookings.filter(b => b.status === 'trainer_completed');
   const activeTrainers = users.filter(u => u.role === 'trainer');
   const pendingApplications = users.filter(u => u.role === 'trainer_pending');
+  const pendingReviews = reviews.filter(r => !r.isPublished);
   const completedBookings = bookings.filter(b => b.status === 'completed');
 
   const totalIncome = completedBookings.reduce((sum, b) => sum + (Number(b.price) || 0), 0);
@@ -35,25 +36,39 @@ const AdminPanel: React.FC = () => {
     const booking = bookings.find(b => b.id === id);
     if (!booking) return;
     
-    // Find trainer to get their current commission rate
     const trainerUser = users.find(u => u.id === booking.trainerId);
     const rate = trainerUser?.commissionRate || 25;
     const commAmt = (Number(booking.price) * rate) / 100;
 
     try {
-      // Force status to 'completed' and ensure all payment fields are sent
       await updateBooking(id, { 
           status: 'completed', 
           paymentMethod: method,
           commissionAmount: commAmt
       });
-      console.log("Payment logged successfully for booking:", id);
     } catch (err: any) {
-      console.error("Critical: Admin Finish Payment Failed", err);
-      // Detailed error for the user to help them fix their DB
-      const errorMsg = err?.message || "Unknown DB Error";
-      alert(`Error saving payment: ${errorMsg}\n\nPlease verify you have run the provided SQL setup in Supabase SQL Editor.`);
+      alert(`Error saving payment: ${err.message}`);
     }
+  };
+
+  const handleApproveReview = (id: string) => {
+    confirmAction({
+      title: 'Approve Review',
+      message: 'This review will become visible on the coach\'s booking page.',
+      onConfirm: async () => {
+        await updateReview(id, { isPublished: true });
+      }
+    });
+  };
+
+  const handleDeleteReview = (id: string) => {
+    confirmAction({
+      title: 'Delete Review',
+      message: 'Are you sure you want to permanently remove this feedback?',
+      onConfirm: async () => {
+        await deleteReview(id);
+      }
+    });
   };
 
   const handleApproveTrainer = (id: string) => {
@@ -139,12 +154,13 @@ const AdminPanel: React.FC = () => {
                 <RefreshCw size={18} />
              </button>
           </div>
-          <p className="text-slate-400 font-medium italic mt-2">ClassFit Management System • бул. „Осми приморски полк“ 128</p>
+          <p className="text-slate-400 font-medium italic mt-2">ClassFit Management System • Moderation Center</p>
         </div>
         <div className="flex flex-wrap gap-2 bg-surface p-1.5 rounded-2xl border border-white/5">
             {[
               { id: 'overview', icon: LayoutDashboard, label: t.tabOverview },
               { id: 'bookings', icon: ListFilter, label: 'Front Desk', badge: awaitingPaymentList.length },
+              { id: 'reviews', icon: MessageSquare, label: 'Moderation', badge: pendingReviews.length },
               { id: 'trainers', icon: Briefcase, label: 'Trainers', badge: activeTrainers.length },
               { id: 'applications', icon: UserCheck, label: 'Apps', badge: pendingApplications.length },
               { id: 'finance', icon: FileSpreadsheet, label: 'Finance' },
@@ -156,7 +172,7 @@ const AdminPanel: React.FC = () => {
                   className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all ${activeTab === tab.id ? 'bg-brand text-dark shadow-lg shadow-brand/10' : 'text-slate-400 hover:text-white'}`}
                 >
                     <tab.icon size={14} /> {tab.label}
-                    {tab.badge ? <span className={`ml-1 px-1.5 py-0.5 rounded text-[8px] ${tab.id === 'bookings' ? 'bg-red-500 text-white animate-pulse' : 'bg-white/10 text-white'}`}>{tab.badge}</span> : null}
+                    {tab.badge ? <span className={`ml-1 px-1.5 py-0.5 rounded text-[8px] ${tab.id === 'bookings' || tab.id === 'reviews' ? 'bg-red-500 text-white animate-pulse' : 'bg-white/10 text-white'}`}>{tab.badge}</span> : null}
                 </button>
             ))}
         </div>
@@ -170,24 +186,56 @@ const AdminPanel: React.FC = () => {
                  <p className="text-4xl font-black italic">{totalIncome.toFixed(2)} <span className="text-sm">BGN</span></p>
               </div>
               <div className="p-8 bg-surface border border-white/5 text-white rounded-[2rem]">
-                 <p className="text-[10px] font-black uppercase mb-4 text-slate-500 tracking-widest">Club Commission</p>
-                 <p className="text-4xl font-black italic text-brand">{totalCommission.toFixed(2)} <span className="text-sm text-slate-500">BGN</span></p>
+                 <p className="text-[10px] font-black uppercase mb-4 text-slate-500 tracking-widest">Pending Reviews</p>
+                 <p className="text-4xl font-black italic text-brand">{pendingReviews.length}</p>
               </div>
-              {awaitingPaymentList.length > 0 && (
-                <div className="md:col-span-2 p-8 bg-red-500/10 border border-red-500/30 rounded-[2rem] flex items-center justify-between shadow-2xl">
-                   <div className="flex items-center gap-4">
-                      <div className="p-3 bg-red-500 text-white rounded-xl shadow-lg shadow-red-500/20">
-                         <Wallet size={24} />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-black uppercase italic text-white mb-1">Pay Requests Sent</h3>
-                        <p className="text-slate-400 text-xs font-medium">{awaitingPaymentList.length} customers marked session done.</p>
-                      </div>
-                   </div>
-                   <button onClick={() => setActiveTab('bookings')} className="px-6 py-3 bg-red-500 text-white rounded-xl text-[10px] font-black uppercase hover:bg-white hover:text-red-500 transition-all">Verify Now</button>
-                </div>
-              )}
            </div>
+        )}
+
+        {activeTab === 'reviews' && (
+            <div className="space-y-6">
+                <h3 className="text-xl font-black uppercase italic text-white flex items-center gap-3 px-4">
+                    <MessageSquare className="text-brand" /> Review Moderation
+                </h3>
+                {pendingReviews.length === 0 ? (
+                    <div className="p-20 bg-surface/30 rounded-[3rem] border-2 border-dashed border-white/5 text-center">
+                        <p className="text-slate-500 font-black uppercase tracking-widest text-[10px]">All reviews are processed.</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {pendingReviews.map(review => {
+                            const trainer = users.find(u => u.id === review.trainerId);
+                            return (
+                                <div key={review.id} className="bg-surface p-8 rounded-[2rem] border border-white/5 flex flex-col justify-between">
+                                    <div>
+                                        <div className="flex items-center justify-between mb-6">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 bg-brand text-dark rounded-xl flex items-center justify-center font-black">{review.avatar}</div>
+                                                <div>
+                                                    <p className="text-xs font-black text-white uppercase italic tracking-tight">{review.author}</p>
+                                                    <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Reviewing: {trainer ? cleanName(trainer.name) : 'Coach'}</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex text-brand">
+                                                {[...Array(review.rating)].map((_, i) => <Star key={i} size={10} fill="currentColor" />)}
+                                            </div>
+                                        </div>
+                                        <p className="text-sm text-slate-300 italic leading-relaxed mb-8">"{review.text}"</p>
+                                    </div>
+                                    <div className="flex gap-3 pt-6 border-t border-white/5">
+                                        <button onClick={() => handleApproveReview(review.id)} className="flex-1 py-3 bg-brand text-dark rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-white transition-all">
+                                            <CheckSquare size={14} /> Approve
+                                        </button>
+                                        <button onClick={() => handleDeleteReview(review.id)} className="flex-1 py-3 bg-red-500/10 text-red-500 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-red-500 hover:text-white transition-all border border-red-500/10">
+                                            <Trash2 size={14} /> Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
         )}
 
         {activeTab === 'bookings' && (

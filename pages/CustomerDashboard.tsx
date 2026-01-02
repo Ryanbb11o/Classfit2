@@ -10,8 +10,9 @@ import { GoogleGenAI, Type } from "@google/genai";
 const ReviewModal: React.FC<{ 
   booking: Booking | null; 
   onClose: () => void; 
-  onSubmit: (id: string, rating: number, text: string, isAi: boolean) => Promise<void>;
+  onSubmit: (id: string, rating: number, text: string, isAi: boolean, trainerId: string) => Promise<void>;
 }> = ({ booking, onClose, onSubmit }) => {
+  const { language } = useAppContext();
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -75,7 +76,7 @@ const ReviewModal: React.FC<{
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await onSubmit(booking.id, rating, comment, isAiEnhanced);
+      await onSubmit(booking.id, rating, comment, isAiEnhanced, booking.trainerId);
     } catch (err) {
       console.error("Review Submit Error:", err);
       alert("Failed to save review.");
@@ -89,7 +90,6 @@ const ReviewModal: React.FC<{
        <div className={`bg-surface rounded-[2.5rem] border border-white/10 w-full shadow-2xl relative animate-in zoom-in-95 duration-300 overflow-hidden flex flex-col md:flex-row transition-all duration-500 ${aiInsights ? 'max-w-4xl' : 'max-w-md'}`}>
           <div className="absolute top-0 left-0 w-full h-1 bg-brand"></div>
           
-          {/* Main Form Area */}
           <div className="flex-1 p-10 text-center">
             <button 
               onClick={onClose}
@@ -150,6 +150,16 @@ const ReviewModal: React.FC<{
                     placeholder="Tell us how it went..."
                     className="w-full bg-dark/50 border border-white/5 rounded-2xl px-5 py-4 text-white font-medium italic outline-none focus:border-brand resize-none placeholder-slate-600 transition-all text-sm"
                   />
+                  
+                  {/* MODERATION WARNING */}
+                  <div className="flex items-start gap-2 px-3 py-3 bg-red-500/10 rounded-xl border border-red-500/20 mt-4">
+                     <AlertCircle size={14} className="text-red-500 shrink-0 mt-0.5" />
+                     <p className="text-[10px] font-bold text-red-500 uppercase tracking-tight leading-normal italic">
+                        {language === 'bg' 
+                          ? 'Вашият отзив ще бъде прегледан от администратор преди публикуване.' 
+                          : 'Your review will be checked by an administrator before appearing on the public page.'}
+                     </p>
+                  </div>
                </div>
                
                <button 
@@ -157,7 +167,7 @@ const ReviewModal: React.FC<{
                   disabled={isSubmitting}
                   className="w-full py-5 bg-brand text-dark rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-white transition-all flex items-center justify-center gap-2 shadow-xl shadow-brand/10"
                >
-                  {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : 'Submit Review'}
+                  {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : 'Submit for Moderation'}
                </button>
             </form>
           </div>
@@ -176,14 +186,6 @@ const ReviewModal: React.FC<{
                      <p className="text-slate-300 text-xs italic leading-relaxed">
                         {aiInsights}
                      </p>
-                  </div>
-                  
-                  <div className="space-y-3">
-                     <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest px-1">Pro Tip</p>
-                     <div className="flex items-start gap-3 text-slate-400">
-                        <Info size={14} className="mt-0.5 shrink-0" />
-                        <p className="text-[11px] leading-relaxed">A detailed review helps other members choose the right coach for their goals.</p>
-                     </div>
                   </div>
                </div>
 
@@ -210,15 +212,10 @@ const ReviewModal: React.FC<{
 };
 
 const CustomerDashboard: React.FC = () => {
-  const { language, bookings, updateBooking, deleteBooking, currentUser, logout, users, requestTrainerUpgrade, confirmAction } = useAppContext();
+  const { language, bookings, updateBooking, deleteBooking, currentUser, logout, users, addReview, refreshData, confirmAction } = useAppContext();
   const t = TRANSLATIONS[language];
   const navigate = useNavigate();
 
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [upgradeSpecialty, setUpgradeSpecialty] = useState('');
-  const [upgradePhone, setUpgradePhone] = useState(currentUser?.phone || '');
-  const [isUpgrading, setIsUpgrading] = useState(false);
-  
   const [bookingToReview, setBookingToReview] = useState<Booking | null>(null);
 
   const allTrainers = useMemo(() => {
@@ -271,31 +268,31 @@ const CustomerDashboard: React.FC = () => {
     navigate('/');
   };
 
-  const handleUpgradeSubmit = async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!currentUser) return;
-      setIsUpgrading(true);
-      try {
-          const { success } = await requestTrainerUpgrade(currentUser.id, currentUser.name, upgradePhone, upgradeSpecialty);
-          if (success) {
-              alert(language === 'bg' ? 'Заявката е изпратена!' : 'Application sent!');
-              setShowUpgradeModal(false);
-          }
-      } finally {
-          setIsUpgrading(false);
-      }
-  };
+  const handleReviewSubmit = async (id: string, rating: number, text: string, isAi: boolean, trainerId: string) => {
+    try {
+        // 1. Post to dedicated reviews table (isPublished will be false by default)
+        await addReview({
+          trainerId,
+          author: currentUser.name.split('(')[0].trim(),
+          rating,
+          text,
+          isAiEnhanced: isAi,
+          bookingId: id
+        });
 
-  const handleReviewSubmit = async (id: string, rating: number, text: string, isAi: boolean) => {
-    await updateBooking(id, { 
-      status: 'trainer_completed',
-      hasBeenReviewed: true, 
-      rating: rating, 
-      reviewText: text,
-      isAiEnhanced: isAi
-    });
-    setBookingToReview(null);
-    alert(language === 'bg' ? 'Благодарим за отзива! Моля платете на рецепция.' : 'Review saved! Please settle payment at the front desk.');
+        // 2. Mark booking as reviewed
+        await updateBooking(id, { 
+          status: 'trainer_completed',
+          hasBeenReviewed: true
+        });
+
+        setBookingToReview(null);
+        alert(language === 'bg' ? 'Благодарим! Отзивът ви е изпратен за одобрение от администратор.' : 'Thank you! Your review has been sent for admin approval.');
+        await refreshData();
+    } catch (err) {
+        console.error("Review failed:", err);
+        alert("Could not submit review. Please try again.");
+    }
   };
 
   const getTrainerImage = (trainer?: Trainer) => trainer?.image || DEFAULT_PROFILE_IMAGE;
@@ -350,7 +347,6 @@ const CustomerDashboard: React.FC = () => {
                     <div key={booking.id} className="bg-surface/50 backdrop-blur-md border border-white/5 rounded-[3rem] p-8 md:p-10 hover:border-brand/40 transition-all group relative overflow-hidden">
                         
                         <div className="flex flex-col lg:flex-row gap-8 lg:items-center">
-                            {/* Trainer Profile */}
                             <div className="flex items-center gap-6 shrink-0">
                                 <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-xl border border-white/5 bg-dark">
                                     <img src={getTrainerImage(trainer)} className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" />
@@ -361,7 +357,6 @@ const CustomerDashboard: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Session Details */}
                             <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-6 py-6 lg:py-0 border-y lg:border-y-0 lg:border-x border-white/5 lg:px-8">
                                 <div className="space-y-4">
                                    <div className="flex items-center gap-3">
@@ -387,7 +382,6 @@ const CustomerDashboard: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Check-in Code Area */}
                             <div className="shrink-0 flex flex-col items-center justify-center p-6 bg-dark/40 rounded-[2rem] border border-white/10 min-w-[160px] relative group-hover:border-brand/30 transition-all">
                                 <div className="absolute top-2 left-1/2 -translate-x-1/2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-500">Check-in Code</div>
                                 <div className="text-3xl font-black italic text-brand tracking-widest mb-1 leading-none pt-3">{booking.checkInCode}</div>
@@ -402,7 +396,6 @@ const CustomerDashboard: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Bottom Actions */}
                         <div className="mt-6 pt-6 border-t border-white/5 flex flex-wrap items-center justify-between gap-4">
                             <div className="flex gap-2">
                                 {isConfirmed && (
@@ -416,7 +409,7 @@ const CustomerDashboard: React.FC = () => {
                                 {(isCompleted || isAwaitingPay) && booking.hasBeenReviewed && (
                                    <div className="flex flex-col gap-1">
                                       <span className="flex items-center gap-2 px-4 py-2 bg-white/5 text-slate-500 rounded-xl text-[9px] font-black uppercase border border-white/5">
-                                         <Star size={12} className="text-brand fill-brand" /> Feedback Shared {booking.isAiEnhanced && <span className="text-blue-400 ml-1">(AI Enhanced)</span>}
+                                         <Star size={12} className="text-brand fill-brand" /> Feedback Shared
                                       </span>
                                    </div>
                                 )}
