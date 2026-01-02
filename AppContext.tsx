@@ -105,6 +105,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       if (bData) {
         setBookings(bData.map((b: any) => ({
           id: b.id,
+          checkInCode: b.check_in_code || b.id.substring(0, 6).toUpperCase(),
           trainerId: b.trainer_id,
           userId: b.user_id,
           customerName: b.customer_name,
@@ -112,11 +113,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           customerEmail: b.customer_email,
           date: b.booking_date,
           time: b.booking_time,
+          duration: b.duration_mins || 60,
           price: b.price,
           status: b.status,
           paymentMethod: b.payment_method,
           language: b.language,
-          commissionAmount: b.commission_amount
+          commissionAmount: b.commission_amount,
+          gymAddress: b.gym_address || 'бул. „Осми приморски полк“ 128 (Спирка МИР)',
+          hasBeenReviewed: b.has_been_reviewed || false
         })));
       }
       
@@ -153,13 +157,21 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const addBooking = async (booking: Booking) => {
+    // Force generation of check-in code if missing
+    const checkInCode = booking.checkInCode || booking.id.substring(0, 6).toUpperCase();
+    const gymAddress = 'бул. „Осми приморски полк“ 128 (Спирка МИР)';
+    
     if (isDemoMode) {
-      const newBookings = [booking, ...bookings];
+      const bookingWithCode = { ...booking, checkInCode, gymAddress };
+      const newBookings = [bookingWithCode, ...bookings];
       setBookings(newBookings);
       localStorage.setItem('classfit_bookings', JSON.stringify(newBookings));
       return;
     }
+
     const { error } = await supabase.from('bookings').insert([{
+      id: booking.id,
+      check_in_code: checkInCode,
       trainer_id: booking.trainerId,
       user_id: booking.userId,
       customer_name: booking.customerName,
@@ -167,9 +179,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       customer_email: booking.customerEmail,
       booking_date: booking.date,
       booking_time: booking.time,
+      duration_mins: booking.duration || 60,
       price: booking.price,
       status: booking.status,
-      language: booking.language
+      language: booking.language,
+      gym_address: gymAddress
     }]);
     if (error) throw error;
     await refreshData();
@@ -186,6 +200,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (updates.status) dbUpdates.status = updates.status;
     if (updates.paymentMethod) dbUpdates.payment_method = updates.paymentMethod;
     if (updates.commissionAmount !== undefined) dbUpdates.commission_amount = updates.commissionAmount;
+    if (updates.hasBeenReviewed !== undefined) dbUpdates.has_been_reviewed = updates.hasBeenReviewed;
 
     const { error } = await supabase.from('bookings').update(dbUpdates).eq('id', id);
     if (error) throw error;

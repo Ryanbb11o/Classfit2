@@ -11,8 +11,8 @@ export interface User {
   bio?: string;   
   joinedDate: string;
   role: 'user' | 'admin' | 'trainer_pending' | 'trainer';
-  approvedBy?: string; // ID or Name of admin who approved the trainer
-  commissionRate?: number; // Percentage (e.g., 20 for 20%)
+  approvedBy?: string; 
+  commissionRate?: number; 
 }
 
 export interface Trainer {
@@ -32,6 +32,7 @@ export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed' 
 
 export interface Booking {
   id: string;
+  checkInCode: string; // 6-digit verification code
   trainerId: string;
   userId?: string; 
   customerName: string;
@@ -40,10 +41,13 @@ export interface Booking {
   language?: Language; 
   date: string; 
   time: string;
+  duration: number; // in minutes
   price: number;
   status: BookingStatus;
   paymentMethod?: 'card' | 'cash';
-  commissionAmount?: number; // Calculated at completion
+  commissionAmount?: number;
+  gymAddress?: string;
+  hasBeenReviewed?: boolean;
 }
 
 export interface Membership {

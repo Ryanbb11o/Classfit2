@@ -161,8 +161,11 @@ const BookingPage: React.FC = () => {
     const localDate = new Date(selectedDate.getTime() - (offset*60*1000));
     const formattedDate = localDate.toISOString().split('T')[0];
 
+    // Fix: Added missing required properties 'checkInCode' and 'duration' to satisfy Booking interface.
+    const bookingId = Math.random().toString(36).substr(2, 9);
     const newBooking: Booking = {
-      id: Math.random().toString(36).substr(2, 9),
+      id: bookingId,
+      checkInCode: bookingId.substring(0, 6).toUpperCase(),
       trainerId: selectedTrainer.id,
       userId: userId, 
       customerName: name,
@@ -171,6 +174,7 @@ const BookingPage: React.FC = () => {
       language: language,
       date: formattedDate,
       time: selectedTime,
+      duration: 60,
       price: selectedTrainer.price,
       status: 'pending',
     };
