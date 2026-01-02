@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { LayoutDashboard, ListFilter, MessageSquare, Briefcase, UserCheck, FileSpreadsheet, Users, RefreshCw, Star, Trash2, Percent, Eye, X, Save, Loader2, TrendingUp, QrCode, Calendar, User, Mail, Shield, Languages, Check, Phone, FileText, Award, Sparkles, ExternalLink } from 'lucide-react';
+import { LayoutDashboard, ListFilter, MessageSquare, Briefcase, UserCheck, FileSpreadsheet, Users, RefreshCw, Star, Trash2, Percent, Eye, X, Save, Loader2, TrendingUp, QrCode, Calendar, User, Mail, Shield, Languages, Check, Phone, FileText, Award, Sparkles, ExternalLink, ChevronRight, UserPlus } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, DEFAULT_PROFILE_IMAGE } from '../constants';
 import { User as UserType, Booking, Review } from '../types';
@@ -173,8 +173,94 @@ const AdminPanel: React.FC = () => {
            </div>
         )}
 
-        {/* UNIFIED TABLE REGISTRY */}
-        {activeTab !== 'overview' && activeTab !== 'reviews' && (
+        {/* APPLICATIONS TAB: NEW HIGH-END DESIGN */}
+        {activeTab === 'applications' && (
+           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+              <div className="flex items-center justify-between px-4">
+                 <h3 className="text-xl font-black uppercase italic text-white flex items-center gap-3">
+                    <UserPlus className="text-brand" /> Onboarding Pipeline
+                 </h3>
+                 <span className="text-[10px] font-black uppercase text-slate-500 tracking-[0.2em]">Pending Review: {pendingApplications.length}</span>
+              </div>
+
+              {pendingApplications.length === 0 ? (
+                 <div className="p-32 bg-surface/30 rounded-[3rem] border-2 border-dashed border-white/5 text-center">
+                    <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-700">
+                       <UserCheck size={32} />
+                    </div>
+                    <p className="text-slate-500 font-black uppercase tracking-widest text-[10px]">The recruitment queue is currently empty.</p>
+                 </div>
+              ) : (
+                 <div className="grid grid-cols-1 gap-4">
+                    {pendingApplications.map(app => (
+                       <div key={app.id} className="group relative bg-surface hover:bg-surface/80 border border-white/5 rounded-[2rem] p-6 flex flex-col md:flex-row items-center justify-between gap-8 transition-all duration-300 hover:shadow-2xl hover:shadow-brand/5 hover:-translate-y-1">
+                          <div className="flex items-center gap-6 w-full md:w-auto">
+                             <div className="relative shrink-0">
+                                <div className="w-16 h-16 rounded-2xl bg-dark border border-white/10 overflow-hidden">
+                                   <img src={app.image || DEFAULT_PROFILE_IMAGE} className="w-full h-full object-cover grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500" />
+                                </div>
+                                <div className="absolute -bottom-2 -right-2 bg-brand text-dark p-1.5 rounded-lg shadow-lg">
+                                   <Briefcase size={12} />
+                                </div>
+                             </div>
+                             <div className="overflow-hidden">
+                                <h4 className="text-lg font-black uppercase italic text-white leading-none mb-2 tracking-tight truncate">{cleanName(app.name)}</h4>
+                                <div className="flex flex-wrap gap-2">
+                                   <span className="text-[8px] font-black uppercase tracking-widest bg-brand/10 text-brand px-2 py-0.5 rounded-md border border-brand/20">
+                                      {app.name.match(/\((.*)\)/)?.[1] || 'Instructor'}
+                                   </span>
+                                   <span className="text-[8px] font-black uppercase tracking-widest bg-white/5 text-slate-400 px-2 py-0.5 rounded-md">
+                                      Exp: {getBioSection(app.bio, 'Experience')} {t.years}
+                                   </span>
+                                </div>
+                             </div>
+                          </div>
+
+                          <div className="hidden lg:flex items-center gap-12 flex-1 px-8 border-x border-white/5">
+                             <div className="space-y-1">
+                                <p className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-600 italic">Linguistic Profile</p>
+                                <div className="flex flex-wrap gap-1">
+                                   {(app.languages || []).slice(0, 3).map(l => (
+                                      <span key={l} className="text-[8px] font-bold text-slate-400">{l}</span>
+                                   ))}
+                                   {(app.languages || []).length > 3 && <span className="text-[8px] font-bold text-slate-600">+{app.languages!.length - 3}</span>}
+                                </div>
+                             </div>
+                             <div className="space-y-1 max-w-[200px]">
+                                <p className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-600 italic">Philosophy Preview</p>
+                                <p className="text-[10px] text-slate-500 italic truncate">"{getBioSection(app.bio, 'Motivation')}"</p>
+                             </div>
+                          </div>
+
+                          <div className="flex items-center gap-3 w-full md:w-auto shrink-0">
+                             <button 
+                                onClick={() => setViewingApplication(app)}
+                                className="flex-1 md:flex-none px-6 py-4 bg-white/5 hover:bg-white/10 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-white/10 flex items-center justify-center gap-2 group/btn"
+                             >
+                                <Eye size={14} className="group-hover/btn:text-brand transition-colors" /> {t.details}
+                             </button>
+                             <button 
+                                onClick={() => handleApproveTrainer(app.id)}
+                                className="flex-1 md:flex-none px-8 py-4 bg-brand hover:bg-white text-dark rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-brand/10 flex items-center justify-center gap-2"
+                             >
+                                <Check size={14} strokeWidth={3} /> {t.confirm}
+                             </button>
+                             <button 
+                                onClick={() => handleRejectTrainer(app.id)}
+                                className="p-4 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-xl transition-all border border-red-500/10"
+                             >
+                                <Trash2 size={16} />
+                             </button>
+                          </div>
+                       </div>
+                    ))}
+                 </div>
+              )}
+           </div>
+        )}
+
+        {/* UNIFIED TABLE REGISTRY (FOR OTHER TABS) */}
+        {activeTab !== 'overview' && activeTab !== 'reviews' && activeTab !== 'applications' && (
            <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-hidden shadow-2xl animate-in fade-in">
               <div className="p-8 border-b border-white/5 bg-white/5 flex justify-between items-center">
                  <div className="flex items-center gap-4">
@@ -183,7 +269,6 @@ const AdminPanel: React.FC = () => {
                         {activeTab === 'trainers' && <Briefcase size={20} />}
                         {activeTab === 'finance' && <FileSpreadsheet size={20} />}
                         {activeTab === 'users' && <Users size={20} />}
-                        {activeTab === 'applications' && <UserCheck size={20} />}
                     </div>
                     <h3 className="text-xl font-black uppercase italic text-white">{activeTab === 'bookings' ? t.tabBookings : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Registry</h3>
                  </div>
@@ -214,14 +299,6 @@ const AdminPanel: React.FC = () => {
                               <th className="px-8 py-5">Email Address</th>
                               <th className="px-8 py-5 text-center">Auth Role</th>
                               <th className="px-8 py-5 text-right">{t.action}</th>
-                           </tr>
-                        )}
-                        {activeTab === 'applications' && (
-                           <tr>
-                              <th className="px-8 py-5">Coach Applicant</th>
-                              <th className="px-8 py-5">Contact Details</th>
-                              <th className="px-8 py-5">Languages</th>
-                              <th className="px-8 py-5 text-right">Decision</th>
                            </tr>
                         )}
                         {activeTab === 'trainers' && (
@@ -271,24 +348,6 @@ const AdminPanel: React.FC = () => {
                                  {u.id !== currentUser?.id && <button onClick={() => deleteUser(u.id)} className="p-2 text-slate-600 hover:text-red-500 transition-all"><Trash2 size={16} /></button>}
                               </td>
                            </tr>
-                        ))}
-                        {activeTab === 'applications' && pendingApplications.map(app => (
-                            <tr key={app.id} className="hover:bg-white/5">
-                                <td className="px-8 py-5">
-                                   <div className="font-black uppercase italic text-white leading-none mb-1">{cleanName(app.name)}</div>
-                                   <div className="text-[9px] text-brand font-black uppercase italic">Exp: {getBioSection(app.bio, 'Experience')}</div>
-                                </td>
-                                <td className="px-8 py-5 text-slate-400">{app.email} <br/> <span className="text-[10px]">{app.phone}</span></td>
-                                <td className="px-8 py-5 flex flex-wrap gap-1 max-w-[150px]">
-                                   {(app.languages || []).map(l => (
-                                      <span key={l} className="px-1.5 py-0.5 bg-white/5 text-[8px] font-black uppercase text-slate-500 rounded">{l}</span>
-                                   ))}
-                                </td>
-                                <td className="px-8 py-5 text-right flex gap-2 justify-end">
-                                    <button onClick={() => setViewingApplication(app)} className="px-4 py-2 bg-white/10 text-white rounded-lg text-[9px] font-black uppercase hover:bg-white hover:text-dark transition-all">{t.details}</button>
-                                    <button onClick={() => handleApproveTrainer(app.id)} className="px-4 py-2 bg-brand text-dark rounded-lg text-[9px] font-black uppercase shadow-lg">{t.confirm}</button>
-                                </td>
-                            </tr>
                         ))}
                         {activeTab === 'trainers' && activeTrainers.map(tr => (
                            <tr key={tr.id} className="hover:bg-white/5 transition-colors">
@@ -412,7 +471,7 @@ const AdminPanel: React.FC = () => {
           </div>
       )}
 
-      {/* NEW: APPLICATION DETAILS MODAL */}
+      {/* APPLICATION DETAILS MODAL */}
       {viewingApplication && (
           <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-dark/98 backdrop-blur-xl animate-in fade-in duration-300">
              <div className="bg-surface border border-white/10 rounded-[3rem] w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl relative flex flex-col md:flex-row">
