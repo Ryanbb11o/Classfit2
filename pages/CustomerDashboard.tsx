@@ -165,9 +165,12 @@ const CustomerDashboard: React.FC = () => {
   };
 
   const handleReviewSubmit = async (id: string, rating: number, text: string) => {
-    // In a real app, we would send the review to a 'reviews' table.
-    // For now, we update the booking as reviewed.
-    await updateBooking(id, { hasBeenReviewed: true });
+    // Save review data directly to the booking row
+    await updateBooking(id, { 
+      hasBeenReviewed: true, 
+      rating: rating, 
+      reviewText: text 
+    });
     setBookingToReview(null);
     alert(language === 'bg' ? 'Благодарим за Вашия отзив!' : 'Thank you for your feedback!');
   };

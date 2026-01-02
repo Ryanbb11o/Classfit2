@@ -120,7 +120,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           language: b.language,
           commissionAmount: b.commission_amount,
           gymAddress: b.gym_address || 'бул. „Осми приморски полк“ 128 (Спирка МИР)',
-          hasBeenReviewed: b.has_been_reviewed || false
+          hasBeenReviewed: b.has_been_reviewed || false,
+          rating: b.rating,
+          reviewText: b.review_text
         })));
       }
       
@@ -157,8 +159,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const addBooking = async (booking: Booking) => {
-    // Force generation of check-in code if missing
-    const checkInCode = booking.checkInCode || booking.id.substring(0, 6).toUpperCase();
+    // Generate code from the ID passed during booking
+    const checkInCode = booking.id.substring(0, 6).toUpperCase();
     const gymAddress = 'бул. „Осми приморски полк“ 128 (Спирка МИР)';
     
     if (isDemoMode) {
@@ -201,9 +203,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (updates.paymentMethod) dbUpdates.payment_method = updates.paymentMethod;
     if (updates.commissionAmount !== undefined) dbUpdates.commission_amount = updates.commissionAmount;
     if (updates.hasBeenReviewed !== undefined) dbUpdates.has_been_reviewed = updates.hasBeenReviewed;
+    if (updates.rating !== undefined) dbUpdates.rating = updates.rating;
+    if (updates.reviewText !== undefined) dbUpdates.review_text = updates.reviewText;
 
     const { error } = await supabase.from('bookings').update(dbUpdates).eq('id', id);
-    if (error) throw error;
+    if (error) {
+      console.error("DB Update Error:", error);
+      throw error;
+    }
     await refreshData();
   };
 

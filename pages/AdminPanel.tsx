@@ -16,7 +16,6 @@ const AdminPanel: React.FC = () => {
   const [isSavingUser, setIsSavingUser] = useState(false);
 
   const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'trainers' | 'finance' | 'users' | 'applications'>('overview');
-  const [completingId, setCompletingId] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const awaitingPaymentList = bookings.filter(b => b.status === 'trainer_completed');
@@ -36,16 +35,22 @@ const AdminPanel: React.FC = () => {
     const booking = bookings.find(b => b.id === id);
     if (!booking) return;
     
+    // Find trainer to get their current commission rate
     const trainer = users.find(u => u.id === booking.trainerId);
-    const commissionRate = trainer?.commissionRate || 0;
-    const commissionAmount = (booking.price * commissionRate) / 100;
+    const rate = trainer?.commissionRate || 25;
+    const commAmt = (booking.price * rate) / 100;
 
-    await updateBooking(id, { 
-        status: 'completed', 
-        paymentMethod: method,
-        commissionAmount: commissionAmount
-    });
-    setCompletingId(null);
+    try {
+      await updateBooking(id, { 
+          status: 'completed', 
+          paymentMethod: method,
+          commissionAmount: commAmt
+      });
+      console.log("Payment successfully logged for booking:", id);
+    } catch (err) {
+      console.error("Failed to update booking status:", err);
+      alert("Error saving payment. Check console.");
+    }
   };
 
   const handleApproveTrainer = (id: string) => {
@@ -305,8 +310,6 @@ const AdminPanel: React.FC = () => {
                 </div>
             </div>
         )}
-        
-        {/* Other tabs follow the same styling logic */}
       </div>
 
       {editingUser && (

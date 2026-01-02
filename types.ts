@@ -48,6 +48,8 @@ export interface Booking {
   commissionAmount?: number;
   gymAddress?: string;
   hasBeenReviewed?: boolean;
+  rating?: number;
+  reviewText?: string;
 }
 
 export interface Membership {
