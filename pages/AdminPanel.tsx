@@ -1,6 +1,12 @@
 
 import React, { useState, useMemo } from 'react';
-import { LayoutDashboard, ListFilter, MessageSquare, Briefcase, UserCheck, FileSpreadsheet, Users, RefreshCw, Star, Trash2, Percent, Eye, X, Save, Loader2, TrendingUp, QrCode, Calendar, User, Mail, Shield, Languages, Check, Phone, FileText, Award, Sparkles, ExternalLink, ChevronRight, UserPlus } from 'lucide-react';
+import { 
+  LayoutDashboard, ListFilter, MessageSquare, Briefcase, UserCheck, 
+  FileSpreadsheet, Users, RefreshCw, Star, Trash2, Percent, Eye, X, 
+  Save, Loader2, TrendingUp, QrCode, Calendar, User, Mail, Shield, 
+  Languages, Check, Phone, FileText, Award, Sparkles, ExternalLink, 
+  ChevronRight, UserPlus, History, Clock 
+} from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, DEFAULT_PROFILE_IMAGE } from '../constants';
 import { User as UserType, Booking, Review } from '../types';
@@ -105,9 +111,8 @@ const AdminPanel: React.FC = () => {
     }
   };
 
-  const cleanName = (name: string) => (name || '').split('(')[0].trim();
+  const cleanName = (name: string | undefined) => (name || 'Applicant').split('(')[0].trim();
 
-  // Robust parsing helper
   const getBioSection = (bio: string | undefined, label: string) => {
       if (!bio) return 'N/A';
       try {
@@ -121,8 +126,17 @@ const AdminPanel: React.FC = () => {
 
   if (!isAdmin) return <div className="p-20 text-center text-white">{t.accessDenied}</div>;
 
+  const tabTitleMap: Record<string, string> = {
+    bookings: t.tabBookings,
+    trainers: t.trainer,
+    finance: t.tabAnalysis,
+    users: t.tabUsers,
+    applications: t.tabRecruitment
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-16 animate-in fade-in duration-500">
+      {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
         <div>
           <div className="flex items-center gap-4">
@@ -177,7 +191,7 @@ const AdminPanel: React.FC = () => {
            </div>
         )}
 
-        {/* CLEANER APPLICATIONS TAB DESIGN */}
+        {/* APPLICATIONS TAB GRID */}
         {activeTab === 'applications' && (
            <div className="animate-in slide-in-from-bottom-2 duration-500">
               <div className="flex items-center gap-4 mb-10">
@@ -206,7 +220,7 @@ const AdminPanel: React.FC = () => {
                              <div className="overflow-hidden">
                                 <h4 className="text-lg font-black uppercase italic text-white leading-none truncate">{cleanName(app.name)}</h4>
                                 <span className="inline-block mt-2 text-[9px] font-black uppercase text-brand tracking-widest bg-brand/10 px-2 py-0.5 rounded">
-                                   {app.name.match(/\((.*)\)/)?.[1] || 'Coach'}
+                                   {(app.name || '').match(/\((.*)\)/)?.[1] || 'Coach'}
                                 </span>
                              </div>
                           </div>
@@ -235,7 +249,7 @@ const AdminPanel: React.FC = () => {
            </div>
         )}
 
-        {/* UNIFIED TABLE REGISTRY (FOR OTHER TABS) */}
+        {/* REGISTRY TABLES FOR OTHER TABS */}
         {activeTab !== 'overview' && activeTab !== 'reviews' && activeTab !== 'applications' && (
            <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-hidden shadow-2xl animate-in fade-in">
               <div className="p-8 border-b border-white/5 bg-white/5 flex justify-between items-center">
@@ -246,7 +260,9 @@ const AdminPanel: React.FC = () => {
                         {activeTab === 'finance' && <FileSpreadsheet size={20} />}
                         {activeTab === 'users' && <Users size={20} />}
                     </div>
-                    <h3 className="text-xl font-black uppercase italic text-white">{activeTab === 'bookings' ? t.tabBookings : t[activeTab as keyof typeof t] || activeTab} {t.registry}</h3>
+                    <h3 className="text-xl font-black uppercase italic text-white">
+                      {tabTitleMap[activeTab] || activeTab} Registry
+                    </h3>
                  </div>
                  {activeTab === 'finance' && (
                     <div className="text-right">
@@ -299,7 +315,7 @@ const AdminPanel: React.FC = () => {
                         {activeTab === 'finance' && completedBookings.map(b => (
                            <tr key={b.id} className="hover:bg-white/5 transition-colors">
                               <td className="px-8 py-5 font-medium text-slate-400">{b.date}</td>
-                              <td className="px-8 py-5 font-black uppercase italic">{cleanName(users.find(u => u.id === b.trainerId)?.name || 'Coach')}</td>
+                              <td className="px-8 py-5 font-black uppercase italic">{cleanName(users.find(u => u.id === b.trainerId)?.name)}</td>
                               <td className="px-8 py-5 text-slate-400">{b.customerName}</td>
                               <td className="px-8 py-5 text-right font-black">{Number(b.price).toFixed(2)}</td>
                               <td className="px-8 py-5 text-right text-brand font-bold">{Number(b.commissionAmount).toFixed(2)}</td>
@@ -351,7 +367,7 @@ const AdminPanel: React.FC = () => {
                            <tr key={b.id} className="hover:bg-white/5 transition-colors">
                               <td className="px-8 py-5">
                                  <div className="font-black uppercase italic leading-none text-white mb-1">{b.customerName}</div>
-                                 <div className="text-[9px] text-slate-500 uppercase tracking-widest">{t.trainer}: {cleanName(users.find(u => u.id === b.trainerId)?.name || 'Team')}</div>
+                                 <div className="text-[9px] text-slate-500 uppercase tracking-widest">{t.trainer}: {cleanName(users.find(u => u.id === b.trainerId)?.name)}</div>
                               </td>
                               <td className="px-8 py-5 text-center"><span className="px-3 py-1 bg-brand/10 text-brand text-[10px] font-black italic rounded-lg border border-brand/20">{b.checkInCode}</span></td>
                               <td className="px-8 py-5 text-slate-400">{b.date} | <span className="font-bold text-white">{b.time}</span></td>
@@ -365,6 +381,7 @@ const AdminPanel: React.FC = () => {
            </div>
         )}
 
+        {/* REVIEWS MODERATION */}
         {activeTab === 'reviews' && (
             <div className="space-y-6">
                 <h3 className="text-xl font-black uppercase italic text-white flex items-center gap-3">
@@ -400,6 +417,7 @@ const AdminPanel: React.FC = () => {
         )}
       </div>
 
+      {/* EDIT USER MODAL */}
       {editingUser && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-dark/95 backdrop-blur-md animate-in fade-in duration-300">
              <div className="bg-surface border border-white/10 rounded-[2.5rem] p-10 w-full max-w-lg shadow-2xl relative overflow-hidden">
@@ -447,15 +465,15 @@ const AdminPanel: React.FC = () => {
           </div>
       )}
 
-      {/* RE-ENGINEERED APPLICATION DETAILS MODAL */}
+      {/* FIXED APPLICATION DETAILS MODAL */}
       {viewingApplication && (
           <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-dark/98 backdrop-blur-xl animate-in fade-in duration-300">
              <div className="bg-surface border border-white/10 rounded-[3rem] w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl relative flex flex-col md:flex-row">
                 <div className="absolute top-0 left-0 w-full h-1 bg-brand"></div>
                 <button onClick={() => setViewingApplication(null)} className="absolute top-6 right-6 text-slate-500 hover:text-white transition-colors p-2 bg-white/5 rounded-full z-10"><X size={20} /></button>
 
-                {/* Left Panel: Profile Quick Look */}
-                <div className="md:w-1/3 bg-dark/50 p-10 border-r border-white/5 flex flex-col items-center text-center">
+                {/* Left Panel */}
+                <div className="md:w-1/3 bg-dark/50 p-10 border-r border-white/5 flex flex-col items-center text-center shrink-0">
                     <div className="w-32 h-32 rounded-[2.5rem] bg-brand/10 p-1 border-2 border-brand/20 mb-8 overflow-hidden">
                         <img src={viewingApplication.image || DEFAULT_PROFILE_IMAGE} className="w-full h-full object-cover grayscale opacity-50" />
                     </div>
@@ -465,28 +483,27 @@ const AdminPanel: React.FC = () => {
                     </span>
 
                     <div className="w-full space-y-4">
-                        <div className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-brand/40 transition-all text-left group">
+                        <div className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/5 text-left group">
                             <Mail size={16} className="text-slate-500 group-hover:text-brand" />
                             <div className="overflow-hidden"><p className="text-[8px] font-black uppercase text-slate-600 mb-0.5 tracking-widest">{t.email}</p><p className="text-xs text-white truncate font-bold">{viewingApplication.email}</p></div>
                         </div>
-                        <div className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-brand/40 transition-all text-left group">
+                        <div className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/5 text-left group">
                             <Phone size={16} className="text-slate-500 group-hover:text-brand" />
                             <div><p className="text-[8px] font-black uppercase text-slate-600 mb-0.5 tracking-widest">{t.phone}</p><p className="text-xs text-white font-bold">{viewingApplication.phone}</p></div>
                         </div>
-                        <div className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-brand/40 transition-all text-left group">
+                        <div className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/5 text-left group">
                             <ExternalLink size={16} className="text-slate-500 group-hover:text-brand" />
-                            <div className="overflow-hidden"><p className="text-[8px] font-black uppercase text-slate-600 mb-0.5 tracking-widest">Social Presence</p><p className="text-xs text-brand truncate font-bold italic">{getBioSection(viewingApplication.bio, 'Social')}</p></div>
+                            <div className="overflow-hidden"><p className="text-[8px] font-black uppercase text-slate-600 mb-0.5 tracking-widest">Social</p><p className="text-xs text-brand truncate font-bold italic">{getBioSection(viewingApplication.bio, 'Social')}</p></div>
                         </div>
                     </div>
                 </div>
 
-                {/* Right Panel: Detailed Dossier */}
+                {/* Right Panel */}
                 <div className="flex-1 p-10 md:p-12 overflow-y-auto custom-scrollbar">
                     <div className="space-y-12">
-                        {/* Section: Experience & Languages */}
                         <div className="grid grid-cols-2 gap-8">
                             <div>
-                                <div className="flex items-center gap-2 mb-4"><History size={14} className="text-brand" /><h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Industry Tenure</h4></div>
+                                <div className="flex items-center gap-2 mb-4"><History size={14} className="text-brand" /><h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Tenure</h4></div>
                                 <p className="text-3xl font-black italic text-white">{getBioSection(viewingApplication.bio, 'Experience')} <span className="text-xs text-slate-600 not-italic uppercase">{t.years}</span></p>
                             </div>
                             <div>
@@ -499,32 +516,23 @@ const AdminPanel: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Section: Certs */}
                         <div className="space-y-4">
                             <div className="flex items-center gap-2 border-b border-white/5 pb-2"><Award size={14} className="text-brand" /><h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">{t.trainerCerts}</h4></div>
                             <p className="text-sm text-slate-300 font-medium italic leading-relaxed">{getBioSection(viewingApplication.bio, 'Certifications')}</p>
                         </div>
 
-                        {/* Section: Motivation */}
-                        <div className="p-8 bg-brand/5 rounded-3xl border border-brand/10 relative overflow-hidden group hover:border-brand/30 transition-all">
-                            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform"><Sparkles size={48} className="text-brand" /></div>
+                        <div className="p-8 bg-brand/5 rounded-3xl border border-brand/10 relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 p-4 opacity-10"><Sparkles size={48} className="text-brand" /></div>
                             <div className="flex items-center gap-2 mb-4"><FileText size={14} className="text-brand" /><h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-brand">{t.trainerMotivation}</h4></div>
                             <p className="text-sm text-white font-medium italic leading-relaxed relative z-10">"{getBioSection(viewingApplication.bio, 'Motivation')}"</p>
                         </div>
 
-                        {/* Decision Bar */}
                         <div className="flex gap-4 pt-6">
-                            <button 
-                                onClick={() => handleApproveTrainer(viewingApplication.id)} 
-                                className="flex-1 py-5 bg-brand text-dark rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-white transition-all shadow-2xl shadow-brand/20"
-                            >
-                                {t.confirm} Application
+                            <button onClick={() => handleApproveTrainer(viewingApplication.id)} className="flex-1 py-5 bg-brand text-dark rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-white transition-all shadow-2xl">
+                                Approve Application
                             </button>
-                            <button 
-                                onClick={() => handleRejectTrainer(viewingApplication.id)} 
-                                className="flex-1 py-5 bg-red-500/10 text-red-500 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-red-500 hover:text-white transition-all border border-red-500/10"
-                            >
-                                {t.cancel}
+                            <button onClick={() => handleRejectTrainer(viewingApplication.id)} className="flex-1 py-5 bg-red-500/10 text-red-500 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-red-500 hover:text-white transition-all border border-red-500/10">
+                                Reject
                             </button>
                         </div>
                     </div>
