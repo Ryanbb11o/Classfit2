@@ -27,7 +27,7 @@ const ReviewModal: React.FC<{
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
-        contents: `Enhance this gym review for a trainer at ClassFit. Keep the sentiment exactly as it is (positive or negative), but make it more clear and professional. Return only the enhanced text. Original text: "${comment}"`,
+        contents: `You are a helpful assistant for ClassFit Gym in Varna. Enhance the following customer review to be more professional and descriptive, but STRICTLY maintain the original sentiment (if they are happy, keep it happy; if they are unhappy, keep it professional but unhappy). Original text: "${comment}"`,
       });
       
       const enhancedText = response.text;
@@ -37,6 +37,7 @@ const ReviewModal: React.FC<{
       }
     } catch (error) {
       console.error("AI Enhancement failed:", error);
+      alert("AI Enhancement currently unavailable. Please submit your review as is.");
     } finally {
       setIsEnhancing(false);
     }
@@ -112,7 +113,7 @@ const ReviewModal: React.FC<{
                     setComment(e.target.value);
                     if (isAiEnhanced) setIsAiEnhanced(false);
                   }}
-                  placeholder="The session was great! I learned a lot today..."
+                  placeholder="Tell us how it went..."
                   className="w-full bg-dark/50 border border-white/5 rounded-2xl px-5 py-4 text-white font-medium italic outline-none focus:border-brand resize-none placeholder-slate-600 transition-all"
                 />
              </div>
