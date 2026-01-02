@@ -141,11 +141,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           avatar: r.author_name.charAt(0),
           isAiEnhanced: r.is_ai_enhanced,
           isPublished: r.is_published,
-          bookingId: r.booking_id
+          bookingId: String(r.booking_id)
         })));
       }
       
-      const { data: uData } = await supabase.from('users').select('*');
+      const { data: uData } = await supabase.from('users').select('*').order('joined_date', { ascending: false });
       if (uData) {
         setUsers(uData.map((u: any) => ({
           id: String(u.id),
@@ -254,6 +254,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (updates.status) dbUpdates.status = updates.status;
     if (updates.paymentMethod) dbUpdates.payment_method = updates.paymentMethod;
     if (updates.hasBeenReviewed !== undefined) dbUpdates.has_been_reviewed = updates.hasBeenReviewed;
+    if (updates.commissionAmount !== undefined) dbUpdates.commission_amount = updates.commissionAmount;
     
     const { error } = await supabase.from('bookings').update(dbUpdates).eq('id', id);
     if (error) throw error;
@@ -273,6 +274,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (updates.phone) dbUpdates.phone = updates.phone;
     if (updates.image) dbUpdates.image = updates.image;
     if (updates.bio) dbUpdates.bio = updates.bio;
+    if (updates.commissionRate !== undefined) dbUpdates.commission_rate = updates.commissionRate;
+    if (updates.approvedBy !== undefined) dbUpdates.approved_by = updates.approvedBy;
     
     const { error } = await supabase.from('users').update(dbUpdates).eq('id', id);
     if (error) throw error;
