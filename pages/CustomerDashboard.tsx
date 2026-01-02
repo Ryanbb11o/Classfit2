@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { Calendar, Clock, CheckCircle, Timer, XCircle, Trash2, CheckCircle2, User as UserIcon, Mail, CalendarPlus, Phone, MapPin, ChevronRight, LogOut, Dumbbell, Activity, AlertCircle, Briefcase, Loader2, X, MapPinned, CreditCard, Banknote, Timer as ClockIcon, Star, CheckSquare, Sparkles } from 'lucide-react';
 import { useAppContext } from '../AppContext';
-import { TRANSLATIONS, getTrainers, DEFAULT_PROFILE_IMAGE } from '../constants';
+import { TRANSLATIONS, getTrainers, DEFAULT_PROFILE_IMAGE, getTrainerReviews } from '../constants';
 import { useNavigate } from 'react-router-dom';
 import { Trainer, Booking } from '../types';
 import { GoogleGenAI } from "@google/genai";
@@ -22,22 +22,33 @@ const ReviewModal: React.FC<{
 
   const handleAiEnhance = async () => {
     if (!comment.trim()) return;
+    
+    // Safety check for the API key required by system instructions
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) {
+      console.error("AI Error: API_KEY is missing. Add it to Vercel Environment Variables.");
+      alert("AI Enhancement requires an API Key. Please check the console or Vercel settings.");
+      return;
+    }
+
     setIsEnhancing(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
-        contents: `You are a helpful assistant for ClassFit Gym in Varna. Enhance the following customer review to be more professional and descriptive, but STRICTLY maintain the original sentiment (if they are happy, keep it happy; if they are unhappy, keep it professional but unhappy). Original text: "${comment}"`,
+        contents: `You are a helpful assistant for ClassFit Gym in Varna. Enhance the following customer review to be more professional and descriptive, but STRICTLY maintain the original sentiment. Original text: "${comment}"`,
       });
       
       const enhancedText = response.text;
       if (enhancedText) {
         setComment(enhancedText.trim());
         setIsAiEnhanced(true);
+      } else {
+        throw new Error("AI returned an empty response.");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("AI Enhancement failed:", error);
-      alert("AI Enhancement currently unavailable. Please submit your review as is.");
+      alert("AI Enhancement currently unavailable. Please check the browser console (F12) for details.");
     } finally {
       setIsEnhancing(false);
     }
@@ -48,6 +59,9 @@ const ReviewModal: React.FC<{
     setIsSubmitting(true);
     try {
       await onSubmit(booking.id, rating, comment, isAiEnhanced);
+    } catch (err) {
+      console.error("Review Submit Error:", err);
+      alert("Failed to save review. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
