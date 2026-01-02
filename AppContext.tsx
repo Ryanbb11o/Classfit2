@@ -62,20 +62,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         } else {
           const localBookings = localStorage.getItem('classfit_bookings');
           const localUsers = localStorage.getItem('classfit_users');
-          
           if (localBookings) setBookings(JSON.parse(localBookings));
-          if (localUsers) {
-            const parsedUsers = JSON.parse(localUsers);
-            setUsers(parsedUsers);
-          }
+          if (localUsers) setUsers(JSON.parse(localUsers));
         }
-        
         const savedUser = localStorage.getItem('classfit_user');
         if (savedUser) {
            const parsedUser = JSON.parse(savedUser);
-           if (parsedUser) {
-             setCurrentUser(parsedUser);
-           }
+           if (parsedUser) setCurrentUser(parsedUser);
         }
       } catch (err) {
         console.warn("Database Init Error:", err);
@@ -101,7 +94,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
 
     try {
-      const { data: bData } = await supabase.from('bookings').select('*').order('created_at', { ascending: false });
+      const { data: bData, error: bError } = await supabase.from('bookings').select('*').order('created_at', { ascending: false });
+      if (bError) throw bError;
       if (bData) {
         setBookings(bData.map((b: any) => ({
           id: b.id,
@@ -127,7 +121,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         })));
       }
       
-      const { data: uData } = await supabase.from('users').select('*');
+      const { data: uData, error: uError } = await supabase.from('users').select('*');
+      if (uError) throw uError;
       if (uData) {
         const mappedUsers = uData.map((u: any) => ({
           id: u.id,
@@ -143,7 +138,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           commissionRate: u.commission_rate || 0
         }));
         setUsers(mappedUsers);
-
         const storedUserStr = localStorage.getItem('classfit_user');
         if (storedUserStr) {
           const storedUser = JSON.parse(storedUserStr);
@@ -171,23 +165,28 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return;
     }
 
-    const { error } = await supabase.from('bookings').insert([{
+    const payload = {
       id: booking.id,
       check_in_code: checkInCode,
       trainer_id: booking.trainerId,
-      user_id: booking.userId,
+      user_id: booking.userId || null,
       customer_name: booking.customerName,
-      customer_phone: booking.customerPhone,
-      customer_email: booking.customerEmail,
+      customer_phone: booking.customerPhone || null,
+      customer_email: booking.customerEmail || null,
       booking_date: booking.date,
       booking_time: booking.time,
       duration_mins: booking.duration || 60,
       price: booking.price,
-      status: booking.status,
-      language: booking.language,
+      status: booking.status || 'pending',
+      language: booking.language || 'bg',
       gym_address: gymAddress
-    }]);
-    if (error) throw error;
+    };
+
+    const { error } = await supabase.from('bookings').insert([payload]);
+    if (error) {
+      console.error("Supabase Error details:", error.message, error.details, error.hint);
+      throw new Error(error.message);
+    }
     await refreshData();
   };
 
@@ -210,7 +209,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     const { error } = await supabase.from('bookings').update(dbUpdates).eq('id', id);
     if (error) {
-      console.error("Supabase update error:", error);
+      console.error("Booking Update Error:", error);
       throw error;
     }
     await refreshData();
@@ -221,7 +220,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         const newUsers = users.map(u => u.id === id ? { ...u, ...updates } : u);
         setUsers(newUsers);
         localStorage.setItem('classfit_users', JSON.stringify(newUsers));
-        if (currentUser && currentUser.id === id) {
+        if (currentUser?.id === id) {
            const updatedUser = { ...currentUser, ...updates };
            setCurrentUser(updatedUser);
            localStorage.setItem('classfit_user', JSON.stringify(updatedUser));
@@ -299,8 +298,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
        localStorage.setItem('classfit_user', JSON.stringify(mockUser));
        return true;
     }
-    const { data } = await supabase.from('users').insert([{ name, email, password: pass, role: 'user' }]).select().single();
-    if (!data) return false;
+    const { data, error } = await supabase.from('users').insert([{ name, email, password: pass, role: 'user' }]).select().single();
+    if (error) throw error;
     await refreshData();
     return true;
   };

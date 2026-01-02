@@ -141,7 +141,7 @@ const BookingPage: React.FC = () => {
   const initiateBooking = async () => {
     if (!selectedTrainer || !selectedTime || !selectedDate) return;
     if (currentUser) {
-      await finalizeBooking(currentUser.name, undefined, currentUser.id, currentUser.email);
+      await finalizeBooking(currentUser.name, currentUser.phone, currentUser.id, currentUser.email);
     } else {
       setShowGuestForm(true);
     }
@@ -151,21 +151,24 @@ const BookingPage: React.FC = () => {
     e.preventDefault();
     if (guestName && guestPhone && guestEmail) {
       await finalizeBooking(guestName, guestPhone, undefined, guestEmail);
+    } else {
+      alert(language === 'bg' ? 'Моля попълнете всички полета.' : 'Please fill all fields.');
     }
   };
 
   const finalizeBooking = async (name: string, phone?: string, userId?: string, email?: string) => {
     if (!selectedTrainer || !selectedTime || !selectedDate) return;
     setIsSubmitting(true);
+    
+    // Format date carefully
     const offset = selectedDate.getTimezoneOffset();
     const localDate = new Date(selectedDate.getTime() - (offset*60*1000));
     const formattedDate = localDate.toISOString().split('T')[0];
 
-    // Fix: Added missing required properties 'checkInCode' and 'duration' to satisfy Booking interface.
-    const bookingId = Math.random().toString(36).substr(2, 9);
+    const bookingId = Math.random().toString(36).substr(2, 9).toUpperCase();
     const newBooking: Booking = {
       id: bookingId,
-      checkInCode: bookingId.substring(0, 6).toUpperCase(),
+      checkInCode: bookingId.substring(0, 6),
       trainerId: selectedTrainer.id,
       userId: userId, 
       customerName: name,
@@ -177,6 +180,7 @@ const BookingPage: React.FC = () => {
       duration: 60,
       price: selectedTrainer.price,
       status: 'pending',
+      gymAddress: 'бул. „Осми приморски полк“ 128 (Спирка МИР)'
     };
 
     try {
@@ -184,9 +188,12 @@ const BookingPage: React.FC = () => {
       setLastBooking(newBooking);
       setShowGuestForm(false);
       setIsSuccess(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Booking failed:", error);
-      alert(language === 'bg' ? 'Грешка. Моля опитайте пак.' : 'Error. Please try again.');
+      const msg = error?.message || "Database Error";
+      alert(language === 'bg' 
+        ? `Възникна грешка при резервация: ${msg}. Моля проверете базата данни.` 
+        : `Booking error: ${msg}. Please ensure your database tables are set up.`);
     } finally {
       setIsSubmitting(false);
     }
@@ -201,7 +208,7 @@ const BookingPage: React.FC = () => {
     
     const text = encodeURIComponent(`ClassFit Session with ${trainer?.name}`);
     const details = encodeURIComponent(`Trainer: ${trainer?.name}\nSpecialty: ${trainer?.specialty}\nLocation: ClassFit Varna (near Bus Stop Mir)`);
-    const location = encodeURIComponent(`1A Studentska Str., Varna, Bulgaria`);
+    const location = encodeURIComponent(`бул. „Осми приморски полк“ 128, Варна`);
     
     return `https://www.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${startDate}/${endDate}&details=${details}&location=${location}`;
   };
@@ -217,22 +224,18 @@ const BookingPage: React.FC = () => {
           <p className="text-slate-400 mb-2 text-sm max-w-sm mx-auto">{t.trainerReviewMsg}</p>
         </div>
 
-        {/* EMAIL NOTIFICATION BLOCK */}
         <div className="bg-brand/10 border border-brand/20 rounded-2xl p-6 mb-8 text-center animate-in slide-in-from-bottom-2 duration-700 delay-300">
             <div className="flex items-center justify-center gap-3 text-brand mb-2">
                 <Mail size={16} />
                 <span className="text-[10px] font-black uppercase tracking-widest">{t.emailConfirmMsg}</span>
             </div>
             <p className="text-white font-bold text-sm underline decoration-brand/50 underline-offset-4">{lastBooking.customerEmail}</p>
-            <p className="text-[10px] text-slate-500 mt-3 font-medium">Please check your inbox (and spam folder) for session details.</p>
+            <p className="text-[10px] text-slate-500 mt-3 font-medium">Please check your inbox for details. Location: ClassFit (Mir stop).</p>
         </div>
 
-        {/* Contact Information Block */}
         <div className="bg-surface border border-white/5 rounded-[2.5rem] p-8 mb-10 shadow-2xl relative overflow-hidden group">
            <div className="absolute top-0 right-0 w-32 h-32 bg-brand/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-           
-           <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-brand mb-6 italic">Contact Information</h3>
-           
+           <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-brand mb-6 italic">Session Confirmation</h3>
            <div className="space-y-6">
               <div className="flex items-center justify-between group/row">
                  <div className="flex items-center gap-4">
@@ -248,7 +251,6 @@ const BookingPage: React.FC = () => {
                     <Phone size={18} />
                  </a>
               </div>
-
               <div className="flex items-center justify-between group/row">
                  <div className="flex items-center gap-4">
                     <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-slate-400 group-hover/row:text-brand transition-colors">
@@ -256,7 +258,7 @@ const BookingPage: React.FC = () => {
                     </div>
                     <div>
                        <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">{t.gymPhoneLabel}</p>
-                       <p className="text-white font-bold text-sm uppercase italic">ClassFit Varna</p>
+                       <p className="text-white font-bold text-sm uppercase italic">ClassFit Varna (Mir Stop)</p>
                     </div>
                  </div>
                  <a href={`tel:${t.gymPhone}`} className="p-3 bg-white/10 text-white rounded-full hover:scale-110 transition-transform border border-white/10">
@@ -264,7 +266,6 @@ const BookingPage: React.FC = () => {
                  </a>
               </div>
            </div>
-
            <div className="mt-10 pt-8 border-t border-white/5 flex flex-col sm:flex-row gap-4">
               <a 
                 href={getGoogleCalendarUrl(lastBooking, selectedTrainer)}
@@ -293,16 +294,14 @@ const BookingPage: React.FC = () => {
 
   return (
     <div className="min-h-screen py-24 animate-in fade-in duration-700">
-      
       {!selectedTrainer ? (
         <div className="max-w-7xl mx-auto px-6">
           <div className="mb-16">
             <h1 className="text-5xl md:text-7xl font-black uppercase italic mb-4 tracking-tighter text-white">{t.booking}</h1>
             <p className="text-slate-500 font-black uppercase tracking-[0.3em] text-[10px]">
-              {language === 'bg' ? 'Изберете Вашия Професионалист' : 'Select Your Professional Coach'}
+              {language === 'bg' ? 'ClassFit Варна • сп. Мир • Изберете Вашия Професионалист' : 'ClassFit Varna • Mir Stop • Select Your Professional Coach'}
             </p>
           </div>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {trainers.map((trainer) => (
               <div 
@@ -311,11 +310,7 @@ const BookingPage: React.FC = () => {
                 className="group relative bg-surface/50 rounded-[2rem] overflow-hidden cursor-pointer transition-all duration-500 hover:-translate-y-2"
               >
                 <div className="aspect-[3/4] relative overflow-hidden">
-                   <img 
-                      src={trainer.image} 
-                      alt={trainer.name} 
-                      className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700"
-                   />
+                   <img src={trainer.image} className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" />
                    <div className="absolute inset-0 bg-gradient-to-t from-dark/90 via-transparent to-transparent"></div>
                    <div className="absolute bottom-0 left-0 p-6 w-full">
                       <p className="text-[9px] font-black uppercase tracking-widest text-brand mb-1">{trainer.specialty}</p>
@@ -328,268 +323,76 @@ const BookingPage: React.FC = () => {
         </div>
       ) : (
         <div className="max-w-7xl mx-auto px-6 animate-in slide-in-from-bottom-4 duration-500 relative">
-          
-          {/* Subtle Accent Background Blur */}
-          <div className="absolute top-40 right-10 w-96 h-96 bg-brand/5 rounded-full blur-[120px] pointer-events-none -z-10"></div>
-          <div className="absolute bottom-10 left-10 w-96 h-96 bg-brand/5 rounded-full blur-[120px] pointer-events-none -z-10"></div>
-
-          <button 
-            onClick={() => { setSelectedTrainer(null); setSelectedTime(null); }}
-            className="mb-12 flex items-center gap-2 text-slate-500 hover:text-white font-black uppercase tracking-widest text-[9px] transition-all group"
-          >
+          <button onClick={() => { setSelectedTrainer(null); setSelectedTime(null); }} className="mb-12 flex items-center gap-2 text-slate-500 hover:text-white font-black uppercase tracking-widest text-[9px] transition-all group">
             <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
             {language === 'bg' ? 'Всички Треньори' : 'All Coaches'}
           </button>
-
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-            
-            {/* LEFT: COACH DETAILS (CENTRAL COLUMN) */}
             <div className="lg:col-span-4 space-y-8">
-               {/* Image & Basic Info Card */}
                <div className="relative rounded-[2.5rem] overflow-hidden border border-white/5 bg-surface shadow-2xl">
-                  <div className="aspect-[4/5] relative overflow-hidden">
-                    <img 
-                      src={selectedTrainer.image} 
-                      alt={selectedTrainer.name} 
-                      className="w-full h-full object-cover grayscale-0"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-dark/60 via-transparent to-transparent"></div>
-                  </div>
-                  
+                  <div className="aspect-[4/5] relative overflow-hidden"><img src={selectedTrainer.image} className="w-full h-full object-cover grayscale-0" /></div>
                   <div className="p-10 text-center">
                      <h2 className="text-4xl font-black uppercase italic text-white mb-2 leading-tight tracking-tighter">{selectedTrainer.name}</h2>
-                     <div className="inline-block px-4 py-1.5 bg-brand text-dark rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-8">
-                        {selectedTrainer.specialty}
-                     </div>
-                     
-                     {/* Experience & Focus Badges - Re-added as requested */}
+                     <div className="inline-block px-4 py-1.5 bg-brand text-dark rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-8">{selectedTrainer.specialty}</div>
                      <div className="grid grid-cols-1 gap-4 pt-6 border-t border-white/5">
                         <div className="flex items-center gap-4 px-6 py-5 bg-dark/40 rounded-2xl border border-white/5 group hover:border-brand/40 transition-all duration-300">
-                            <div className="w-12 h-12 bg-brand/10 text-brand rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-brand/5 group-hover:bg-brand group-hover:text-dark transition-colors">
-                                <Award size={24} />
-                            </div>
-                            <div className="text-left">
-                                <p className="text-[11px] font-black uppercase tracking-widest text-white leading-none mb-1">5+ Years</p>
-                                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-tight">Active Coaching</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-4 px-6 py-5 bg-dark/40 rounded-2xl border border-white/5 group hover:border-brand/40 transition-all duration-300">
-                            <div className="w-12 h-12 bg-brand/10 text-brand rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-brand/5 group-hover:bg-brand group-hover:text-dark transition-colors">
-                                <Target size={24} />
-                            </div>
-                            <div className="text-left">
-                                <p className="text-[11px] font-black uppercase tracking-widest text-white leading-none mb-1">Performance</p>
-                                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-tight">Focus & Results</p>
-                            </div>
+                            <div className="w-12 h-12 bg-brand/10 text-brand rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-brand/5 group-hover:bg-brand group-hover:text-dark transition-colors"><Award size={24} /></div>
+                            <div className="text-left"><p className="text-[11px] font-black uppercase tracking-widest text-white leading-none mb-1">Expert</p><p className="text-[9px] font-bold text-slate-500 uppercase tracking-tight">Active Coaching</p></div>
                         </div>
                      </div>
-                  </div>
-               </div>
-
-               {/* Bio/Background Container - Enhanced Background for Cohesion */}
-               <div className="relative p-10 bg-surface/50 backdrop-blur-xl rounded-[2.5rem] border border-white/10 shadow-2xl overflow-hidden text-center group">
-                  {/* Internal decoration */}
-                  <div className="absolute -top-10 -right-10 w-32 h-32 bg-brand/5 rounded-full blur-2xl transition-all duration-700 group-hover:bg-brand/10"></div>
-                  
-                  <h3 className="text-xs font-black uppercase tracking-[0.4em] text-slate-600 mb-8 italic flex items-center justify-center gap-3">
-                    <span className="w-8 h-px bg-white/5"></span>
-                    Background
-                    <span className="w-8 h-px bg-white/5"></span>
-                  </h3>
-                  
-                  <div className="relative">
-                    <Quote className="absolute -top-6 -left-2 text-brand/10 transform -rotate-12" size={48} />
-                    <p className="text-slate-300 leading-relaxed font-medium italic text-base relative z-10 px-4 mb-4">
-                        {selectedTrainer.bio || 'Professional fitness guidance focused on achieving peak physical results and sustainable health habits.'}
-                    </p>
-                  </div>
-                  
-                  <div className="inline-flex items-center gap-2 mt-4 px-3 py-1 bg-white/5 rounded-lg border border-white/5">
-                     <Check size={10} className="text-brand" />
-                     <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 italic">Varna Certified Coach</span>
                   </div>
                </div>
             </div>
-
-            {/* RIGHT: BOOKING BLOCK */}
             <div className="lg:col-span-8">
                <div className="bg-surface/30 backdrop-blur-sm rounded-[3rem] border border-white/5 p-8 md:p-12 shadow-2xl">
-                  
-                  {/* Calendar Header */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-12">
                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-brand/10 rounded-xl flex items-center justify-center text-brand">
-                            <CalendarIcon size={20} />
-                        </div>
-                        <h3 className="text-2xl font-black uppercase italic text-white tracking-tighter">
-                            {language === 'bg' ? 'График' : 'Session Calendar'}
-                        </h3>
+                        <div className="w-10 h-10 bg-brand/10 rounded-xl flex items-center justify-center text-brand"><CalendarIcon size={20} /></div>
+                        <h3 className="text-2xl font-black uppercase italic text-white tracking-tighter">Session Schedule</h3>
                      </div>
                      <div className="flex items-center gap-2">
-                         <button onClick={handlePrevMonth} className="w-10 h-10 flex items-center justify-center hover:bg-white/5 rounded-full text-slate-500 hover:text-white transition-all border border-white/5">
-                            <ChevronLeft size={18} />
-                         </button>
+                         <button onClick={handlePrevMonth} className="w-10 h-10 flex items-center justify-center hover:bg-white/5 rounded-full text-slate-500 hover:text-white transition-all border border-white/5"><ChevronLeft size={18} /></button>
                          <div className="px-6 py-2 bg-white/5 rounded-full border border-white/5 min-w-[140px] text-center">
-                            <span className="text-[11px] font-black uppercase tracking-widest text-white">
-                               {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
-                            </span>
+                            <span className="text-[11px] font-black uppercase tracking-widest text-white">{monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}</span>
                          </div>
-                         <button onClick={handleNextMonth} className="w-10 h-10 flex items-center justify-center hover:bg-white/5 rounded-full text-slate-500 hover:text-white transition-all border border-white/5">
-                            <ChevronRight size={18} />
-                         </button>
+                         <button onClick={handleNextMonth} className="w-10 h-10 flex items-center justify-center hover:bg-white/5 rounded-full text-slate-500 hover:text-white transition-all border border-white/5"><ChevronRight size={18} /></button>
                      </div>
                   </div>
-
-                  {/* Calendar Grid */}
                   <div className="mb-16">
-                      <div className="grid grid-cols-7 gap-1 mb-6 text-center">
-                         {weekDays.map(day => (
-                            <div key={day} className="text-[10px] font-black text-slate-600 uppercase tracking-widest">
-                               {day}
-                            </div>
-                         ))}
-                      </div>
-                      <div className="grid grid-cols-7 gap-3 place-items-center">
-                         {renderCalendar()}
-                      </div>
+                      <div className="grid grid-cols-7 gap-1 mb-6 text-center">{weekDays.map(day => (<div key={day} className="text-[10px] font-black text-slate-600 uppercase tracking-widest">{day}</div>))}</div>
+                      <div className="grid grid-cols-7 gap-3 place-items-center">{renderCalendar()}</div>
                   </div>
-
-                  {/* Slots Grid */}
                   <div className="pt-12 border-t border-white/5 mb-12">
-                     <div className="flex items-center gap-3 mb-8">
-                        <Clock className="text-brand" size={16} />
-                        <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 italic">Available Time Slots</h3>
-                     </div>
+                     <div className="flex items-center gap-3 mb-8"><Clock className="text-brand" size={16} /><h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 italic">Available Time Slots</h3></div>
                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
                         {selectedTrainer.availability.map(time => (
-                           <button
-                              key={time}
-                              onClick={() => setSelectedTime(time)}
-                              className={`py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border ${
-                                 selectedTime === time
-                                    ? 'bg-brand text-dark border-brand shadow-lg shadow-brand/10'
-                                    : 'bg-white/5 text-slate-400 border-white/5 hover:border-brand/40'
-                              }`}
-                           >
-                              {time}
-                           </button>
+                           <button key={time} onClick={() => setSelectedTime(time)} className={`py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border ${selectedTime === time ? 'bg-brand text-dark border-brand shadow-lg shadow-brand/10' : 'bg-white/5 text-slate-400 border-white/5 hover:border-brand/40'}`}>{time}</button>
                         ))}
                      </div>
                   </div>
-
-                  {/* Summary & Button */}
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-10 pt-10 border-t border-white/5">
-                      <div className="text-center sm:text-left">
-                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-2">Investment</p>
-                          <div className="text-4xl font-black uppercase italic text-white leading-none tracking-tighter">
-                              {selectedTrainer.price} <span className="text-lg text-brand font-bold not-italic ml-1">BGN</span>
-                          </div>
-                      </div>
-
-                      <button 
-                         onClick={initiateBooking}
-                         disabled={!selectedTime || isSubmitting}
-                         className={`w-full sm:w-auto px-16 py-6 rounded-full font-black uppercase italic tracking-[0.2em] text-xs transition-all shadow-xl flex items-center justify-center gap-3 ${
-                            selectedTime && !isSubmitting
-                               ? 'bg-brand text-dark hover:scale-105 shadow-brand/20'
-                               : 'bg-white/5 text-slate-700 cursor-not-allowed shadow-none border border-white/5'
-                         }`}
-                      >
+                      <div className="text-center sm:text-left"><p className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-2">Total</p><div className="text-4xl font-black uppercase italic text-white leading-none tracking-tighter">{selectedTrainer.price} <span className="text-lg text-brand font-bold not-italic ml-1">BGN</span></div></div>
+                      <button onClick={initiateBooking} disabled={!selectedTime || isSubmitting} className={`w-full sm:w-auto px-16 py-6 rounded-full font-black uppercase italic tracking-[0.2em] text-xs transition-all shadow-xl flex items-center justify-center gap-3 ${selectedTime && !isSubmitting ? 'bg-brand text-dark hover:scale-105 shadow-brand/20' : 'bg-white/5 text-slate-700 cursor-not-allowed border border-white/5'}`}>
                          {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : (language === 'bg' ? 'Запази час' : 'Confirm Session')}
                       </button>
                   </div>
-
-                  {/* CLIENT TESTIMONIALS SECTION */}
-                  <div className="mt-24 pt-12 border-t border-white/5">
-                     <div className="flex items-center justify-between mb-10">
-                        <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-brand/5 rounded-xl flex items-center justify-center text-brand">
-                                <ShieldCheck size={20} />
-                            </div>
-                            <h3 className="text-lg font-black uppercase italic text-white tracking-tight">
-                                Client Results & Feedback
-                            </h3>
-                        </div>
-                        <div className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/5">
-                            <Star size={12} className="text-brand fill-brand" />
-                            <span className="text-[10px] font-black text-white uppercase tracking-widest">Top Rated Coach</span>
-                        </div>
-                     </div>
-
-                     <div className="space-y-8 max-h-[400px] overflow-y-auto custom-scrollbar pr-6">
-                        {trainerReviews.map((review, i) => (
-                           <div key={i} className="group relative">
-                              <div className="flex items-start gap-6">
-                                 <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center font-black text-xs text-brand shrink-0 group-hover:bg-brand group-hover:text-dark transition-all duration-300">
-                                    {review.avatar}
-                                 </div>
-                                 <div className="flex-1">
-                                    <div className="flex items-center justify-between mb-2">
-                                       <span className="text-xs font-black text-white uppercase italic tracking-wide">{review.author}</span>
-                                       <div className="flex gap-0.5">
-                                          {[...Array(5)].map((_, s) => <Star key={s} size={10} className="text-brand fill-brand" />)}
-                                       </div>
-                                    </div>
-                                    <p className="text-sm text-slate-400 font-medium italic leading-relaxed">
-                                       "{review.text}"
-                                    </p>
-                                    <div className="mt-2 text-[9px] font-bold text-slate-600 uppercase tracking-tighter">{review.time}</div>
-                                 </div>
-                              </div>
-                           </div>
-                        ))}
-                     </div>
-                  </div>
-
                </div>
             </div>
-
           </div>
         </div>
       )}
-
-      {/* Guest Modal */}
       {showGuestForm && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-dark/95 backdrop-blur-md animate-in fade-in duration-300">
            <div className="bg-surface rounded-[3rem] p-10 md:p-12 max-w-md w-full shadow-2xl relative border border-white/10 overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-brand"></div>
-              <button onClick={() => setShowGuestForm(false)} className="absolute top-8 right-8 text-slate-500 hover:text-white transition-all bg-white/5 p-2 rounded-full">
-                <X size={20} />
-              </button>
-              
-              <div className="mb-8">
-                  <h2 className="text-3xl font-black uppercase italic text-white tracking-tighter mb-2">{t.finalize}</h2>
-                  <p className="text-slate-500 text-xs font-medium">Please provide your contact details to complete the session booking.</p>
-              </div>
-
+              <button onClick={() => setShowGuestForm(false)} className="absolute top-8 right-8 text-slate-500 hover:text-white transition-all bg-white/5 p-2 rounded-full"><X size={20} /></button>
+              <div className="mb-8"><h2 className="text-3xl font-black uppercase italic text-white tracking-tighter mb-2">{t.finalize}</h2><p className="text-slate-500 text-xs font-medium">Please provide contact details to finalize your ClassFit booking.</p></div>
               <form onSubmit={handleGuestSubmit} className="space-y-4">
-                <div className="space-y-1">
-                   <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-2">Full Name</label>
-                   <input 
-                      type="text" required value={guestName} placeholder={t.name}
-                      onChange={(e) => setGuestName(e.target.value)}
-                      className="w-full bg-dark/50 border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white outline-none focus:border-brand transition-all"
-                   />
-                </div>
-                <div className="space-y-1">
-                   <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-2">Phone Number</label>
-                   <input 
-                      type="tel" required value={guestPhone} placeholder={t.phone}
-                      onChange={(e) => setGuestPhone(e.target.value)}
-                      className="w-full bg-dark/50 border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white outline-none focus:border-brand transition-all"
-                   />
-                </div>
-                <div className="space-y-1">
-                   <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-2">Email Address</label>
-                   <input 
-                      type="email" required value={guestEmail} placeholder="Email"
-                      onChange={(e) => setGuestEmail(e.target.value)}
-                      className="w-full bg-dark/50 border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white outline-none focus:border-brand transition-all"
-                   />
-                </div>
-                
-                <button type="submit" className="w-full bg-brand text-dark py-5 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-brand/10 mt-6 hover:scale-[1.02] transition-all">
-                   {t.confirmBooking}
+                <div className="space-y-1"><label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-2">Name</label><input type="text" required value={guestName} onChange={(e) => setGuestName(e.target.value)} className="w-full bg-dark/50 border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white outline-none focus:border-brand transition-all" /></div>
+                <div className="space-y-1"><label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-2">Phone</label><input type="tel" required value={guestPhone} onChange={(e) => setGuestPhone(e.target.value)} className="w-full bg-dark/50 border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white outline-none focus:border-brand transition-all" /></div>
+                <div className="space-y-1"><label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-2">Email</label><input type="email" required value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} className="w-full bg-dark/50 border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white outline-none focus:border-brand transition-all" /></div>
+                <button type="submit" disabled={isSubmitting} className="w-full bg-brand text-dark py-5 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-brand/10 mt-6 hover:scale-[1.02] transition-all">
+                   {isSubmitting ? <Loader2 className="animate-spin mx-auto" /> : t.confirmBooking}
                 </button>
               </form>
            </div>
