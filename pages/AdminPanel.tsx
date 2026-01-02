@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { LayoutDashboard, ListFilter, MessageSquare, Briefcase, UserCheck, FileSpreadsheet, Users, RefreshCw, Star, Trash2, Percent, Eye, X, Save, Loader2, TrendingUp, QrCode, Calendar, User, Mail, Shield } from 'lucide-react';
+import { LayoutDashboard, ListFilter, MessageSquare, Briefcase, UserCheck, FileSpreadsheet, Users, RefreshCw, Star, Trash2, Percent, Eye, X, Save, Loader2, TrendingUp, QrCode, Calendar, User, Mail, Shield, Languages } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, DEFAULT_PROFILE_IMAGE } from '../constants';
 import { User as UserType, Booking, Review } from '../types';
@@ -12,7 +12,7 @@ const AdminPanel: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'trainers' | 'finance' | 'users' | 'applications' | 'reviews'>('overview');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [editingUser, setEditingUser] = useState<UserType | null>(null);
-  const [editForm, setEditForm] = useState({ name: '', phone: '', bio: '', image: '', specialty: '', commissionRate: 0 });
+  const [editForm, setEditForm] = useState({ name: '', phone: '', bio: '', image: '', specialty: '', commissionRate: 0, languages: [] as string[] });
   const [isSavingUser, setIsSavingUser] = useState(false);
 
   const awaitingPaymentList = bookings.filter(b => b.status === 'trainer_completed');
@@ -62,7 +62,8 @@ const AdminPanel: React.FC = () => {
         phone: u.phone || '',
         bio: u.bio || '',
         image: u.image || '',
-        commissionRate: u.commissionRate || 0
+        commissionRate: u.commissionRate || 0,
+        languages: u.languages || []
     });
   };
 
@@ -73,7 +74,7 @@ const AdminPanel: React.FC = () => {
     try {
         const finalName = editForm.specialty ? `${editForm.name} (${editForm.specialty})` : editForm.name;
         await updateUser(editingUser.id, {
-            name: finalName, phone: editForm.phone, bio: editForm.bio, image: editForm.image, commissionRate: editForm.commissionRate
+            name: finalName, phone: editForm.phone, bio: editForm.bio, image: editForm.image, commissionRate: editForm.commissionRate, languages: editForm.languages
         });
         setEditingUser(null);
     } finally {
@@ -188,15 +189,15 @@ const AdminPanel: React.FC = () => {
                            <tr>
                               <th className="px-8 py-5">Coach Applicant</th>
                               <th className="px-8 py-5">Contact Details</th>
-                              <th className="px-8 py-5">Specialty</th>
+                              <th className="px-8 py-5">Languages</th>
                               <th className="px-8 py-5 text-right">Decision</th>
                            </tr>
                         )}
                         {activeTab === 'trainers' && (
                            <tr>
                               <th className="px-8 py-5">Professional Profile</th>
-                              <th className="px-8 py-5">Commission Rate</th>
-                              <th className="px-8 py-5">Verification</th>
+                              <th className="px-8 py-5">Linguistic Profile</th>
+                              <th className="px-8 py-5">Commission</th>
                               <th className="px-8 py-5 text-right">Management</th>
                            </tr>
                         )}
@@ -242,9 +243,16 @@ const AdminPanel: React.FC = () => {
                         ))}
                         {activeTab === 'applications' && pendingApplications.map(app => (
                             <tr key={app.id} className="hover:bg-white/5">
-                                <td className="px-8 py-5 font-black uppercase italic text-white leading-none">{cleanName(app.name)}</td>
+                                <td className="px-8 py-5">
+                                   <div className="font-black uppercase italic text-white leading-none mb-1">{cleanName(app.name)}</div>
+                                   <div className="text-[9px] text-brand font-black uppercase italic">Exp: {app.bio?.match(/Experience: (.*)/)?.[1] || 'New'}</div>
+                                </td>
                                 <td className="px-8 py-5 text-slate-400">{app.email} <br/> <span className="text-[10px]">{app.phone}</span></td>
-                                <td className="px-8 py-5"><span className="text-yellow-500 font-bold uppercase text-[10px]">{app.name.match(/\((.*)\)/)?.[1] || 'Coach'}</span></td>
+                                <td className="px-8 py-5 flex flex-wrap gap-1 max-w-[150px]">
+                                   {(app.languages || []).map(l => (
+                                      <span key={l} className="px-1.5 py-0.5 bg-white/5 text-[8px] font-black uppercase text-slate-500 rounded">{l}</span>
+                                   ))}
+                                </td>
                                 <td className="px-8 py-5 text-right flex gap-2 justify-end">
                                     <button onClick={() => handleApproveTrainer(app.id)} className="px-4 py-2 bg-brand text-dark rounded-lg text-[9px] font-black uppercase shadow-lg">Approve</button>
                                     <button onClick={() => handleRejectTrainer(app.id)} className="px-4 py-2 bg-white/5 text-slate-400 rounded-lg text-[9px] font-black uppercase hover:text-red-500 transition-all">Reject</button>
@@ -262,8 +270,14 @@ const AdminPanel: React.FC = () => {
                                     <p className="text-[9px] text-brand font-black uppercase">{tr.name.match(/\((.*)\)/)?.[1] || 'Club Professional'}</p>
                                  </div>
                               </td>
+                              <td className="px-8 py-5">
+                                 <div className="flex flex-wrap gap-1">
+                                    {(tr.languages || []).map(l => (
+                                       <span key={l} className="px-2 py-0.5 bg-brand/10 text-brand text-[8px] font-black uppercase rounded">{l}</span>
+                                    ))}
+                                 </div>
+                              </td>
                               <td className="px-8 py-5"><span className="px-2 py-1 bg-brand text-dark rounded text-[8px] font-black uppercase">{tr.commissionRate}% Share</span></td>
-                              <td className="px-8 py-5"><span className="text-slate-500 text-[10px] font-black uppercase tracking-widest italic">Verified by Admin</span></td>
                               <td className="px-8 py-5 text-right"><button onClick={() => handleEditUserClick(tr)} className="px-4 py-2 bg-white/10 text-white rounded-lg text-[9px] font-black uppercase flex items-center gap-2 hover:bg-brand hover:text-dark transition-all ml-auto"><Eye size={14} /> Profile</button></td>
                            </tr>
                         ))}
@@ -333,7 +347,7 @@ const AdminPanel: React.FC = () => {
                         <div><label className="text-[10px] font-black uppercase text-slate-600 ml-2">Specialty</label><input type="text" className="w-full bg-dark/50 border border-white/10 rounded-xl px-4 py-3 text-white font-bold outline-none focus:border-brand" value={editForm.specialty} onChange={e => setEditForm({...editForm, specialty: e.target.value})} /></div>
                     </div>
                     <div className="p-6 bg-brand/5 border border-brand/20 rounded-2xl">
-                        <div className="flex items-center justify-between mb-4"><label className="text-[10px] font-black uppercase text-brand">Club Commission Share</label><span className="text-[10px] font-black text-slate-500">Current: {editingUser.commissionRate}%</span></div>
+                        <div className="flex items-center justify-between mb-4"><label className="text-[10px] font-black uppercase text-brand">Club Commission Share</label><span className="text-[10px] font-black text-slate-500">Current: {editingUser.commissionRate || 0}%</span></div>
                         <div className="relative"><input type="number" min="0" max="100" className="w-full bg-dark/50 border border-white/10 rounded-xl px-4 py-4 text-white font-black text-xl outline-none focus:border-brand pr-12" value={editForm.commissionRate} onChange={e => setEditForm({...editForm, commissionRate: parseInt(e.target.value) || 0})} /><Percent size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-brand" /></div>
                     </div>
                     <div><label className="text-[10px] font-black uppercase text-slate-600 ml-2">Public Image Link</label><input type="text" className="w-full bg-dark/50 border border-white/10 rounded-xl px-4 py-3 text-white font-bold outline-none focus:border-brand" value={editForm.image} onChange={e => setEditForm({...editForm, image: e.target.value})} /></div>

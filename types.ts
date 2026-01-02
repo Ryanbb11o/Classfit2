@@ -13,6 +13,7 @@ export interface User {
   role: 'user' | 'admin' | 'trainer_pending' | 'trainer';
   approvedBy?: string; 
   commissionRate?: number; 
+  languages?: string[]; // New field for coaches
 }
 
 export interface Trainer {
@@ -26,6 +27,7 @@ export interface Trainer {
   availability: string[]; 
   commissionRate?: number;
   approvedBy?: string;
+  languages?: string[];
 }
 
 export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'trainer_completed';

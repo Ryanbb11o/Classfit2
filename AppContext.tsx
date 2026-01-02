@@ -38,6 +38,7 @@ interface AppContextType {
     certs?: string;
     social?: string;
     motivation?: string;
+    languages?: string[];
   }) => Promise<{ success: boolean; msg?: string }>;
   requestTrainerUpgrade: (userId: string, currentName: string, phone: string, specialty: string) => Promise<{ success: boolean; msg?: string }>;
   updateUser: (id: string, updates: Partial<User>) => Promise<void>;
@@ -168,7 +169,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           bio: u.bio,     
           joinedDate: u.joined_date || new Date().toISOString(),
           approvedBy: u.approved_by,
-          commissionRate: u.commission_rate || 0
+          commissionRate: u.commission_rate || 0,
+          languages: u.languages || []
         })));
       }
     } catch (e) {
@@ -286,6 +288,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (updates.bio) dbUpdates.bio = updates.bio;
     if (updates.commissionRate !== undefined) dbUpdates.commission_rate = updates.commissionRate;
     if (updates.approvedBy !== undefined) dbUpdates.approved_by = updates.approvedBy;
+    if (updates.languages) dbUpdates.languages = updates.languages;
     
     const { error } = await supabase.from('users').update(dbUpdates).eq('id', id);
     if (error) throw error;
@@ -324,7 +327,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           bio: data.bio,
           joinedDate: data.joined_date,
           approvedBy: data.approved_by,
-          commissionRate: data.commission_rate || 0
+          commissionRate: data.commission_rate || 0,
+          languages: data.languages || []
         };
         setCurrentUser(user);
         localStorage.setItem('classfit_user', JSON.stringify(user));
@@ -337,7 +341,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (isDemoMode) {
        const mockUser: User = { 
         id: Math.random().toString(36).substr(2, 9), 
-        name, email, password: pass, role: 'user', joinedDate: new Date().toISOString(), image: DEFAULT_PROFILE_IMAGE
+        name, email, password: pass, role: 'user', joinedDate: new Date().toISOString(), image: DEFAULT_PROFILE_IMAGE, languages: []
        };
        const newUsers = [...users, mockUser];
        localStorage.setItem('classfit_users', JSON.stringify(newUsers));
@@ -363,6 +367,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     certs?: string;
     social?: string;
     motivation?: string;
+    languages?: string[];
   }): Promise<{ success: boolean; msg?: string }> => {
     const fullName = `${data.name} (${data.specialty})`;
     const bioText = `Experience: ${data.experience || 'N/A'}\nCertifications: ${data.certs || 'N/A'}\nSocial: ${data.social || 'N/A'}\nMotivation: ${data.motivation || 'N/A'}`;
@@ -370,7 +375,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (isDemoMode) {
        const newUser: User = { 
         id: Math.random().toString(36).substr(2, 9), 
-        name: fullName, email: data.email, password: data.pass, phone: data.phone, bio: bioText, role: 'trainer_pending', joinedDate: new Date().toISOString(), image: DEFAULT_PROFILE_IMAGE
+        name: fullName, email: data.email, password: data.pass, phone: data.phone, bio: bioText, role: 'trainer_pending', joinedDate: new Date().toISOString(), image: DEFAULT_PROFILE_IMAGE, languages: data.languages || []
        };
        setUsers([...users, newUser]);
        return { success: true };
@@ -381,7 +386,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       phone: data.phone, 
       password: data.pass, 
       bio: bioText,
-      role: 'trainer_pending' 
+      role: 'trainer_pending',
+      languages: data.languages || []
     }]);
     if (error) return { success: false, msg: error.message };
     await refreshData();

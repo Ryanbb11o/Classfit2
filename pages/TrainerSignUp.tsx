@@ -1,8 +1,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-// Added Zap to imports from lucide-react
-import { Dumbbell, AlertCircle, CheckCircle, Briefcase, User, Mail, Phone, Lock, ArrowRight, Instagram, Award, History, Heart, Sparkles, X, ChevronRight, Loader2, Zap } from 'lucide-react';
+import { Dumbbell, AlertCircle, CheckCircle, Briefcase, User, Mail, Phone, Lock, ArrowRight, Instagram, Award, History, Heart, Sparkles, X, ChevronRight, Loader2, Zap, Plus, Minus, Languages, Check } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS } from '../constants';
 
@@ -16,18 +15,36 @@ const TrainerSignUp: React.FC = () => {
     email: '',
     phone: '',
     specialty: '',
-    experience: '',
+    experience: '0',
     certs: '',
     social: '',
     motivation: '',
     password: ''
   });
+
+  const [selectedLangs, setSelectedLangs] = useState<string[]>(['Bulgarian']);
   
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
 
+  const languageOptions = ['Bulgarian', 'English', 'Russian', 'German', 'Turkish', 'Other'];
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const toggleLanguage = (lang: string) => {
+    setSelectedLangs(prev => 
+      prev.includes(lang) ? prev.filter(l => l !== lang) : [...prev, lang]
+    );
+  };
+
+  const handleExperienceChange = (type: 'inc' | 'dec') => {
+    setForm(prev => {
+      const current = parseInt(prev.experience) || 0;
+      const next = type === 'inc' ? current + 1 : Math.max(0, current - 1);
+      return { ...prev, experience: next.toString() };
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -44,20 +61,15 @@ const TrainerSignUp: React.FC = () => {
           experience: form.experience,
           certs: form.certs,
           social: form.social,
-          motivation: form.motivation
+          motivation: form.motivation,
+          languages: selectedLangs
         });
         
         if (success) {
             setStatus('success');
         } else {
             setStatus('error');
-            if (msg?.includes('check constraint')) {
-                setErrorMsg('Database connectivity issue. Admin required.');
-            } else if (msg?.includes('unique constraint')) {
-                setErrorMsg(language === 'bg' ? 'Имейлът вече е регистриран.' : 'Email already in use.');
-            } else {
-                setErrorMsg(msg || 'Registration failed.');
-            }
+            setErrorMsg(msg || 'Registration failed.');
         }
     } catch (err) {
         setStatus('error');
@@ -94,11 +106,11 @@ const TrainerSignUp: React.FC = () => {
   return (
     <div className="fixed inset-0 z-[50] bg-dark flex flex-col md:flex-row overflow-hidden font-sans">
       {/* LEFT SIDE: IMMERSIVE BRANDING */}
-      <div className="hidden md:flex md:w-[45%] lg:w-[40%] relative overflow-hidden bg-dark p-20 flex-col justify-between">
+      <div className="hidden md:flex md:w-[40%] lg:w-[35%] relative overflow-hidden bg-dark p-20 flex-col justify-between border-r border-white/5">
          <div className="absolute inset-0 z-0">
             <img 
                src="https://images.unsplash.com/photo-1593079831268-3381b0db4a77?q=80&w=2069&auto=format&fit=crop" 
-               className="w-full h-full object-cover grayscale opacity-30 scale-110"
+               className="w-full h-full object-cover grayscale opacity-30 scale-110 blur-sm"
                alt="Gym"
             />
             <div className="absolute inset-0 bg-gradient-to-tr from-dark via-dark/80 to-transparent"></div>
@@ -110,34 +122,28 @@ const TrainerSignUp: React.FC = () => {
                <X size={18} className="text-slate-600 group-hover:text-white transition-colors" />
             </button>
 
-            <h1 className="text-6xl lg:text-7xl font-black uppercase italic text-white leading-[0.85] tracking-tighter mb-8">
-               JOIN THE <br/> <span className="text-brand">ELITE</span> TEAM
+            <h1 className="text-7xl font-black uppercase italic text-white leading-[0.8] tracking-tighter mb-8">
+               JOIN THE <br/> <span className="text-brand">ELITE</span> <br/> TEAM
             </h1>
-            <p className="text-slate-400 text-lg font-medium italic max-w-sm leading-relaxed mb-12">
+            <p className="text-slate-400 text-lg font-medium italic max-w-xs leading-relaxed mb-12">
                {language === 'bg' 
                  ? 'Търсим най-добрите професионалисти във Варна. Развивайте кариерата си при нас.' 
                  : 'We are looking for the absolute best professionals in Varna. Grow your career with us.'}
             </p>
 
-            <div className="space-y-6">
-               <div className="flex items-center gap-4 text-white group">
-                  <div className="w-10 h-10 rounded-xl bg-brand/10 text-brand flex items-center justify-center group-hover:bg-brand group-hover:text-dark transition-all">
-                     <Zap size={18} fill="currentColor" />
+            <div className="space-y-4">
+               {[
+                 { icon: Zap, text: 'High-Traffic Base' },
+                 { icon: Award, text: 'Club Benefits' },
+                 { icon: Briefcase, text: 'Professional Growth' }
+               ].map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-4 text-white group">
+                    <div className="w-10 h-10 rounded-xl bg-brand/10 text-brand flex items-center justify-center group-hover:bg-brand group-hover:text-dark transition-all">
+                       <item.icon size={18} fill="currentColor" />
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-widest italic">{item.text}</span>
                   </div>
-                  <span className="text-[10px] font-black uppercase tracking-widest italic">High-Traffic Facility</span>
-               </div>
-               <div className="flex items-center gap-4 text-white group">
-                  <div className="w-10 h-10 rounded-xl bg-brand/10 text-brand flex items-center justify-center group-hover:bg-brand group-hover:text-dark transition-all">
-                     <Award size={18} fill="currentColor" />
-                  </div>
-                  <span className="text-[10px] font-black uppercase tracking-widest italic">Professional Growth</span>
-               </div>
-               <div className="flex items-center gap-4 text-white group">
-                  <div className="w-10 h-10 rounded-xl bg-brand/10 text-brand flex items-center justify-center group-hover:bg-brand group-hover:text-dark transition-all">
-                     <History size={18} fill="currentColor" />
-                  </div>
-                  <span className="text-[10px] font-black uppercase tracking-widest italic">Full Digital Schedule</span>
-               </div>
+               ))}
             </div>
          </div>
 
@@ -147,115 +153,144 @@ const TrainerSignUp: React.FC = () => {
          </div>
       </div>
 
-      {/* RIGHT SIDE: SCROLLABLE APPLICATION FORM */}
-      <div className="flex-1 overflow-y-auto bg-surface/20 backdrop-blur-3xl p-8 md:p-16 lg:p-24 custom-scrollbar">
-         <div className="max-w-2xl mx-auto">
+      {/* RIGHT SIDE: FULL APPLICATION FORM */}
+      <div className="flex-1 overflow-y-auto bg-surface/10 backdrop-blur-3xl p-8 md:p-16 lg:p-24 custom-scrollbar">
+         <div className="max-w-3xl mx-auto">
             <div className="md:hidden flex justify-between items-center mb-12">
                <span className="text-xl font-black italic text-white">CLASS<span className="text-brand">FIT</span></span>
                <button onClick={() => navigate('/')} className="p-2 bg-white/5 rounded-full text-slate-400"><X size={20}/></button>
             </div>
 
-            <div className="mb-12">
-               <div className="inline-flex items-center gap-3 bg-brand text-dark px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest mb-6">
+            <div className="mb-16">
+               <div className="inline-flex items-center gap-3 bg-brand text-dark px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest mb-6 shadow-xl shadow-brand/20">
                   <Briefcase size={12} /> Coach Application Portal
                </div>
-               <h2 className="text-4xl font-black uppercase italic text-white tracking-tighter mb-4 leading-none">PROFESSIONAL DETAILS</h2>
+               <h2 className="text-5xl font-black uppercase italic text-white tracking-tighter mb-4 leading-none">PROFESSIONAL DETAILS</h2>
                <p className="text-slate-500 font-medium text-sm italic">Tell us about your expertise and why you belong at ClassFit.</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-12">
+            <form onSubmit={handleSubmit} className="space-y-16">
                {status === 'error' && (
-                  <div className="bg-red-500/10 text-red-500 p-6 rounded-2xl flex items-center gap-3 text-xs font-black uppercase tracking-wide border border-red-500/20 animate-in fade-in zoom-in-95">
+                  <div className="bg-red-500/10 text-red-500 p-6 rounded-3xl flex items-center gap-3 text-xs font-black uppercase tracking-wide border border-red-500/20 animate-in fade-in zoom-in-95">
                      <AlertCircle size={20} /> {errorMsg}
                   </div>
                )}
 
                {/* SECTION 1: IDENTITY */}
-               <div className="space-y-6">
-                  <div className="flex items-center gap-3 border-b border-white/5 pb-3">
-                     <User size={14} className="text-brand" />
-                     <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">Identity & Access</h3>
+               <div className="space-y-8">
+                  <div className="flex items-center gap-4 border-b border-white/5 pb-4">
+                     <div className="w-8 h-8 rounded-lg bg-brand/10 text-brand flex items-center justify-center"><User size={14} /></div>
+                     <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 italic">Identity & Access</h3>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                     <div className="space-y-2">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-600 ml-2">Full Legal Name</label>
-                        <input name="name" type="text" required value={form.name} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white font-bold outline-none focus:border-brand transition-all placeholder-slate-700" placeholder="e.g. Michael Jordan" />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                     <div className="space-y-3">
+                        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">Full Legal Name</label>
+                        <input name="name" type="text" required value={form.name} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-white font-bold outline-none focus:border-brand transition-all placeholder-slate-800" placeholder="Michael Jordan" />
                      </div>
-                     <div className="space-y-2">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-600 ml-2">Professional Email</label>
-                        <input name="email" type="email" required value={form.email} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white font-bold outline-none focus:border-brand transition-all placeholder-slate-700" placeholder="coach@classfit.bg" />
+                     <div className="space-y-3">
+                        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">Email Address</label>
+                        <input name="email" type="email" required value={form.email} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-white font-bold outline-none focus:border-brand transition-all placeholder-slate-800" placeholder="coach@classfit.bg" />
                      </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                     <div className="space-y-2">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-600 ml-2">Secure Password</label>
-                        <input name="password" type="password" required value={form.password} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white font-bold outline-none focus:border-brand transition-all placeholder-slate-700" placeholder="••••••••" />
+                     <div className="space-y-3">
+                        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">Password</label>
+                        <input name="password" type="password" required value={form.password} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-white font-bold outline-none focus:border-brand transition-all placeholder-slate-800" placeholder="••••••••" />
                      </div>
-                     <div className="space-y-2">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-600 ml-2">Contact Phone</label>
-                        <input name="phone" type="tel" required value={form.phone} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white font-bold outline-none focus:border-brand transition-all placeholder-slate-700" placeholder="+359..." />
+                     <div className="space-y-3">
+                        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">Phone Number</label>
+                        <input name="phone" type="tel" required value={form.phone} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-white font-bold outline-none focus:border-brand transition-all placeholder-slate-800" placeholder="+359..." />
                      </div>
                   </div>
                </div>
 
                {/* SECTION 2: EXPERTISE */}
-               <div className="space-y-6">
-                  <div className="flex items-center gap-3 border-b border-white/5 pb-3">
-                     <Dumbbell size={14} className="text-brand" />
-                     <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">Expertise & Skills</h3>
+               <div className="space-y-8">
+                  <div className="flex items-center gap-4 border-b border-white/5 pb-4">
+                     <div className="w-8 h-8 rounded-lg bg-brand/10 text-brand flex items-center justify-center"><Dumbbell size={14} /></div>
+                     <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 italic">Expertise & Experience</h3>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                     <div className="space-y-2">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-600 ml-2">Primary Specialty</label>
-                        <input name="specialty" type="text" required value={form.specialty} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white font-bold outline-none focus:border-brand transition-all placeholder-slate-700" placeholder="e.g. Powerlifting, Yoga" />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                     <div className="space-y-3">
+                        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">Primary Coaching Discipline</label>
+                        <input name="specialty" type="text" required value={form.specialty} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-white font-bold outline-none focus:border-brand transition-all placeholder-slate-800" placeholder="Powerlifting, CrossFit, Yoga..." />
                      </div>
-                     <div className="space-y-2">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-600 ml-2">Years of Experience</label>
-                        <input name="experience" type="text" value={form.experience} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white font-bold outline-none focus:border-brand transition-all placeholder-slate-700" placeholder="e.g. 5 Years" />
+                     <div className="space-y-3">
+                        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">Years of Experience</label>
+                        <div className="relative group flex items-center">
+                           <button type="button" onClick={() => handleExperienceChange('dec')} className="absolute left-3 w-10 h-10 rounded-xl bg-white/5 text-slate-500 flex items-center justify-center hover:bg-brand hover:text-dark transition-all z-10"><Minus size={16} /></button>
+                           <input type="number" value={form.experience} readOnly className="w-full bg-white/5 border border-white/10 rounded-2xl px-14 py-5 text-white font-black text-xl outline-none text-center" />
+                           <span className="absolute right-16 text-[9px] font-black uppercase tracking-widest text-slate-600 pointer-events-none italic">Years</span>
+                           <button type="button" onClick={() => handleExperienceChange('inc')} className="absolute right-3 w-10 h-10 rounded-xl bg-white/5 text-slate-500 flex items-center justify-center hover:bg-brand hover:text-dark transition-all z-10"><Plus size={16} /></button>
+                        </div>
                      </div>
                   </div>
-                  <div className="space-y-2">
-                     <label className="text-[9px] font-black uppercase tracking-widest text-slate-600 ml-2">Certifications & Education</label>
-                     <input name="certs" type="text" value={form.certs} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white font-bold outline-none focus:border-brand transition-all placeholder-slate-700" placeholder="e.g. NSA Bulgarian Certification, ISSA..." />
+                  
+                  {/* LANGUAGE SELECTION */}
+                  <div className="space-y-4">
+                     <label className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">
+                        <Languages size={14} className="text-brand" /> Languages Spoken
+                     </label>
+                     <div className="flex flex-wrap gap-3">
+                        {languageOptions.map(lang => (
+                           <button 
+                              key={lang} 
+                              type="button" 
+                              onClick={() => toggleLanguage(lang)}
+                              className={`px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${
+                                 selectedLangs.includes(lang) 
+                                 ? 'bg-brand text-dark border-brand shadow-lg shadow-brand/10' 
+                                 : 'bg-white/5 text-slate-400 border-white/5 hover:border-brand/40'
+                              }`}
+                           >
+                              {selectedLangs.includes(lang) && <Check size={12} className="inline mr-2" />}
+                              {lang}
+                           </button>
+                        ))}
+                     </div>
+                  </div>
+
+                  <div className="space-y-3">
+                     <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">Certifications & Education</label>
+                     <textarea name="certs" rows={3} value={form.certs} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-white font-medium italic outline-none focus:border-brand transition-all placeholder-slate-800 resize-none" placeholder="List your professional certifications..." />
                   </div>
                </div>
 
                {/* SECTION 3: SOCIAL & VISION */}
-               <div className="space-y-6">
-                  <div className="flex items-center gap-3 border-b border-white/5 pb-3">
-                     <Sparkles size={14} className="text-brand" />
-                     <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">Public Presence & Vision</h3>
+               <div className="space-y-8">
+                  <div className="flex items-center gap-4 border-b border-white/5 pb-4">
+                     <div className="w-8 h-8 rounded-lg bg-brand/10 text-brand flex items-center justify-center"><Sparkles size={14} /></div>
+                     <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 italic">Motivation & Reach</h3>
                   </div>
-                  <div className="space-y-2">
-                     <label className="text-[9px] font-black uppercase tracking-widest text-slate-600 ml-2">Instagram / LinkedIn Link</label>
+                  <div className="space-y-3">
+                     <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">Social Profile Link (IG/LI)</label>
                      <div className="relative">
-                        <Instagram size={16} className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-600" />
-                        <input name="social" type="text" value={form.social} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl pl-14 pr-6 py-4 text-white font-bold outline-none focus:border-brand transition-all placeholder-slate-700" placeholder="instagram.com/yourprofile" />
+                        <Instagram size={18} className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-700" />
+                        <input name="social" type="text" value={form.social} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl pl-16 pr-6 py-5 text-white font-bold outline-none focus:border-brand transition-all placeholder-slate-800" placeholder="instagram.com/coach_profile" />
                      </div>
                   </div>
-                  <div className="space-y-2">
-                     <label className="text-[9px] font-black uppercase tracking-widest text-slate-600 ml-2">Why ClassFit? (Motivation)</label>
-                     <textarea name="motivation" required rows={4} value={form.motivation} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white font-medium italic outline-none focus:border-brand transition-all placeholder-slate-700 resize-none" placeholder="Explain your coaching philosophy and why you want to join our facility..." />
+                  <div className="space-y-3">
+                     <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">Why join the ClassFit Team?</label>
+                     <textarea name="motivation" required rows={5} value={form.motivation} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-white font-medium italic outline-none focus:border-brand transition-all placeholder-slate-800 resize-none" placeholder="Describe your philosophy and what you bring to our club..." />
                   </div>
                </div>
 
-               <div className="pt-10 flex flex-col md:flex-row items-center gap-8">
+               <div className="pt-10 flex flex-col md:flex-row items-center gap-10">
                   <button 
                      type="submit"
                      disabled={status === 'loading'}
-                     className="w-full md:w-auto px-20 py-6 bg-brand text-dark rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-white transition-all shadow-2xl shadow-brand/20 flex items-center justify-center gap-3 disabled:opacity-50"
+                     className="w-full md:w-auto px-24 py-7 bg-brand text-dark rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-white transition-all shadow-2xl shadow-brand/20 flex items-center justify-center gap-3 disabled:opacity-50"
                   >
-                     {status === 'loading' ? <Loader2 className="animate-spin" size={18} /> : <>Submit Application <ChevronRight size={18} /></>}
+                     {status === 'loading' ? <Loader2 className="animate-spin" size={20} /> : <>Submit Application <ChevronRight size={20} /></>}
                   </button>
-                  <p className="text-[10px] text-slate-600 font-bold uppercase tracking-widest italic text-center md:text-left">
-                     {language === 'bg' ? 'До 48 часа за разглеждане' : '48h Review Policy'}
+                  <p className="text-[10px] text-slate-600 font-bold uppercase tracking-widest italic text-center md:text-left leading-loose">
+                     {language === 'bg' ? 'До 48 часа за преглед на заявката.' : 'Review period: 48 Business Hours.'} <br/>
+                     <span className="text-slate-700">All data is kept strictly professional.</span>
                   </p>
                </div>
             </form>
             
-            <div className="mt-20 pt-10 border-t border-white/5 flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-500">
-               <Link to="/login" className="hover:text-white transition-colors">Already have account? Login</Link>
-               <Link to="/" className="hover:text-white transition-colors">ClassFit Base</Link>
+            <div className="mt-24 pt-10 border-t border-white/5 flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-600">
+               <Link to="/login" className="hover:text-white transition-colors">Existing Account Login</Link>
+               <Link to="/" className="hover:text-white transition-colors tracking-[0.4em]">ClassFit Base</Link>
             </div>
          </div>
       </div>
