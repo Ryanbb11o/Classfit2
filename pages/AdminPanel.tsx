@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { LayoutDashboard, ListFilter, MessageSquare, Briefcase, UserCheck, FileSpreadsheet, Users, RefreshCw, Star, Trash2, Percent, Eye, X, Save, Loader2, TrendingUp, QrCode, Calendar, User, Mail, Shield, Languages } from 'lucide-react';
+import { LayoutDashboard, ListFilter, MessageSquare, Briefcase, UserCheck, FileSpreadsheet, Users, RefreshCw, Star, Trash2, Percent, Eye, X, Save, Loader2, TrendingUp, QrCode, Calendar, User, Mail, Shield, Languages, Check } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, DEFAULT_PROFILE_IMAGE } from '../constants';
 import { User as UserType, Booking, Review } from '../types';
@@ -14,6 +14,8 @@ const AdminPanel: React.FC = () => {
   const [editingUser, setEditingUser] = useState<UserType | null>(null);
   const [editForm, setEditForm] = useState({ name: '', phone: '', bio: '', image: '', specialty: '', commissionRate: 0, languages: [] as string[] });
   const [isSavingUser, setIsSavingUser] = useState(false);
+
+  const languageOptions = ['Bulgarian', 'English', 'Russian', 'German', 'Turkish', 'Other'];
 
   const awaitingPaymentList = bookings.filter(b => b.status === 'trainer_completed');
   const activeTrainers = users.filter(u => u.role === 'trainer');
@@ -67,6 +69,15 @@ const AdminPanel: React.FC = () => {
     });
   };
 
+  const toggleLanguage = (lang: string) => {
+    setEditForm(prev => ({
+        ...prev,
+        languages: prev.languages.includes(lang) 
+            ? prev.languages.filter(l => l !== lang) 
+            : [...prev.languages, lang]
+    }));
+  };
+
   const handleSaveUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingUser) return;
@@ -74,7 +85,12 @@ const AdminPanel: React.FC = () => {
     try {
         const finalName = editForm.specialty ? `${editForm.name} (${editForm.specialty})` : editForm.name;
         await updateUser(editingUser.id, {
-            name: finalName, phone: editForm.phone, bio: editForm.bio, image: editForm.image, commissionRate: editForm.commissionRate, languages: editForm.languages
+            name: finalName, 
+            phone: editForm.phone, 
+            bio: editForm.bio, 
+            image: editForm.image, 
+            commissionRate: editForm.commissionRate, 
+            languages: editForm.languages
         });
         setEditingUser(null);
     } finally {
@@ -346,6 +362,30 @@ const AdminPanel: React.FC = () => {
                         <div><label className="text-[10px] font-black uppercase text-slate-600 ml-2">Trainer Name</label><input type="text" className="w-full bg-dark/50 border border-white/10 rounded-xl px-4 py-3 text-white font-bold outline-none focus:border-brand" value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})} /></div>
                         <div><label className="text-[10px] font-black uppercase text-slate-600 ml-2">Specialty</label><input type="text" className="w-full bg-dark/50 border border-white/10 rounded-xl px-4 py-3 text-white font-bold outline-none focus:border-brand" value={editForm.specialty} onChange={e => setEditForm({...editForm, specialty: e.target.value})} /></div>
                     </div>
+                    
+                    <div className="space-y-4">
+                        <label className="flex items-center gap-2 text-[10px] font-black uppercase text-brand tracking-widest ml-2">
+                           <Languages size={14} /> Coach Languages
+                        </label>
+                        <div className="flex flex-wrap gap-2">
+                           {languageOptions.map(lang => (
+                              <button 
+                                 key={lang} 
+                                 type="button" 
+                                 onClick={() => toggleLanguage(lang)}
+                                 className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border ${
+                                    editForm.languages.includes(lang) 
+                                    ? 'bg-brand text-dark border-brand shadow-lg shadow-brand/10' 
+                                    : 'bg-white/5 text-slate-400 border-white/5 hover:border-brand/40'
+                                 }`}
+                              >
+                                 {editForm.languages.includes(lang) && <Check size={10} className="inline mr-1" />}
+                                 {lang}
+                              </button>
+                           ))}
+                        </div>
+                    </div>
+
                     <div className="p-6 bg-brand/5 border border-brand/20 rounded-2xl">
                         <div className="flex items-center justify-between mb-4"><label className="text-[10px] font-black uppercase text-brand">Club Commission Share</label><span className="text-[10px] font-black text-slate-500">Current: {editingUser.commissionRate || 0}%</span></div>
                         <div className="relative"><input type="number" min="0" max="100" className="w-full bg-dark/50 border border-white/10 rounded-xl px-4 py-4 text-white font-black text-xl outline-none focus:border-brand pr-12" value={editForm.commissionRate} onChange={e => setEditForm({...editForm, commissionRate: parseInt(e.target.value) || 0})} /><Percent size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-brand" /></div>

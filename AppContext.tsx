@@ -54,6 +54,14 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+// Helper to extract specific sections from the bio string
+const parseBioField = (bio: string | undefined, key: string) => {
+  if (!bio) return '';
+  const regex = new RegExp(`${key}: (.*)(\\n|$)`, 'i');
+  const match = bio.match(regex);
+  return match ? match[1].trim() : '';
+};
+
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [language, setLanguage] = useState<Language>('bg');
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -114,7 +122,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
 
     try {
-      // 1. Fetch Bookings
       const { data: bData } = await supabase.from('bookings').select('*').order('created_at', { ascending: false });
       if (bData) {
         setBookings(bData.map((b: any) => ({
@@ -138,7 +145,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         })));
       }
 
-      // 2. Fetch Reviews
       const { data: rData } = await supabase.from('reviews').select('*').order('created_at', { ascending: false });
       if (rData) {
         setReviews(rData.map((r: any) => ({
@@ -155,23 +161,26 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         })));
       }
       
-      // 3. Fetch Users
       const { data: uData } = await supabase.from('users').select('*').order('joined_date', { ascending: false });
       if (uData) {
-        setUsers(uData.map((u: any) => ({
-          id: String(u.id),
-          name: u.name || 'User',
-          email: u.email || '',
-          password: u.password || '',
-          role: u.role || 'user',
-          phone: u.phone,
-          image: u.image || DEFAULT_PROFILE_IMAGE, 
-          bio: u.bio,     
-          joinedDate: u.joined_date || new Date().toISOString(),
-          approvedBy: u.approved_by,
-          commissionRate: u.commission_rate || 0,
-          languages: u.languages || []
-        })));
+        setUsers(uData.map((u: any) => {
+          const langString = parseBioField(u.bio, 'Languages');
+          const langs = langString ? langString.split(',').map(s => s.trim()) : [];
+          return {
+            id: String(u.id),
+            name: u.name || 'User',
+            email: u.email || '',
+            password: u.password || '',
+            role: u.role || 'user',
+            phone: u.phone,
+            image: u.image || DEFAULT_PROFILE_IMAGE, 
+            bio: u.bio,     
+            joinedDate: u.joined_date || new Date().toISOString(),
+            approvedBy: u.approved_by,
+            commissionRate: u.commission_rate || 0,
+            languages: langs
+          };
+        }));
       }
     } catch (e) {
       console.error("Refresh failed:", e);
@@ -274,21 +283,30 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const updateUser = async (id: string, updates: Partial<User>) => {
+    // Bio handling: If languages are updated, we must sync them into the bio string fallback
+    let finalBio = updates.bio;
+    if (updates.languages) {
+        const user = users.find(u => u.id === id);
+        const currentBio = updates.bio || user?.bio || '';
+        const baseBio = currentBio.replace(/Languages: .*/i, '').trim();
+        finalBio = `${baseBio}\nLanguages: ${updates.languages.join(', ')}`;
+    }
+
     if (isDemoMode) {
-        const newUsers = users.map(u => u.id === id ? { ...u, ...updates } : u);
+        const newUsers = users.map(u => u.id === id ? { ...u, ...updates, bio: finalBio } : u);
         setUsers(newUsers);
         localStorage.setItem('classfit_users', JSON.stringify(newUsers));
         return;
     }
+
     const dbUpdates: any = {};
     if (updates.role) dbUpdates.role = updates.role;
     if (updates.name) dbUpdates.name = updates.name;
     if (updates.phone) dbUpdates.phone = updates.phone;
     if (updates.image) dbUpdates.image = updates.image;
-    if (updates.bio) dbUpdates.bio = updates.bio;
+    if (finalBio !== undefined) dbUpdates.bio = finalBio;
     if (updates.commissionRate !== undefined) dbUpdates.commission_rate = updates.commissionRate;
     if (updates.approvedBy !== undefined) dbUpdates.approved_by = updates.approvedBy;
-    if (updates.languages) dbUpdates.languages = updates.languages;
     
     const { error } = await supabase.from('users').update(dbUpdates).eq('id', id);
     if (error) throw error;
@@ -316,6 +334,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
     const { data } = await supabase.from('users').select('*').eq('email', email).eq('password', pass).maybeSingle();
     if (data) {
+        const langString = parseBioField(data.bio, 'Languages');
         const user: User = {
           id: String(data.id),
           name: data.name,
@@ -328,7 +347,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           joinedDate: data.joined_date,
           approvedBy: data.approved_by,
           commissionRate: data.commission_rate || 0,
-          languages: data.languages || []
+          languages: langString ? langString.split(',').map(s => s.trim()) : []
         };
         setCurrentUser(user);
         localStorage.setItem('classfit_user', JSON.stringify(user));
@@ -353,7 +372,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const { error } = await supabase.from('users').insert([{ name, email, password: pass, role: 'user' }]);
     if (error) throw error;
     await refreshData();
-    // After registration, log the user in
     return login(email, pass);
   };
 
@@ -370,7 +388,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     languages?: string[];
   }): Promise<{ success: boolean; msg?: string }> => {
     const fullName = `${data.name} (${data.specialty})`;
-    const bioText = `Experience: ${data.experience || 'N/A'}\nCertifications: ${data.certs || 'N/A'}\nSocial: ${data.social || 'N/A'}\nMotivation: ${data.motivation || 'N/A'}`;
+    const bioText = `Experience: ${data.experience || 'N/A'}\nCertifications: ${data.certs || 'N/A'}\nSocial: ${data.social || 'N/A'}\nMotivation: ${data.motivation || 'N/A'}\nLanguages: ${data.languages?.join(', ') || 'Bulgarian'}`;
     
     if (isDemoMode) {
        const newUser: User = { 
@@ -386,8 +404,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       phone: data.phone, 
       password: data.pass, 
       bio: bioText,
-      role: 'trainer_pending',
-      languages: data.languages || []
+      role: 'trainer_pending'
     }]);
     if (error) return { success: false, msg: error.message };
     await refreshData();
