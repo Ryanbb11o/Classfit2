@@ -1,11 +1,11 @@
 
 import React, { useState, useMemo } from 'react';
-import { Calendar, Clock, CheckCircle, Timer, XCircle, Trash2, CheckCircle2, User as UserIcon, Mail, CalendarPlus, Phone, MapPin, ChevronRight, LogOut, Dumbbell, Activity, AlertCircle, Briefcase, Loader2, X, MapPinned, CreditCard, Banknote, Timer as ClockIcon, Star, CheckSquare, Sparkles } from 'lucide-react';
+import { Calendar, Clock, CheckCircle, Timer, XCircle, Trash2, CheckCircle2, User as UserIcon, Mail, CalendarPlus, Phone, MapPin, ChevronRight, LogOut, Dumbbell, Activity, AlertCircle, Briefcase, Loader2, X, MapPinned, CreditCard, Banknote, Timer as ClockIcon, Star, CheckSquare, Sparkles, Lightbulb, Info } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, getTrainers, DEFAULT_PROFILE_IMAGE, getTrainerReviews } from '../constants';
 import { useNavigate } from 'react-router-dom';
 import { Trainer, Booking } from '../types';
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 
 const ReviewModal: React.FC<{ 
   booking: Booking | null; 
@@ -17,17 +17,17 @@ const ReviewModal: React.FC<{
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [isAiEnhanced, setIsAiEnhanced] = useState(false);
+  const [aiInsights, setAiInsights] = useState<string | null>(null);
 
   if (!booking) return null;
 
   const handleAiEnhance = async () => {
     if (!comment.trim()) return;
     
-    // Safety check for the API key required by system instructions
     const apiKey = process.env.API_KEY;
     if (!apiKey) {
-      console.error("AI Error: API_KEY is missing. Add it to Vercel Environment Variables.");
-      alert("AI Enhancement requires an API Key. Please check the console or Vercel settings.");
+      console.error("AI Error: API_KEY is missing.");
+      alert("AI Enhancement requires an API Key. Please check the Vercel environment variables.");
       return;
     }
 
@@ -36,19 +36,36 @@ const ReviewModal: React.FC<{
       const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
-        contents: `You are a helpful assistant for ClassFit Gym in Varna. Enhance the following customer review to be more professional and descriptive, but STRICTLY maintain the original sentiment. Original text: "${comment}"`,
+        contents: `Review to enhance: "${comment}"`,
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              polishedReview: {
+                type: Type.STRING,
+                description: "The straight, enhanced review text ONLY. No intros or conversational filler.",
+              },
+              insights: {
+                type: Type.STRING,
+                description: "A brief professional explanation of what was improved or suggestions for the user.",
+              }
+            },
+            required: ["polishedReview", "insights"]
+          },
+          systemInstruction: "You are a professional review editor for ClassFit Gym. Your goal is to rewrite customer reviews to be more engaging and professional while keeping the original meaning. You MUST return a JSON object with 'polishedReview' and 'insights'. DO NOT talk back to the user in the 'polishedReview' field."
+        }
       });
       
-      const enhancedText = response.text;
-      if (enhancedText) {
-        setComment(enhancedText.trim());
+      const result = JSON.parse(response.text || '{}');
+      if (result.polishedReview) {
+        setComment(result.polishedReview);
+        setAiInsights(result.insights);
         setIsAiEnhanced(true);
-      } else {
-        throw new Error("AI returned an empty response.");
       }
     } catch (error: any) {
       console.error("AI Enhancement failed:", error);
-      alert("AI Enhancement currently unavailable. Please check the browser console (F12) for details.");
+      alert("AI Enhancement currently unavailable.");
     } finally {
       setIsEnhancing(false);
     }
@@ -61,7 +78,7 @@ const ReviewModal: React.FC<{
       await onSubmit(booking.id, rating, comment, isAiEnhanced);
     } catch (err) {
       console.error("Review Submit Error:", err);
-      alert("Failed to save review. Please try again.");
+      alert("Failed to save review.");
     } finally {
       setIsSubmitting(false);
     }
@@ -69,80 +86,124 @@ const ReviewModal: React.FC<{
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-dark/95 backdrop-blur-md animate-in fade-in duration-300">
-       <div className="bg-surface rounded-[2.5rem] border border-white/10 p-10 w-full max-w-md shadow-2xl relative animate-in zoom-in-95 duration-300 overflow-hidden text-center">
+       <div className={`bg-surface rounded-[2.5rem] border border-white/10 w-full shadow-2xl relative animate-in zoom-in-95 duration-300 overflow-hidden flex flex-col md:flex-row transition-all duration-500 ${aiInsights ? 'max-w-4xl' : 'max-w-md'}`}>
           <div className="absolute top-0 left-0 w-full h-1 bg-brand"></div>
+          
+          {/* Main Form Area */}
+          <div className="flex-1 p-10 text-center">
+            <button 
+              onClick={onClose}
+              className="absolute top-6 right-6 p-2 bg-white/5 rounded-full text-slate-400 hover:text-white transition-colors md:hidden"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="mb-8">
+               <div className="w-16 h-16 bg-brand text-dark rounded-[1.5rem] flex items-center justify-center mx-auto mb-4 shadow-xl shadow-brand/20">
+                  <Star size={28} className="fill-dark" />
+               </div>
+               <h2 className="text-2xl font-black uppercase italic text-white mb-1 leading-none tracking-tighter">Review Your Coach</h2>
+               <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest italic">Session: {booking.date}</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-6 text-left">
+               <div className="flex justify-center gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setRating(star)}
+                      className="p-1 transition-transform hover:scale-125 focus:outline-none"
+                    >
+                      <Star 
+                        size={32} 
+                        className={`${star <= rating ? 'text-brand fill-brand' : 'text-slate-700'}`} 
+                      />
+                    </button>
+                  ))}
+               </div>
+
+               <div className="space-y-2 relative">
+                  <div className="flex items-center justify-between mb-1 px-2">
+                     <label className="text-[9px] font-black uppercase tracking-widest text-slate-500">Your Feedback</label>
+                     <button
+                        type="button"
+                        onClick={handleAiEnhance}
+                        disabled={isEnhancing || !comment.trim()}
+                        className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest transition-all ${
+                          isAiEnhanced 
+                            ? 'bg-brand/20 text-brand border border-brand/30' 
+                            : 'bg-brand/10 text-brand border border-brand/20 hover:bg-brand hover:text-dark disabled:opacity-50'
+                        }`}
+                     >
+                        {isEnhancing ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />}
+                        {isAiEnhanced ? 'Re-Enhance' : 'AI Enhance'}
+                     </button>
+                  </div>
+                  <textarea 
+                    rows={4}
+                    value={comment}
+                    onChange={(e) => {
+                      setComment(e.target.value);
+                      if (isAiEnhanced) setIsAiEnhanced(false);
+                    }}
+                    placeholder="Tell us how it went..."
+                    className="w-full bg-dark/50 border border-white/5 rounded-2xl px-5 py-4 text-white font-medium italic outline-none focus:border-brand resize-none placeholder-slate-600 transition-all text-sm"
+                  />
+               </div>
+               
+               <button 
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full py-5 bg-brand text-dark rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-white transition-all flex items-center justify-center gap-2 shadow-xl shadow-brand/10"
+               >
+                  {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : 'Submit Review'}
+               </button>
+            </form>
+          </div>
+
+          {/* AI Insights Sidebar */}
+          {aiInsights && (
+            <div className="w-full md:w-80 bg-white/5 border-l border-white/5 p-8 flex flex-col animate-in slide-in-from-right-4 duration-500">
+               <div className="flex items-center gap-2 text-brand mb-6">
+                  <Lightbulb size={18} />
+                  <h3 className="text-xs font-black uppercase tracking-widest">AI Insights</h3>
+               </div>
+               
+               <div className="flex-grow space-y-6">
+                  <div className="p-4 bg-dark/40 rounded-2xl border border-white/5 relative">
+                     <div className="absolute -top-2 left-4 px-2 bg-surface text-[8px] font-black uppercase text-slate-500 tracking-widest">Logic</div>
+                     <p className="text-slate-300 text-xs italic leading-relaxed">
+                        {aiInsights}
+                     </p>
+                  </div>
+                  
+                  <div className="space-y-3">
+                     <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest px-1">Pro Tip</p>
+                     <div className="flex items-start gap-3 text-slate-400">
+                        <Info size={14} className="mt-0.5 shrink-0" />
+                        <p className="text-[11px] leading-relaxed">A detailed review helps other members choose the right coach for their goals.</p>
+                     </div>
+                  </div>
+               </div>
+
+               <div className="mt-auto pt-6">
+                  <button 
+                    onClick={() => { setAiInsights(null); setIsAiEnhanced(false); }}
+                    className="w-full py-3 bg-white/5 hover:bg-white/10 text-slate-500 hover:text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border border-white/5"
+                  >
+                    Clear Insights
+                  </button>
+               </div>
+            </div>
+          )}
+
           <button 
             onClick={onClose}
-            className="absolute top-6 right-6 p-2 bg-white/5 rounded-full text-slate-400 hover:text-white transition-colors"
+            className="hidden md:block absolute top-6 right-6 p-2 bg-white/5 rounded-full text-slate-400 hover:text-white transition-colors"
           >
              <X size={20} />
           </button>
-
-          <div className="mb-8">
-             <div className="w-20 h-20 bg-brand text-dark rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-xl shadow-brand/20">
-                <Star size={32} className="fill-dark" />
-             </div>
-             <h2 className="text-3xl font-black uppercase italic text-white mb-2 leading-none tracking-tighter">Review Your Coach</h2>
-             <p className="text-slate-400 text-sm font-medium italic">How was your session on <span className="text-white font-bold">{booking.date}</span>?</p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-6 text-left">
-             <div className="flex justify-center gap-2">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button
-                    key={star}
-                    type="button"
-                    onClick={() => setRating(star)}
-                    className="p-1 transition-transform hover:scale-125 focus:outline-none"
-                  >
-                    <Star 
-                      size={36} 
-                      className={`${star <= rating ? 'text-brand fill-brand' : 'text-slate-700'}`} 
-                    />
-                  </button>
-                ))}
-             </div>
-
-             <div className="space-y-2 relative">
-                <div className="flex items-center justify-between mb-1 px-2">
-                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Your Feedback</label>
-                   <button
-                      type="button"
-                      onClick={handleAiEnhance}
-                      disabled={isEnhancing || !comment.trim()}
-                      className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${
-                        isAiEnhanced 
-                          ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
-                          : 'bg-brand/10 text-brand border border-brand/20 hover:bg-brand hover:text-dark disabled:opacity-50'
-                      }`}
-                   >
-                      {isEnhancing ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
-                      {isAiEnhanced ? 'AI Enhanced' : 'AI Enhance Review'}
-                   </button>
-                </div>
-                <textarea 
-                  rows={4}
-                  value={comment}
-                  onChange={(e) => {
-                    setComment(e.target.value);
-                    if (isAiEnhanced) setIsAiEnhanced(false);
-                  }}
-                  placeholder="Tell us how it went..."
-                  className="w-full bg-dark/50 border border-white/5 rounded-2xl px-5 py-4 text-white font-medium italic outline-none focus:border-brand resize-none placeholder-slate-600 transition-all"
-                />
-             </div>
-             
-             <button 
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full py-5 bg-brand text-dark rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-white transition-all flex items-center justify-center gap-2 shadow-xl shadow-brand/10"
-             >
-                {isSubmitting ? <Loader2 className="animate-spin" /> : 'Submit Review'}
-             </button>
-             <p className="text-center text-[9px] text-slate-600 font-bold uppercase tracking-widest">
-               Marks session as complete at the front desk
-             </p>
-          </form>
        </div>
     </div>
   );
