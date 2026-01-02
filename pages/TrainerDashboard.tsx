@@ -155,17 +155,17 @@ const TrainerDashboard: React.FC = () => {
       <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-hidden min-h-[500px]">
          <div className="border-b border-white/5 p-6 flex items-center gap-4 overflow-x-auto">
             <button onClick={() => setActiveTab('schedule')} className={`flex items-center gap-2 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'schedule' ? 'bg-white text-dark' : 'bg-white/5 text-slate-400 hover:text-white'}`}>
-               <LayoutDashboard size={14} /> My Schedule
+               <LayoutDashboard size={14} /> {t.tabHistory}
             </button>
             <button onClick={() => setActiveTab('requests')} className={`flex items-center gap-2 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'requests' ? 'bg-white text-dark' : 'bg-white/5 text-slate-400 hover:text-white'}`}>
-               <ListFilter size={14} /> Requests
+               <ListFilter size={14} /> {t.tabBookings}
                {pendingRequests.length > 0 && <span className="ml-2 bg-brand text-dark px-1.5 py-0.5 rounded text-[9px] font-bold">{pendingRequests.length}</span>}
             </button>
             <button onClick={() => setActiveTab('reviews')} className={`flex items-center gap-2 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'reviews' ? 'bg-white text-dark' : 'bg-white/5 text-slate-400 hover:text-white'}`}>
-               <Star size={14} /> Reviews
+               <Star size={14} /> {t.reviewsTitle}
             </button>
             <button onClick={() => setActiveTab('profile')} className={`flex items-center gap-2 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'profile' ? 'bg-white text-dark' : 'bg-white/5 text-slate-400 hover:text-white'}`}>
-               <Settings size={14} /> Profile
+               <Settings size={14} /> {t.loginProfile}
             </button>
          </div>
 
@@ -178,7 +178,7 @@ const TrainerDashboard: React.FC = () => {
                            <th className="px-8 py-5">Date & Time</th>
                            <th className="px-8 py-5">Client Information</th>
                            <th className="px-8 py-5 text-center">Check-in Code</th>
-                           <th className="px-8 py-5 text-right">Actions</th>
+                           <th className="px-8 py-5 text-right">{t.action}</th>
                         </tr>
                      </thead>
                      <tbody className="divide-y divide-white/5">
@@ -202,7 +202,7 @@ const TrainerDashboard: React.FC = () => {
                                  </td>
                                  <td className="px-8 py-6 text-right">
                                     <button onClick={() => handleAction(booking.id, 'trainer_completed')} className="px-5 py-2.5 bg-white/5 hover:bg-brand hover:text-dark rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-300 transition-all border border-white/5">
-                                       <CheckCircle size={14} className="inline mr-2" /> Mark Done
+                                       <CheckCircle size={14} className="inline mr-2" /> {t.finish}
                                     </button>
                                  </td>
                               </tr>
@@ -219,7 +219,7 @@ const TrainerDashboard: React.FC = () => {
                      <thead className="bg-dark/30">
                         <tr className="text-[10px] font-black uppercase text-slate-500">
                            <th className="px-8 py-5">Request Date</th>
-                           <th className="px-8 py-5">Customer</th>
+                           <th className="px-8 py-5">{t.client}</th>
                            <th className="px-8 py-5 text-right">Approve / Reject</th>
                         </tr>
                      </thead>
@@ -278,7 +278,7 @@ const TrainerDashboard: React.FC = () => {
                     <form onSubmit={handleSaveProfile} className="max-w-2xl space-y-8">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase text-slate-500 ml-2 tracking-widest">Display Name</label>
+                                <label className="text-[10px] font-black uppercase text-slate-500 ml-2 tracking-widest">{t.name}</label>
                                 <input type="text" className="w-full bg-dark/50 border border-white/10 rounded-2xl px-5 py-4 text-white font-bold outline-none focus:border-brand transition-all" value={editName} onChange={e => setEditName(e.target.value)} />
                             </div>
                             <div className="space-y-2">

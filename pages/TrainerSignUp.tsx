@@ -85,18 +85,16 @@ const TrainerSignUp: React.FC = () => {
                       <CheckCircle size={40} />
                   </div>
                   <h1 className="text-4xl font-black uppercase italic text-white mb-6 mt-4 tracking-tighter">
-                      {language === 'bg' ? 'ЗАЯВКАТА Е ПРИЕТА' : 'APPLICATION FILED'}
+                      {t.applicationFiled}
                   </h1>
                   <p className="text-slate-400 font-medium leading-relaxed mb-10 italic">
-                      {language === 'bg' 
-                        ? 'Профилът ви беше създаден успешно със статус "Изчакващ". Екипът на ClassFit ще прегледа вашата експертиза и ще се свърже с вас за интервю.' 
-                        : 'Your profile has been successfully created with pending status. The ClassFit team will review your expertise and contact you for an interview shortly.'}
+                      {t.pendingReviewMsg}
                   </p>
                   <button 
                     onClick={() => navigate('/')} 
                     className="w-full py-5 bg-brand text-dark rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-white transition-all shadow-xl shadow-brand/10"
                   >
-                      {language === 'bg' ? 'Към началната страница' : 'Return to Base'}
+                      {t.returnToBase}
                   </button>
               </div>
           </div>
@@ -123,12 +121,10 @@ const TrainerSignUp: React.FC = () => {
             </button>
 
             <h1 className="text-7xl font-black uppercase italic text-white leading-[0.8] tracking-tighter mb-8">
-               JOIN THE <br/> <span className="text-brand">ELITE</span> <br/> TEAM
+               {t.joinThe} <br/> <span className="text-brand">{t.eliteTeam}</span>
             </h1>
             <p className="text-slate-400 text-lg font-medium italic max-w-xs leading-relaxed mb-12">
-               {language === 'bg' 
-                 ? 'Търсим най-добрите професионалисти във Варна. Развивайте кариерата си при нас.' 
-                 : 'We are looking for the absolute best professionals in Varna. Grow your career with us.'}
+               {t.varnaProfessionals}
             </p>
 
             <div className="space-y-4">
@@ -163,10 +159,10 @@ const TrainerSignUp: React.FC = () => {
 
             <div className="mb-16">
                <div className="inline-flex items-center gap-3 bg-brand text-dark px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest mb-6 shadow-xl shadow-brand/20">
-                  <Briefcase size={12} /> Coach Application Portal
+                  <Briefcase size={12} /> {t.coachPortal}
                </div>
-               <h2 className="text-5xl font-black uppercase italic text-white tracking-tighter mb-4 leading-none">PROFESSIONAL DETAILS</h2>
-               <p className="text-slate-500 font-medium text-sm italic">Tell us about your expertise and why you belong at ClassFit.</p>
+               <h2 className="text-5xl font-black uppercase italic text-white tracking-tighter mb-4 leading-none">{t.professionalDetails}</h2>
+               <p className="text-slate-500 font-medium text-sm italic">{t.coachPhilosophy}</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-16">
@@ -180,23 +176,23 @@ const TrainerSignUp: React.FC = () => {
                <div className="space-y-8">
                   <div className="flex items-center gap-4 border-b border-white/5 pb-4">
                      <div className="w-8 h-8 rounded-lg bg-brand/10 text-brand flex items-center justify-center"><User size={14} /></div>
-                     <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 italic">Identity & Access</h3>
+                     <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 italic">{t.identityAndAccess}</h3>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                      <div className="space-y-3">
-                        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">Full Legal Name</label>
+                        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">{t.trainerFullName}</label>
                         <input name="name" type="text" required value={form.name} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-white font-bold outline-none focus:border-brand transition-all placeholder-slate-800" placeholder="Michael Jordan" />
                      </div>
                      <div className="space-y-3">
-                        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">Email Address</label>
+                        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">{t.trainerEmail}</label>
                         <input name="email" type="email" required value={form.email} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-white font-bold outline-none focus:border-brand transition-all placeholder-slate-800" placeholder="coach@classfit.bg" />
                      </div>
                      <div className="space-y-3">
-                        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">Password</label>
+                        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">{t.trainerPassword}</label>
                         <input name="password" type="password" required value={form.password} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-white font-bold outline-none focus:border-brand transition-all placeholder-slate-800" placeholder="••••••••" />
                      </div>
                      <div className="space-y-3">
-                        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">Phone Number</label>
+                        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">{t.trainerPhone}</label>
                         <input name="phone" type="tel" required value={form.phone} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-white font-bold outline-none focus:border-brand transition-all placeholder-slate-800" placeholder="+359..." />
                      </div>
                   </div>
@@ -206,19 +202,19 @@ const TrainerSignUp: React.FC = () => {
                <div className="space-y-8">
                   <div className="flex items-center gap-4 border-b border-white/5 pb-4">
                      <div className="w-8 h-8 rounded-lg bg-brand/10 text-brand flex items-center justify-center"><Dumbbell size={14} /></div>
-                     <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 italic">Expertise & Experience</h3>
+                     <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 italic">{t.expertiseAndExperience}</h3>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                      <div className="space-y-3">
-                        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">Primary Coaching Discipline</label>
+                        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">{t.trainerSpecialty}</label>
                         <input name="specialty" type="text" required value={form.specialty} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-white font-bold outline-none focus:border-brand transition-all placeholder-slate-800" placeholder="Powerlifting, CrossFit, Yoga..." />
                      </div>
                      <div className="space-y-3">
-                        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">Years of Experience</label>
+                        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">{t.trainerExperience}</label>
                         <div className="relative group flex items-center">
                            <button type="button" onClick={() => handleExperienceChange('dec')} className="absolute left-3 w-10 h-10 rounded-xl bg-white/5 text-slate-500 flex items-center justify-center hover:bg-brand hover:text-dark transition-all z-10"><Minus size={16} /></button>
                            <input type="number" value={form.experience} readOnly className="w-full bg-white/5 border border-white/10 rounded-2xl px-14 py-5 text-white font-black text-xl outline-none text-center" />
-                           <span className="absolute right-16 text-[9px] font-black uppercase tracking-widest text-slate-600 pointer-events-none italic">Years</span>
+                           <span className="absolute right-16 text-[9px] font-black uppercase tracking-widest text-slate-600 pointer-events-none italic">{t.years}</span>
                            <button type="button" onClick={() => handleExperienceChange('inc')} className="absolute right-3 w-10 h-10 rounded-xl bg-white/5 text-slate-500 flex items-center justify-center hover:bg-brand hover:text-dark transition-all z-10"><Plus size={16} /></button>
                         </div>
                      </div>
@@ -227,7 +223,7 @@ const TrainerSignUp: React.FC = () => {
                   {/* LANGUAGE SELECTION */}
                   <div className="space-y-4">
                      <label className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">
-                        <Languages size={14} className="text-brand" /> Languages Spoken
+                        <Languages size={14} className="text-brand" /> {t.trainerLanguagesSpoken}
                      </label>
                      <div className="flex flex-wrap gap-3">
                         {languageOptions.map(lang => (
@@ -249,7 +245,7 @@ const TrainerSignUp: React.FC = () => {
                   </div>
 
                   <div className="space-y-3">
-                     <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">Certifications & Education</label>
+                     <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">{t.trainerCerts}</label>
                      <textarea name="certs" rows={3} value={form.certs} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-white font-medium italic outline-none focus:border-brand transition-all placeholder-slate-800 resize-none" placeholder="List your professional certifications..." />
                   </div>
                </div>
@@ -258,17 +254,17 @@ const TrainerSignUp: React.FC = () => {
                <div className="space-y-8">
                   <div className="flex items-center gap-4 border-b border-white/5 pb-4">
                      <div className="w-8 h-8 rounded-lg bg-brand/10 text-brand flex items-center justify-center"><Sparkles size={14} /></div>
-                     <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 italic">Motivation & Reach</h3>
+                     <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 italic">{t.motivationAndReach}</h3>
                   </div>
                   <div className="space-y-3">
-                     <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">Social Profile Link (IG/LI)</label>
+                     <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">{t.trainerSocial}</label>
                      <div className="relative">
                         <Instagram size={18} className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-700" />
                         <input name="social" type="text" value={form.social} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl pl-16 pr-6 py-5 text-white font-bold outline-none focus:border-brand transition-all placeholder-slate-800" placeholder="instagram.com/coach_profile" />
                      </div>
                   </div>
                   <div className="space-y-3">
-                     <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">Why join the ClassFit Team?</label>
+                     <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">{t.trainerMotivation}</label>
                      <textarea name="motivation" required rows={5} value={form.motivation} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-white font-medium italic outline-none focus:border-brand transition-all placeholder-slate-800 resize-none" placeholder="Describe your philosophy and what you bring to our club..." />
                   </div>
                </div>
@@ -279,10 +275,10 @@ const TrainerSignUp: React.FC = () => {
                      disabled={status === 'loading'}
                      className="w-full md:w-auto px-24 py-7 bg-brand text-dark rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-white transition-all shadow-2xl shadow-brand/20 flex items-center justify-center gap-3 disabled:opacity-50"
                   >
-                     {status === 'loading' ? <Loader2 className="animate-spin" size={20} /> : <>Submit Application <ChevronRight size={20} /></>}
+                     {status === 'loading' ? <Loader2 className="animate-spin" size={20} /> : <>{t.trainerSubmit} <ChevronRight size={20} /></>}
                   </button>
                   <p className="text-[10px] text-slate-600 font-bold uppercase tracking-widest italic text-center md:text-left leading-loose">
-                     {language === 'bg' ? 'До 48 часа за преглед на заявката.' : 'Review period: 48 Business Hours.'} <br/>
+                     {t.trainerReviewHours} <br/>
                      <span className="text-slate-700">All data is kept strictly professional.</span>
                   </p>
                </div>

@@ -100,14 +100,14 @@ const AdminPanel: React.FC = () => {
 
   const cleanName = (name: string) => name.split('(')[0].trim();
 
-  if (!isAdmin) return <div className="p-20 text-center text-white">Access Denied</div>;
+  if (!isAdmin) return <div className="p-20 text-center text-white">{t.accessDenied}</div>;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-16 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
         <div>
           <div className="flex items-center gap-4">
-             <h1 className="text-4xl font-black uppercase italic text-white leading-none tracking-tighter">Admin Panel</h1>
+             <h1 className="text-4xl font-black uppercase italic text-white leading-none tracking-tighter">{t.adminPanel}</h1>
              <button onClick={handleManualRefresh} className={`p-2 rounded-full hover:bg-white/10 ${isRefreshing ? 'animate-spin text-brand' : 'text-slate-500'}`}>
                 <RefreshCw size={18} />
              </button>
@@ -116,13 +116,13 @@ const AdminPanel: React.FC = () => {
         </div>
         <div className="flex flex-wrap gap-2 bg-surface p-1.5 rounded-2xl border border-white/5">
             {[
-              { id: 'overview', icon: LayoutDashboard, label: 'Overview' },
-              { id: 'bookings', icon: ListFilter, label: 'Reception', badge: awaitingPaymentList.length + bookings.filter(b => b.status === 'pending' || b.status === 'confirmed').length },
+              { id: 'overview', icon: LayoutDashboard, label: t.tabOverview },
+              { id: 'bookings', icon: ListFilter, label: t.tabBookings, badge: awaitingPaymentList.length + bookings.filter(b => b.status === 'pending' || b.status === 'confirmed').length },
               { id: 'reviews', icon: MessageSquare, label: 'Moderation', badge: pendingReviews.length },
-              { id: 'trainers', icon: Briefcase, label: 'Trainers' },
+              { id: 'trainers', icon: Briefcase, label: t.trainer },
               { id: 'applications', icon: UserCheck, label: 'Apps', badge: pendingApplications.length },
-              { id: 'finance', icon: FileSpreadsheet, label: 'Finance' },
-              { id: 'users', icon: Users, label: 'Members' }
+              { id: 'finance', icon: FileSpreadsheet, label: t.tabAnalysis },
+              { id: 'users', icon: Users, label: t.tabUsers }
             ].map(tab => (
                 <button key={tab.id} onClick={() => setActiveTab(tab.id as any)} className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all ${activeTab === tab.id ? 'bg-brand text-dark shadow-lg' : 'text-slate-400 hover:text-white'}`}>
                     <tab.icon size={14} /> {tab.label}
@@ -137,7 +137,7 @@ const AdminPanel: React.FC = () => {
            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div className="p-8 bg-brand text-dark rounded-[2.5rem] shadow-xl relative overflow-hidden group">
                  <div className="absolute top-4 right-4 text-dark/20 group-hover:scale-125 transition-transform"><TrendingUp size={48} /></div>
-                 <p className="text-[10px] font-black uppercase mb-4 opacity-60 tracking-widest">Gross Revenue</p>
+                 <p className="text-[10px] font-black uppercase mb-4 opacity-60 tracking-widest">{t.totalIncome}</p>
                  <p className="text-4xl font-black italic">{totalIncome.toFixed(2)} <span className="text-sm font-bold">BGN</span></p>
               </div>
               <div className="p-8 bg-surface border border-white/5 text-white rounded-[2.5rem] relative overflow-hidden group">
@@ -147,7 +147,7 @@ const AdminPanel: React.FC = () => {
               </div>
               <div className="p-8 bg-surface border border-white/5 text-white rounded-[2.5rem] relative overflow-hidden group">
                  <div className="absolute top-4 right-4 text-white/5 group-hover:scale-125 transition-transform"><Users size={48} /></div>
-                 <p className="text-[10px] font-black uppercase mb-4 text-slate-500 tracking-widest">Active Members</p>
+                 <p className="text-[10px] font-black uppercase mb-4 text-slate-500 tracking-widest">{t.allUsers}</p>
                  <p className="text-4xl font-black italic">{users.filter(u => u.role === 'user').length}</p>
               </div>
               <div className="p-8 bg-surface border border-white/5 text-white rounded-[2.5rem] relative overflow-hidden group">
@@ -170,7 +170,7 @@ const AdminPanel: React.FC = () => {
                         {activeTab === 'users' && <Users size={20} />}
                         {activeTab === 'applications' && <UserCheck size={20} />}
                     </div>
-                    <h3 className="text-xl font-black uppercase italic text-white">{activeTab === 'bookings' ? 'Reception' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Registry</h3>
+                    <h3 className="text-xl font-black uppercase italic text-white">{activeTab === 'bookings' ? t.tabBookings : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Registry</h3>
                  </div>
                  {activeTab === 'finance' && (
                     <div className="text-right">
@@ -186,8 +186,8 @@ const AdminPanel: React.FC = () => {
                         {activeTab === 'finance' && (
                            <tr>
                               <th className="px-8 py-5">Session Date</th>
-                              <th className="px-8 py-5">Coach Name</th>
-                              <th className="px-8 py-5">Client Name</th>
+                              <th className="px-8 py-5">{t.trainer}</th>
+                              <th className="px-8 py-5">{t.client}</th>
                               <th className="px-8 py-5 text-right">Revenue</th>
                               <th className="px-8 py-5 text-right">Commission</th>
                               <th className="px-8 py-5 text-center">Mode</th>
@@ -198,7 +198,7 @@ const AdminPanel: React.FC = () => {
                               <th className="px-8 py-5">Full Member Details</th>
                               <th className="px-8 py-5">Email Address</th>
                               <th className="px-8 py-5 text-center">Auth Role</th>
-                              <th className="px-8 py-5 text-right">Account Actions</th>
+                              <th className="px-8 py-5 text-right">{t.action}</th>
                            </tr>
                         )}
                         {activeTab === 'applications' && (
@@ -214,16 +214,16 @@ const AdminPanel: React.FC = () => {
                               <th className="px-8 py-5">Professional Profile</th>
                               <th className="px-8 py-5">Linguistic Profile</th>
                               <th className="px-8 py-5">Commission</th>
-                              <th className="px-8 py-5 text-right">Management</th>
+                              <th className="px-8 py-5 text-right">{t.action}</th>
                            </tr>
                         )}
                         {activeTab === 'bookings' && (
                            <tr>
-                              <th className="px-8 py-5">Client Name</th>
+                              <th className="px-8 py-5">{t.client}</th>
                               <th className="px-8 py-5 text-center">Auth Code</th>
                               <th className="px-8 py-5">Session Schedule</th>
-                              <th className="px-8 py-5">Log Status</th>
-                              <th className="px-8 py-5 text-right">Ops</th>
+                              <th className="px-8 py-5">{t.status}</th>
+                              <th className="px-8 py-5 text-right">{t.action}</th>
                            </tr>
                         )}
                     </thead>
@@ -270,8 +270,8 @@ const AdminPanel: React.FC = () => {
                                    ))}
                                 </td>
                                 <td className="px-8 py-5 text-right flex gap-2 justify-end">
-                                    <button onClick={() => handleApproveTrainer(app.id)} className="px-4 py-2 bg-brand text-dark rounded-lg text-[9px] font-black uppercase shadow-lg">Approve</button>
-                                    <button onClick={() => handleRejectTrainer(app.id)} className="px-4 py-2 bg-white/5 text-slate-400 rounded-lg text-[9px] font-black uppercase hover:text-red-500 transition-all">Reject</button>
+                                    <button onClick={() => handleApproveTrainer(app.id)} className="px-4 py-2 bg-brand text-dark rounded-lg text-[9px] font-black uppercase shadow-lg">{t.confirm}</button>
+                                    <button onClick={() => handleRejectTrainer(app.id)} className="px-4 py-2 bg-white/5 text-slate-400 rounded-lg text-[9px] font-black uppercase hover:text-red-500 transition-all">{t.cancel}</button>
                                 </td>
                             </tr>
                         ))}
@@ -301,7 +301,7 @@ const AdminPanel: React.FC = () => {
                            <tr key={b.id} className="hover:bg-white/5 transition-colors">
                               <td className="px-8 py-5">
                                  <div className="font-black uppercase italic leading-none text-white mb-1">{b.customerName}</div>
-                                 <div className="text-[9px] text-slate-500 uppercase tracking-widest">Coach: {cleanName(users.find(u => u.id === b.trainerId)?.name || 'Team')}</div>
+                                 <div className="text-[9px] text-slate-500 uppercase tracking-widest">{t.trainer}: {cleanName(users.find(u => u.id === b.trainerId)?.name || 'Team')}</div>
                               </td>
                               <td className="px-8 py-5 text-center"><span className="px-3 py-1 bg-brand/10 text-brand text-[10px] font-black italic rounded-lg border border-brand/20">{b.checkInCode}</span></td>
                               <td className="px-8 py-5 text-slate-400">{b.date} | <span className="font-bold text-white">{b.time}</span></td>
@@ -339,8 +339,8 @@ const AdminPanel: React.FC = () => {
                                     <p className="text-sm text-slate-300 italic mb-8 leading-relaxed">"{review.text}"</p>
                                 </div>
                                 <div className="flex gap-3 pt-6 border-t border-white/5">
-                                    <button onClick={() => handleApproveReview(review.id)} className="flex-1 py-3 bg-brand text-dark rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-lg">Approve</button>
-                                    <button onClick={() => deleteReview(review.id)} className="flex-1 py-3 bg-red-500/10 text-red-500 rounded-xl text-[10px] font-black uppercase border border-red-500/10 hover:bg-red-500 hover:text-white transition-all">Delete</button>
+                                    <button onClick={() => handleApproveReview(review.id)} className="flex-1 py-3 bg-brand text-dark rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-lg">{t.confirm}</button>
+                                    <button onClick={() => deleteReview(review.id)} className="flex-1 py-3 bg-red-500/10 text-red-500 rounded-xl text-[10px] font-black uppercase border border-red-500/10 hover:bg-red-500 hover:text-white transition-all">{t.deleteUser}</button>
                                 </div>
                             </div>
                         ))}
@@ -359,7 +359,7 @@ const AdminPanel: React.FC = () => {
                 <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-8">Update professional profile and financial terms</p>
                 <form onSubmit={handleSaveUser} className="space-y-6">
                     <div className="grid grid-cols-2 gap-4">
-                        <div><label className="text-[10px] font-black uppercase text-slate-600 ml-2">Trainer Name</label><input type="text" className="w-full bg-dark/50 border border-white/10 rounded-xl px-4 py-3 text-white font-bold outline-none focus:border-brand" value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})} /></div>
+                        <div><label className="text-[10px] font-black uppercase text-slate-600 ml-2">{t.name}</label><input type="text" className="w-full bg-dark/50 border border-white/10 rounded-xl px-4 py-3 text-white font-bold outline-none focus:border-brand" value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})} /></div>
                         <div><label className="text-[10px] font-black uppercase text-slate-600 ml-2">Specialty</label><input type="text" className="w-full bg-dark/50 border border-white/10 rounded-xl px-4 py-3 text-white font-bold outline-none focus:border-brand" value={editForm.specialty} onChange={e => setEditForm({...editForm, specialty: e.target.value})} /></div>
                     </div>
                     
