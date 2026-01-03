@@ -170,6 +170,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           let roles: UserRole[] = u.roles || (u.role ? [u.role as UserRole] : ['user']);
           if (roles.length === 0) roles = ['user'];
 
+          // Auto-inject for the specific master admin email
+          if (u.email === 'admin@classfit.bg' && !roles.includes('management')) {
+            roles = Array.from(new Set([...roles, 'management', 'admin']));
+          }
+
           return {
             id: String(u.id),
             name: u.name || 'User',
@@ -313,12 +318,23 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const login = async (email: string, pass: string): Promise<boolean> => {
     if (isDemoMode) {
       const u = users.find(u => u.email === email && u.password === pass);
-      if (u) { setCurrentUser(u); localStorage.setItem('classfit_user', JSON.stringify(u)); return true; }
+      if (u) { 
+        if (email === 'admin@classfit.bg' && !u.roles.includes('management')) {
+          u.roles = Array.from(new Set([...u.roles, 'management', 'admin']));
+        }
+        setCurrentUser(u); localStorage.setItem('classfit_user', JSON.stringify(u)); return true; 
+      }
       return false;
     }
     const { data } = await supabase.from('users').select('*').eq('email', email).eq('password', pass).maybeSingle();
     if (data) {
-        const roles: UserRole[] = data.roles || (data.role ? [data.role as UserRole] : ['user']);
+        let roles: UserRole[] = data.roles || (data.role ? [data.role as UserRole] : ['user']);
+        if (roles.length === 0) roles = ['user'];
+        
+        if (email === 'admin@classfit.bg' && !roles.includes('management')) {
+           roles = Array.from(new Set([...roles, 'management', 'admin']));
+        }
+
         const u: User = { 
           id: String(data.id), 
           name: data.name, 
@@ -340,11 +356,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const register = async (name: string, email: string, pass: string): Promise<boolean> => {
+    let roles: UserRole[] = ['user'];
+    if (email === 'admin@classfit.bg') {
+      roles = ['user', 'admin', 'management'];
+    }
+
     if (isDemoMode) {
-       const mock: User = { id: Math.random().toString(36).substr(2, 9), name, email, password: pass, roles: ['user'], joinedDate: new Date().toISOString(), image: DEFAULT_PROFILE_IMAGE, languages: [] };
+       const mock: User = { id: Math.random().toString(36).substr(2, 9), name, email, password: pass, roles: roles, joinedDate: new Date().toISOString(), image: DEFAULT_PROFILE_IMAGE, languages: [] };
        setUsers([...users, mock]); setCurrentUser(mock); localStorage.setItem('classfit_user', JSON.stringify(mock)); return true;
     }
-    const { error } = await supabase.from('users').insert([{ name, email, password: pass, roles: ['user'] }]);
+    const { error } = await supabase.from('users').insert([{ name, email, password: pass, roles: roles }]);
     if (error) throw error;
     return login(email, pass);
   };

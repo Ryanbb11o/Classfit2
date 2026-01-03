@@ -145,6 +145,12 @@ const AdminPanel: React.FC = () => {
     let newRoles: UserRole[];
     const hasRole = user.roles.includes(targetRole);
 
+    // Sticky Logic: Management role cannot be removed via UI
+    if (hasRole && targetRole === 'management') {
+      alert(language === 'bg' ? 'Ролята "Management" не може да бъде премахната от никого.' : 'The "Management" role cannot be removed by anyone.');
+      return;
+    }
+
     if (hasRole) {
       newRoles = user.roles.filter(r => r !== targetRole);
       if (newRoles.length === 0) newRoles = ['user'];
@@ -154,12 +160,18 @@ const AdminPanel: React.FC = () => {
 
     confirmAction({
       title: hasRole ? 'Revoke Authority' : 'Grant Authority',
-      message: `Update roles for ${user.name}?`,
+      message: `Update roles for ${user.name.split('(')[0].trim()}?`,
       onConfirm: async () => await updateUser(userId, { roles: newRoles })
     });
   };
 
   const handleDeleteUserAccount = (userId: string) => {
+    const user = users.find(u => u.id === userId);
+    if (user?.roles.includes('management')) {
+      alert(language === 'bg' ? 'Акаунти с роля "Management" не могат да бъдат изтривани.' : 'Accounts with the "Management" role cannot be deleted.');
+      return;
+    }
+
     confirmAction({
       title: 'Permanently Delete User',
       message: 'This action will remove the user profile and all associated data. This cannot be undone.',
@@ -169,7 +181,7 @@ const AdminPanel: React.FC = () => {
 
   const cleanName = (name: string | undefined) => (name || 'Member').split('(')[0].trim();
 
-  // Role Display Configuration as requested
+  // Updated Labels for Roles
   const roleOptions: { id: UserRole, label: string, color: string }[] = [
     { id: 'management', label: 'Management', color: 'text-purple-400 bg-purple-500/10 border-purple-500/20' },
     { id: 'admin', label: 'Web Admin', color: 'text-red-500 bg-red-500/10 border-red-500/20' },
@@ -369,7 +381,11 @@ const AdminPanel: React.FC = () => {
                                                       <div className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-brand shadow-[0_0_8px_rgba(197,217,45,0.7)]' : 'bg-slate-700'}`}></div>
                                                       {option.label}
                                                    </span>
-                                                   {isActive ? <X size={10} className="text-red-500" /> : <Plus size={10} className="opacity-40" />}
+                                                   {isActive ? (
+                                                      option.id === 'management' ? <ShieldCheck size={10} className="text-purple-400 opacity-50" /> : <X size={10} className="text-red-500" />
+                                                   ) : (
+                                                      <Plus size={10} className="opacity-40" />
+                                                   )}
                                                 </button>
                                              );
                                           })}
@@ -380,7 +396,7 @@ const AdminPanel: React.FC = () => {
                            </td>
                            <td className="px-8 py-6 text-right">
                               <div className="flex justify-end gap-2">
-                                 {user.id !== currentUser?.id && (
+                                 {!user.roles.includes('management') && (
                                     <button 
                                        onClick={() => handleDeleteUserAccount(user.id)}
                                        className="p-2 text-slate-600 hover:text-red-500 transition-colors"
