@@ -166,7 +166,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             joinedDate: u.joined_date || new Date().toISOString(),
             approvedBy: u.approved_by,
             commissionRate: u.commission_rate || 25,
-            blockedDates: u.blocked_dates || []
+            blockedDates: u.blocked_dates || [],
+            languages: u.languages || []
           };
       }));
     } catch (e) {
@@ -202,6 +203,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (updates.roles !== undefined) dbPayload.roles = updates.roles;
     if (updates.commissionRate !== undefined) dbPayload.commission_rate = updates.commissionRate;
     if (updates.approvedBy !== undefined) dbPayload.approved_by = updates.approvedBy;
+    if (updates.languages !== undefined) dbPayload.languages = updates.languages;
 
     const { error } = await supabase.from('users').update(dbPayload).eq('id', id);
     if (error) {
@@ -242,7 +244,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     const { error } = await supabase.from('bookings').update({
        status: finalUpdates.status,
-       payment_method: finalUpdates.paymentMethod,
+       payment_method: finalUpdates.payment_method,
        booking_date: finalUpdates.date,
        booking_time: finalUpdates.time,
        settled_at: finalUpdates.settledAt,
@@ -282,7 +284,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           id: String(data.id), name: data.name, email: data.email, password: data.password, 
           roles: roles, phone: data.phone, image: data.image || DEFAULT_PROFILE_IMAGE, 
           bio: data.bio, joinedDate: data.joined_date, approvedBy: data.approved_by, 
-          commissionRate: data.commission_rate || 25, blockedDates: data.blocked_dates || [] 
+          commissionRate: data.commission_rate || 25, blockedDates: data.blocked_dates || [],
+          languages: data.languages || []
         };
         setCurrentUser(u); localStorage.setItem('classfit_user', JSON.stringify(u)); return true;
     }
@@ -303,10 +306,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const fullName = `${data.name} (${data.specialty})`;
     const bioText = `Experience: ${data.experience || 'N/A'}\nCertifications: ${data.certs || 'N/A'}\nSocial: ${data.social || 'N/A'}\nMotivation: ${data.motivation || 'N/A'}\nLanguages: ${data.languages?.join(', ') || 'Bulgarian'}`;
     if (isDemoMode) {
-       const u: User = { id: Math.random().toString(36).substr(2, 9), name: fullName, email: data.email, password: data.pass, phone: data.phone, bio: bioText, roles: ['user', 'trainer_pending'], joinedDate: new Date().toISOString(), image: DEFAULT_PROFILE_IMAGE, commissionRate: 25 };
+       const u: User = { id: Math.random().toString(36).substr(2, 9), name: fullName, email: data.email, password: data.pass, phone: data.phone, bio: bioText, roles: ['user', 'trainer_pending'], joinedDate: new Date().toISOString(), image: DEFAULT_PROFILE_IMAGE, commissionRate: 25, languages: data.languages || [] };
        setUsers([...users, u]); return { success: true };
     }
-    const { error } = await supabase.from('users').insert([{ name: fullName, email: data.email, phone: data.phone, password: data.pass, bio: bioText, roles: ['user', 'trainer_pending'], commission_rate: 25 }]);
+    const { error } = await supabase.from('users').insert([{ name: fullName, email: data.email, phone: data.phone, password: data.pass, bio: bioText, roles: ['user', 'trainer_pending'], commission_rate: 25, languages: data.languages || [] }]);
     if (error) return { success: false, msg: error.message };
     await refreshData(); return { success: true };
   };
