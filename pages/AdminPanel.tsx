@@ -8,7 +8,6 @@ import { User as UserType, Booking, Review } from '../types';
 import RoleManagementModal from '../components/RoleManagementModal';
 
 const AdminPanel: React.FC = () => {
-  // Added currentUser to the destructuring to fix the error on line 504
   const { language, bookings, refreshData, updateBooking, updateUser, deleteUser, isAdmin, isManagement, users, reviews, deleteReview, updateReview, confirmAction, deleteBooking, currentUser } = useAppContext();
   const location = useLocation();
   const t = TRANSLATIONS[language];
@@ -166,6 +165,16 @@ const AdminPanel: React.FC = () => {
   };
 
   if (!isAdmin) return <div className="p-20 text-center text-white">{t.accessDenied}</div>;
+
+  const handleDeleteReview = (id: string) => {
+    confirmAction({
+      title: t.deleteMsg,
+      message: t.sure,
+      onConfirm: async () => {
+        await deleteReview(id);
+      }
+    });
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-16 animate-in fade-in duration-500 text-left">
@@ -605,7 +614,7 @@ const AdminPanel: React.FC = () => {
                     </div>
                     <div className="flex gap-4">
                        <button onClick={() => updateReview(r.id, { isPublished: true })} className="flex-1 py-5 bg-brand text-dark rounded-2xl font-black uppercase text-[11px] shadow-lg shadow-brand/10 hover:bg-white transition-all">Publish Live</button>
-                       <button onClick={() => deleteReview(r.id)} className="px-8 py-5 bg-white/5 text-slate-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all shadow-sm"><Trash size={18} /></button>
+                       <button onClick={() => handleDeleteReview(r.id)} className="px-8 py-5 bg-white/5 text-slate-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all shadow-sm"><Trash size={18} /></button>
                     </div>
                  </div>
               ))}

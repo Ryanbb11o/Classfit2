@@ -1,15 +1,17 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, Calendar as CalendarIcon, Clock, User, Phone, X, Mail, Loader2, ChevronLeft, ChevronRight, ArrowLeft, Star, Award, Zap, Quote, ThumbsUp, MapPin, Target, ShieldCheck, CalendarPlus, MessageSquare, Sparkles, Languages, MessageSquarePlus } from 'lucide-react';
+import { Check, Calendar as CalendarIcon, Clock, User, Phone, X, Mail, Loader2, ChevronLeft, ChevronRight, ArrowLeft, Star, Award, Zap, Quote, ThumbsUp, MapPin, Target, ShieldCheck, CalendarPlus, MessageSquare, Sparkles, Languages, MessageSquarePlus, Trash2 } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { getTrainers, TRANSLATIONS, DEFAULT_PROFILE_IMAGE, getTrainerReviews } from '../constants';
 import { Trainer, Booking } from '../types';
 
 const BookingPage: React.FC = () => {
-  const { language, addBooking, currentUser, users, bookings, reviews: liveReviews } = useAppContext();
+  const { language, addBooking, currentUser, users, bookings, reviews: liveReviews, confirmAction, deleteReview } = useAppContext();
   const navigate = useNavigate();
   const t = TRANSLATIONS[language];
+  
+  const isManagement = currentUser?.roles?.includes('management');
   
   const trainers = useMemo(() => {
     const staticTrainers = getTrainers(language);
@@ -51,13 +53,13 @@ const BookingPage: React.FC = () => {
   const allTrainerReviews = useMemo(() => {
     if (!selectedTrainer) return [];
     const currentUserName = currentUser?.name.split('(')[0].trim();
-    // Show published reviews OR the current user's own reviews
+    // Show published reviews OR the current user's own reviews OR all if manager
     const realReviews = liveReviews.filter(r => 
-      r.trainerId === selectedTrainer.id && (r.isPublished || r.author === currentUserName)
+      r.trainerId === selectedTrainer.id && (r.isPublished || r.author === currentUserName || isManagement)
     );
     const demoReviews = getTrainerReviews(selectedTrainer.id, language);
     return [...realReviews, ...demoReviews].slice(0, 10);
-  }, [selectedTrainer, language, liveReviews, currentUser]);
+  }, [selectedTrainer, language, liveReviews, currentUser, isManagement]);
 
   const needsReview = useMemo(() => {
     if (!currentUser || !selectedTrainer) return null;
@@ -264,6 +266,16 @@ const BookingPage: React.FC = () => {
     );
   }
 
+  const handleDeleteReview = (id: string) => {
+    confirmAction({
+      title: t.deleteMsg,
+      message: t.sure,
+      onConfirm: async () => {
+        await deleteReview(id);
+      }
+    });
+  };
+
   return (
     <div className="min-h-screen py-24 animate-in fade-in duration-700">
       {!selectedTrainer ? (
@@ -395,7 +407,16 @@ const BookingPage: React.FC = () => {
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                        {allTrainerReviews.map((review: any, i) => (
-                          <div key={i} className="p-6 bg-dark/40 rounded-[2rem] border border-white/5 space-y-4">
+                          <div key={review.id || i} className="p-6 bg-dark/40 rounded-[2rem] border border-white/5 space-y-4 relative group">
+                             {isManagement && (
+                               <button 
+                                 onClick={() => handleDeleteReview(review.id)}
+                                 className="absolute top-4 right-4 p-2 bg-red-500/10 text-red-500 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white z-10"
+                                 title={t.deleteMsg}
+                               >
+                                 <Trash2 size={14} />
+                               </button>
+                             )}
                              <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                    <div className="w-8 h-8 rounded-xl bg-brand text-dark text-[11px] font-black flex items-center justify-center">{review.avatar}</div>
