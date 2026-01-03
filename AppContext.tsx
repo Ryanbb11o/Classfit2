@@ -199,23 +199,23 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const updateBooking = async (id: string, updates: Partial<Booking>) => {
-    let finalUpdates = { ...updates };
     const adminName = currentUser?.name.split('(')[0].trim() || 'Admin';
+    const existing = bookings.find(b => b.id === id);
+    if (!existing) return;
+
+    let finalUpdates = { ...existing, ...updates };
 
     if (updates.status === 'completed') {
-      const booking = bookings.find(b => b.id === id);
-      const trainer = users.find(u => u.id === booking?.trainerId);
-      if (booking && trainer) {
-        const rate = trainer.commissionRate || 25; 
-        const gymCut = (booking.price * rate) / 100;
-        finalUpdates.commissionAmount = gymCut;
-        finalUpdates.trainerEarnings = booking.price - gymCut;
-        finalUpdates.settledAt = new Date().toISOString();
-        finalUpdates.settledBy = adminName;
-      }
+      const trainer = users.find(u => u.id === existing.trainerId);
+      const rate = trainer?.commissionRate || 25; 
+      const gymCut = (existing.price * rate) / 100;
+      finalUpdates.commissionAmount = gymCut;
+      finalUpdates.trainerEarnings = existing.price - gymCut;
+      finalUpdates.settledAt = new Date().toISOString();
+      finalUpdates.settledBy = adminName;
     }
 
-    // Always log administrative modifications if we are in admin context
+    // Record audit details if modified by Management/Admin
     if (isAdmin) {
       finalUpdates.lastModifiedBy = adminName;
       finalUpdates.modifiedAt = new Date().toISOString();
@@ -240,6 +240,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
        booking_date: finalUpdates.date,
        booking_time: finalUpdates.time
     }).eq('id', id);
+    
     if (error) throw error;
     await refreshData();
   };

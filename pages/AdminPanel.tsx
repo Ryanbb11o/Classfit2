@@ -20,6 +20,7 @@ const AdminPanel: React.FC = () => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [expandedBookingId, setExpandedBookingId] = useState<string | null>(null);
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
+  const [isSavingBooking, setIsSavingBooking] = useState(false);
 
   useEffect(() => {
     if (location.state?.activeTab) setActiveTab(location.state.activeTab as any);
@@ -437,6 +438,7 @@ const AdminPanel: React.FC = () => {
            </div>
         )}
 
+        {/* Other tabs remain the same... */}
         {activeTab === 'trainers' && ( activeTrainers.length === 0 ? <p className="text-center py-20 text-slate-500">No active coaches.</p> :
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {activeTrainers.map(t => (
@@ -453,15 +455,6 @@ const AdminPanel: React.FC = () => {
                           <span className="text-slate-500 uppercase">Commision Rate</span>
                           <span className="text-white bg-white/5 px-3 py-1 rounded-lg">{t.commissionRate || 25}%</span>
                        </div>
-                       <div className="flex justify-between items-center text-[10px] font-bold">
-                          <span className="text-slate-500 uppercase italic">Registered Profile</span>
-                          <div className="flex items-center gap-2">
-                             <span className="text-slate-600 font-mono">{t.id.substring(0,8)}...</span>
-                             <button onClick={() => handleCopy(t.id)} className="p-1.5 bg-white/5 rounded-lg text-slate-500 hover:text-white transition-colors">
-                                {copiedId === t.id ? <CheckSquare size={12} /> : <Copy size={12} />}
-                             </button>
-                          </div>
-                       </div>
                     </div>
                     <button onClick={() => setUserForRoles(t)} className="mt-8 w-full py-4 bg-white/5 hover:bg-brand hover:text-dark text-slate-500 text-[10px] font-black uppercase rounded-2xl border border-white/10 transition-all flex items-center justify-center gap-2 italic">
                        <Settings2 size={14} /> Identity Controls
@@ -471,7 +464,6 @@ const AdminPanel: React.FC = () => {
            </div>
         )}
 
-        {/* Recruitment / Applications */}
         {activeTab === 'applications' && ( pendingApps.length === 0 ? <p className="text-center py-20 text-slate-500 italic">Queue is clear.</p> :
            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {pendingApps.map(app => (
@@ -485,9 +477,6 @@ const AdminPanel: React.FC = () => {
                     </div>
                     <div className="space-y-4 mb-10">
                        <p className="text-xs text-slate-400 italic leading-relaxed">"{app.bio}"</p>
-                       <div className="flex gap-4 text-[9px] font-black uppercase tracking-widest text-slate-600 italic">
-                          <span>{app.email}</span> • <span>{app.phone}</span>
-                       </div>
                     </div>
                     <div className="flex gap-4">
                        <button onClick={() => setUserForRoles(app)} className="flex-1 py-5 bg-brand text-dark rounded-2xl font-black uppercase text-xs hover:bg-white transition-all shadow-xl">Review & Hire</button>
@@ -498,12 +487,11 @@ const AdminPanel: React.FC = () => {
            </div>
         )}
 
-        {/* User Registry */}
         {activeTab === 'users' && (
            <div className="bg-surface rounded-[3rem] border border-white/5 overflow-hidden shadow-2xl">
               <table className="w-full">
                   <thead className="bg-dark/30 text-[9px] font-black uppercase text-slate-500">
-                     <tr><th className="px-8 py-5 text-left">Member Profile</th><th className="px-8 py-5 text-left">Verified ID</th><th className="px-8 py-5 text-left">Registration</th><th className="px-8 py-5 text-right">Delete</th></tr>
+                     <tr><th className="px-8 py-5 text-left">Member Profile</th><th className="px-8 py-5 text-left">Registration</th><th className="px-8 py-5 text-right">Delete</th></tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
                      {users.map(u => (
@@ -517,12 +505,6 @@ const AdminPanel: React.FC = () => {
                                  </div>
                               </div>
                            </td>
-                           <td className="px-8 py-6">
-                              <div className="flex items-center gap-2">
-                                 <span className="text-[10px] font-mono text-slate-600 bg-dark/50 px-3 py-1 rounded-lg border border-white/5">{u.id.substring(0,12)}...</span>
-                                 <button onClick={() => handleCopy(u.id)} className="p-1.5 bg-white/5 rounded-lg text-slate-500 hover:text-white transition-all">{copiedId === u.id ? <CheckSquare size={12} /> : <Copy size={12} />}</button>
-                              </div>
-                           </td>
                            <td className="px-8 py-6 text-slate-400 font-bold italic">{new Date(u.joinedDate).toLocaleDateString()}</td>
                            <td className="px-8 py-6 text-right">
                               {!u.roles.includes('management') && isManagement && <button onClick={() => confirmAction({ title: 'Purge Account', message: `Permanently delete ${u.name}'s entire profile and history?`, onConfirm: () => deleteUser(u.id) })} className="p-3 text-slate-700 hover:text-red-500 transition-colors bg-white/5 rounded-xl"><Trash2 size={16}/></button>}
@@ -534,7 +516,6 @@ const AdminPanel: React.FC = () => {
            </div>
         )}
 
-        {/* Roles / Authority */}
         {activeTab === 'roles' && (
            <div className="bg-surface rounded-[3rem] border border-white/5 overflow-hidden shadow-2xl">
               <table className="w-full">
@@ -554,7 +535,6 @@ const AdminPanel: React.FC = () => {
            </div>
         )}
 
-        {/* Review Moderation */}
         {activeTab === 'reviews' && ( pendingReviews.length === 0 ? <p className="text-center py-20 text-slate-500 italic">No feedback pending moderation.</p> :
            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">
               {pendingReviews.map(r => (
@@ -640,12 +620,21 @@ const AdminPanel: React.FC = () => {
 
                     <div className="pt-6 border-t border-white/5 space-y-3">
                         <button 
-                            onClick={async () => { await updateBooking(editingBooking.id, editingBooking); setEditingBooking(null); }} 
+                            disabled={isSavingBooking}
+                            onClick={async () => { 
+                              setIsSavingBooking(true);
+                              try {
+                                await updateBooking(editingBooking.id, editingBooking); 
+                                setEditingBooking(null); 
+                              } finally {
+                                setIsSavingBooking(false);
+                              }
+                            }} 
                             className="w-full py-5 bg-brand text-dark rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl shadow-brand/10 hover:bg-white transition-all flex items-center justify-center gap-2"
                         >
-                            <Save size={16} /> Save Changes & Log Identity
+                            {isSavingBooking ? <Loader2 className="animate-spin" size={16} /> : <><Save size={16} /> Update Session & Log Audit</>}
                         </button>
-                        <p className="text-center text-[9px] text-slate-600 font-bold uppercase tracking-widest italic">Action will be recorded in the audit trail.</p>
+                        <p className="text-center text-[9px] text-slate-600 font-bold uppercase tracking-widest italic">Management action will be recorded in the audit trail.</p>
                     </div>
                 </div>
             </div>
