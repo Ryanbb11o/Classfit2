@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Language, Booking, User, Review, UserRole } from './types';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
@@ -191,7 +192,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         return;
     }
 
-    // Map columns and OMIT missing 'blockedDates' to avoid schema errors
     const dbPayload: any = {};
     if (updates.name !== undefined) dbPayload.name = updates.name;
     if (updates.email !== undefined) dbPayload.email = updates.email;
@@ -207,7 +207,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (error) {
         console.error("Supabase User Update Error:", error);
         setUsers(prevUsers); // Rollback
-        alert(`Account update failed: ${error.message}. Some specialized columns may be missing from your database schema.`);
+        alert(`Account update failed: ${error.message}`);
         return;
     }
     await refreshData();
@@ -220,7 +220,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     let finalUpdates = { ...existing, ...updates };
 
-    if (updates.status === 'completed') {
+    // Automatic calculation logic only if settlement is triggered without manual overrides
+    if (updates.status === 'completed' && updates.commissionAmount === undefined) {
       const trainer = users.find(u => u.id === existing.trainerId);
       const rate = trainer?.commissionRate || 25; 
       const gymCut = (existing.price * rate) / 100;
@@ -245,13 +246,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
        booking_date: finalUpdates.date,
        booking_time: finalUpdates.time,
        settled_at: finalUpdates.settledAt,
-       settled_by: finalUpdates.settledBy
+       settled_by: finalUpdates.settledBy,
+       has_been_reviewed: finalUpdates.hasBeenReviewed,
+       commission_amount: finalUpdates.commissionAmount,
+       trainer_earnings: finalUpdates.trainerEarnings
     }).eq('id', id);
     
     if (error) {
        console.error("Supabase Booking Update Error:", error);
        setBookings(previousBookings); 
-       alert(`Database Error: ${error.message}. Ensure your Supabase schema supports these updates.`);
+       alert(`Database Error: ${error.message}`);
        return;
     }
     
@@ -268,7 +272,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
     const { data } = await supabase.from('users').select('*').eq('email', email).eq('password', pass).maybeSingle();
     if (data) {
-        const roles = data.roles || ['user'];
+        let roles = data.roles || ['user'];
+        // Master Role Injection during login
+        if (data.email === MASTER_EMAIL || String(data.id) === MASTER_ID) {
+           roles = Array.from(new Set([...roles, 'management', 'admin']));
+        }
+
         const u: User = { 
           id: String(data.id), name: data.name, email: data.email, password: data.password, 
           roles: roles, phone: data.phone, image: data.image || DEFAULT_PROFILE_IMAGE, 
@@ -294,10 +303,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const fullName = `${data.name} (${data.specialty})`;
     const bioText = `Experience: ${data.experience || 'N/A'}\nCertifications: ${data.certs || 'N/A'}\nSocial: ${data.social || 'N/A'}\nMotivation: ${data.motivation || 'N/A'}\nLanguages: ${data.languages?.join(', ') || 'Bulgarian'}`;
     if (isDemoMode) {
-       const u: User = { id: Math.random().toString(36).substr(2, 9), name: fullName, email: data.email, password: data.pass, phone: data.phone, bio: bioText, roles: ['user', 'trainer_pending'], joinedDate: new Date().toISOString(), image: DEFAULT_PROFILE_IMAGE };
+       const u: User = { id: Math.random().toString(36).substr(2, 9), name: fullName, email: data.email, password: data.pass, phone: data.phone, bio: bioText, roles: ['user', 'trainer_pending'], joinedDate: new Date().toISOString(), image: DEFAULT_PROFILE_IMAGE, commissionRate: 25 };
        setUsers([...users, u]); return { success: true };
     }
-    const { error } = await supabase.from('users').insert([{ name: fullName, email: data.email, phone: data.phone, password: data.pass, bio: bioText, roles: ['user', 'trainer_pending'] }]);
+    const { error } = await supabase.from('users').insert([{ name: fullName, email: data.email, phone: data.phone, password: data.pass, bio: bioText, roles: ['user', 'trainer_pending'], commission_rate: 25 }]);
     if (error) return { success: false, msg: error.message };
     await refreshData(); return { success: true };
   };

@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { LayoutDashboard, ListFilter, Briefcase, UserCheck, FileSpreadsheet, Users, RefreshCw, Star, Trash2, Eye, X, Loader2, TrendingUp, Wallet, Check, Ban, DollarSign, PieChart, History, CreditCard, Banknote, Calendar, Clock, User, Phone, ShieldCheck, Key, Fingerprint, Settings2, Copy, CheckSquare, MessageSquare, Trash, Zap, ArrowUpRight, Activity, BellRing, ChevronDown, ChevronUp, Info, MapPinned, Edit3, Save, AlertTriangle } from 'lucide-react';
+import { LayoutDashboard, ListFilter, Briefcase, UserCheck, FileSpreadsheet, Users, RefreshCw, Star, Trash2, Eye, X, Loader2, TrendingUp, Wallet, Check, Ban, DollarSign, PieChart, History, CreditCard, Banknote, Calendar, Clock, User, Phone, ShieldCheck, Key, Fingerprint, Settings2, Copy, CheckSquare, MessageSquare, Trash, Zap, ArrowUpRight, Activity, BellRing, ChevronDown, ChevronUp, Info, MapPinned, Edit3, Save, AlertTriangle, Percent } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, DEFAULT_PROFILE_IMAGE } from '../constants';
 import { User as UserType, Booking, Review } from '../types';
@@ -150,7 +150,7 @@ const AdminPanel: React.FC = () => {
                    </div>
                    <div className="h-px bg-white/5"></div>
                    <div className="flex justify-between items-center text-[10px]">
-                      <span className="text-brand font-black uppercase">Gym P&L ({trainer?.commissionRate || 25}%)</span>
+                      <span className="text-brand font-black uppercase">Gym P&L</span>
                       <span className="text-brand font-black italic">{booking.commissionAmount?.toFixed(2)} BGN</span>
                    </div>
                    <div className="flex justify-between items-center text-[10px]">
@@ -174,7 +174,7 @@ const AdminPanel: React.FC = () => {
              <h1 className="text-4xl font-black uppercase italic text-white tracking-tighter leading-none">Console</h1>
              <button onClick={handleManualRefresh} className={`p-2 rounded-xl bg-white/5 ${isRefreshing ? 'animate-spin text-brand' : 'text-slate-500'}`}><RefreshCw size={18} /></button>
           </div>
-          <p className="text-slate-500 font-black uppercase tracking-[0.3em] text-[10px] mt-2 italic">ClassFit Varna Admin</p>
+          <p className="text-slate-500 font-black uppercase tracking-[0.3em] text-[10px] mt-2 italic">ClassFit Varna Admin • Mir Stop</p>
         </div>
         <div className="flex flex-wrap gap-2 bg-surface p-1.5 rounded-2xl border border-white/5">
             {[
@@ -200,7 +200,7 @@ const AdminPanel: React.FC = () => {
         {activeTab === 'overview' && (
            <div className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                 {/* Total Revenue -> Finance Tab */}
+                 {/* Total Revenue Hyperlink -> Finance */}
                  <div 
                     onClick={() => setActiveTab('finance')}
                     className="p-8 bg-brand text-dark rounded-[2.5rem] shadow-xl relative overflow-hidden group cursor-pointer hover:scale-[1.02] active:scale-95 transition-all"
@@ -208,12 +208,12 @@ const AdminPanel: React.FC = () => {
                     <div className="absolute top-4 right-4 opacity-10"><PieChart size={48} /></div>
                     <p className="text-[10px] font-black uppercase mb-4 tracking-widest italic opacity-60">Total Revenue</p>
                     <p className="text-4xl font-black italic tracking-tighter">{totalRevenue.toFixed(2)} <span className="text-xs">BGN</span></p>
-                    <div className="mt-4 inline-flex items-center gap-1.5 px-2.5 py-1 bg-dark/10 rounded-lg text-[9px] font-black uppercase italic">
-                       <ArrowUpRight size={12} /> View Details
+                    <div className="mt-4 inline-flex items-center gap-1.5 px-2.5 py-1 bg-dark/10 rounded-lg text-[9px] font-black uppercase italic group-hover:bg-dark group-hover:text-brand transition-colors">
+                       <ArrowUpRight size={12} /> Financial Report
                     </div>
                  </div>
 
-                 {/* Gym Profit -> Finance Tab */}
+                 {/* Gym Profit Hyperlink -> Finance */}
                  <div 
                     onClick={() => setActiveTab('finance')}
                     className="p-8 bg-surface border border-white/5 rounded-[2.5rem] relative overflow-hidden group cursor-pointer hover:border-brand/40 hover:scale-[1.02] active:scale-95 transition-all"
@@ -221,10 +221,10 @@ const AdminPanel: React.FC = () => {
                     <div className="absolute top-4 right-4 opacity-10"><TrendingUp size={48} className="text-brand" /></div>
                     <p className="text-[10px] font-black uppercase mb-4 tracking-widest italic text-slate-500">Gym Profit</p>
                     <p className="text-4xl font-black italic text-brand tracking-tighter">{gymProfit.toFixed(2)} <span className="text-xs">BGN</span></p>
-                    <p className="text-[9px] text-slate-600 font-bold uppercase mt-4 italic tracking-widest group-hover:text-brand transition-colors">Net Earnings →</p>
+                    <p className="text-[9px] text-slate-600 font-bold uppercase mt-4 italic tracking-widest group-hover:text-brand transition-colors">Profit Analysis →</p>
                  </div>
 
-                 {/* Pending Pay -> Finance Tab */}
+                 {/* Pending Pay Hyperlink -> Finance */}
                  <div 
                     onClick={() => setActiveTab('finance')}
                     className="p-8 bg-surface border border-white/5 rounded-[2.5rem] relative overflow-hidden group cursor-pointer hover:border-yellow-500/40 hover:scale-[1.02] active:scale-95 transition-all"
@@ -232,10 +232,10 @@ const AdminPanel: React.FC = () => {
                     <div className="absolute top-4 right-4 opacity-5"><Wallet size={48} className="text-yellow-500" /></div>
                     <p className="text-[10px] font-black uppercase mb-4 tracking-widest italic text-slate-500">Pending Pay</p>
                     <p className="text-4xl font-black italic text-yellow-500 tracking-tighter">{awaitingPaymentList.length}</p>
-                    <div className="mt-4 text-[9px] font-black uppercase text-slate-400 group-hover:text-white transition-colors">Action Required →</div>
+                    <div className="mt-4 text-[9px] font-black uppercase text-slate-400 group-hover:text-yellow-500 transition-colors">Awaiting Verification →</div>
                  </div>
 
-                 {/* Community -> Users Tab */}
+                 {/* Community Hyperlink -> Users */}
                  <div 
                     onClick={() => setActiveTab('users')}
                     className="p-8 bg-surface border border-white/5 rounded-[2.5rem] relative overflow-hidden group cursor-pointer hover:border-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all"
@@ -243,7 +243,7 @@ const AdminPanel: React.FC = () => {
                     <div className="absolute top-4 right-4 opacity-5"><Users size={48} className="text-blue-500" /></div>
                     <p className="text-[10px] font-black uppercase mb-4 tracking-widest italic text-slate-500">Community</p>
                     <p className="text-4xl font-black italic text-white tracking-tighter">{users.length}</p>
-                    <p className="text-[9px] text-slate-600 font-bold uppercase mt-4 italic tracking-widest group-hover:text-blue-400 transition-colors">Active Members →</p>
+                    <p className="text-[9px] text-slate-600 font-bold uppercase mt-4 italic tracking-widest group-hover:text-blue-400 transition-colors">Member Registry →</p>
                  </div>
               </div>
 
@@ -423,8 +423,20 @@ const AdminPanel: React.FC = () => {
                     </div>
                     <div className="space-y-4 pt-6 border-t border-white/5">
                        <div className="flex justify-between items-center text-[10px] font-bold">
-                          <span className="text-slate-500 uppercase">Commision Rate</span>
-                          <span className="text-white bg-white/5 px-3 py-1 rounded-lg">{t.commissionRate || 25}%</span>
+                          <span className="text-slate-500 uppercase flex items-center gap-1.5"><Percent size={12} /> Commission Rate</span>
+                          {isManagement ? (
+                              <div className="flex items-center gap-2">
+                                <input 
+                                    type="number" 
+                                    value={t.commissionRate} 
+                                    onChange={(e) => updateUser(t.id, { commissionRate: Number(e.target.value) })}
+                                    className="w-16 bg-dark/40 border border-white/10 rounded-lg px-2 py-1 text-white font-black text-center outline-none focus:border-brand"
+                                />
+                                <span className="text-slate-500">%</span>
+                              </div>
+                          ) : (
+                              <span className="text-white bg-white/5 px-3 py-1 rounded-lg">{t.commissionRate || 25}%</span>
+                          )}
                        </div>
                     </div>
                     <button onClick={() => setUserForRoles(t)} className="mt-8 w-full py-4 bg-white/5 hover:bg-brand hover:text-dark text-slate-500 text-[10px] font-black uppercase rounded-2xl border border-white/10 transition-all flex items-center justify-center gap-2 italic">
@@ -536,7 +548,7 @@ const AdminPanel: React.FC = () => {
 
       {editingBooking && (
          <div className="fixed inset-0 z-[220] flex items-center justify-center p-4 bg-dark/95 backdrop-blur-xl animate-in fade-in duration-300 text-left">
-            <div className="bg-surface border border-white/10 rounded-[3rem] p-10 w-full max-w-lg shadow-2xl relative overflow-hidden">
+            <div className="bg-surface border border-white/10 rounded-[3rem] p-10 w-full max-w-lg shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh]">
                 <div className="absolute top-0 left-0 w-full h-1.5 bg-yellow-500"></div>
                 <button onClick={() => setEditingBooking(null)} className="absolute top-8 right-8 text-slate-500 hover:text-white bg-white/5 p-2 rounded-full"><X size={20} /></button>
                 
@@ -546,7 +558,7 @@ const AdminPanel: React.FC = () => {
                    <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest">ID: {editingBooking.id.substring(0,8)}...</p>
                 </div>
 
-                <div className="space-y-6">
+                <div className="space-y-6 overflow-y-auto pr-2 custom-scrollbar">
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                            <label className="text-[9px] font-black uppercase tracking-widest text-slate-600 ml-2">Session Date</label>
@@ -588,6 +600,45 @@ const AdminPanel: React.FC = () => {
                         </select>
                     </div>
 
+                    <div className="bg-dark/40 p-6 rounded-2xl border border-white/5 space-y-4">
+                       <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 italic mb-2">P&L Overrides</h4>
+                       <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                             <label className="text-[8px] font-black uppercase text-slate-600 ml-1 italic">Gym Profit (BGN)</label>
+                             <input 
+                                type="number" 
+                                value={editingBooking.commissionAmount} 
+                                onChange={(e) => {
+                                   const gymCut = Number(e.target.value);
+                                   setEditingBooking({
+                                      ...editingBooking, 
+                                      commissionAmount: gymCut,
+                                      trainerEarnings: editingBooking.price - gymCut
+                                   });
+                                }}
+                                className="w-full bg-surface border border-white/10 rounded-xl px-4 py-2.5 text-brand font-black text-xs outline-none focus:border-brand"
+                             />
+                          </div>
+                          <div className="space-y-2">
+                             <label className="text-[8px] font-black uppercase text-slate-600 ml-1 italic">Coach Yield (BGN)</label>
+                             <input 
+                                type="number" 
+                                value={editingBooking.trainerEarnings} 
+                                onChange={(e) => {
+                                   const trainerCut = Number(e.target.value);
+                                   setEditingBooking({
+                                      ...editingBooking, 
+                                      trainerEarnings: trainerCut,
+                                      commissionAmount: editingBooking.price - trainerCut
+                                   });
+                                }}
+                                className="w-full bg-surface border border-white/10 rounded-xl px-4 py-2.5 text-white font-black text-xs outline-none focus:border-brand"
+                             />
+                          </div>
+                       </div>
+                       <p className="text-[8px] text-slate-600 font-bold italic text-center">Base Price: {editingBooking.price} BGN • Adjustments will be saved to the ledger.</p>
+                    </div>
+
                     <div className="pt-6 border-t border-white/5 space-y-3">
                         <button 
                             disabled={isSavingBooking}
@@ -604,7 +655,6 @@ const AdminPanel: React.FC = () => {
                         >
                             {isSavingBooking ? <Loader2 className="animate-spin" size={16} /> : <><Save size={16} /> Commit Overrides & Update Ledger</>}
                         </button>
-                        <p className="text-center text-[9px] text-slate-600 font-bold uppercase tracking-widest italic">Management actions are synchronized with the secure live ledger.</p>
                     </div>
                 </div>
             </div>
