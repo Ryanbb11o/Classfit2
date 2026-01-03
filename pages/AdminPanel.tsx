@@ -1,10 +1,107 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { LayoutDashboard, ListFilter, MessageSquare, Briefcase, UserCheck, FileSpreadsheet, Users, RefreshCw, Star, Trash2, Eye, X, Save, Loader2, TrendingUp, Wallet, Check, Ban, DollarSign, PieChart, History, CreditCard, Banknote, Calendar, Clock, User, Phone, Mail, ShieldCheck, AlertCircle, UserPlus, ShieldAlert, ChevronDown, Plus, Minus } from 'lucide-react';
+import { LayoutDashboard, ListFilter, MessageSquare, Briefcase, UserCheck, FileSpreadsheet, Users, RefreshCw, Star, Trash2, Eye, X, Save, Loader2, TrendingUp, Wallet, Check, Ban, DollarSign, PieChart, History, CreditCard, Banknote, Calendar, Clock, User, Phone, Mail, ShieldCheck, AlertCircle, UserPlus, ShieldAlert, ChevronDown, Plus, Minus, Key, Fingerprint, Settings2 } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, DEFAULT_PROFILE_IMAGE } from '../constants';
 import { User as UserType, Booking, UserRole } from '../types';
+
+// Role Management Modal Component
+const RoleManagementModal: React.FC<{ 
+  user: UserType | null; 
+  onClose: () => void; 
+  onUpdate: (userId: string, roles: UserRole[]) => Promise<void>;
+  roleOptions: { id: UserRole, label: string, color: string }[];
+  language: string;
+}> = ({ user, onClose, onUpdate, roleOptions, language }) => {
+  const [selectedRoles, setSelectedRoles] = useState<UserRole[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (user) setSelectedRoles(user.roles);
+  }, [user]);
+
+  if (!user) return null;
+
+  const handleToggle = (role: UserRole) => {
+    // Protection for Management Role
+    if (role === 'management' && user.roles.includes('management')) {
+      alert(language === 'bg' ? 'Ролята "Management" е защитена.' : 'The "Management" role is protected and cannot be removed here.');
+      return;
+    }
+
+    if (selectedRoles.includes(role)) {
+      const next = selectedRoles.filter(r => r !== role);
+      setSelectedRoles(next.length === 0 ? ['user'] : next);
+    } else {
+      setSelectedRoles([...selectedRoles, role]);
+    }
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    await onUpdate(user.id, selectedRoles);
+    setIsSaving(false);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-dark/95 backdrop-blur-xl animate-in fade-in duration-300 text-left">
+       <div className="bg-surface border border-white/10 rounded-[3rem] p-10 w-full max-w-md shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-1.5 bg-brand"></div>
+          <button onClick={onClose} className="absolute top-8 right-8 text-slate-500 hover:text-white bg-white/5 p-2 rounded-full"><X size={20} /></button>
+          
+          <div className="mb-10">
+             <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand/10 text-brand rounded-lg text-[9px] font-black uppercase tracking-widest mb-4 italic">
+                <Settings2 size={12} /> Authority Control
+             </div>
+             <h2 className="text-3xl font-black uppercase italic text-white tracking-tighter leading-none mb-2">{user.name.split('(')[0].trim()}</h2>
+             <div className="flex items-center gap-2 text-slate-500">
+                <Fingerprint size={12} />
+                <p className="text-[10px] font-mono uppercase tracking-tighter">{user.id}</p>
+             </div>
+          </div>
+
+          <div className="space-y-4 mb-10">
+             <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest italic mb-4">Select Assigned Roles</p>
+             <div className="grid grid-cols-1 gap-2">
+                {roleOptions.map((opt) => {
+                  const isActive = selectedRoles.includes(opt.id);
+                  const isLocked = opt.id === 'management' && user.roles.includes('management');
+                  
+                  return (
+                    <button 
+                      key={opt.id}
+                      onClick={() => handleToggle(opt.id)}
+                      disabled={isLocked}
+                      className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${
+                        isActive 
+                          ? 'bg-brand/10 border-brand/30 text-white' 
+                          : 'bg-dark/40 border-white/5 text-slate-500 hover:border-white/20'
+                      } ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                       <div className="flex items-center gap-3">
+                          <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-brand shadow-[0_0_8px_rgba(197,217,45,0.8)]' : 'bg-slate-700'}`}></div>
+                          <span className="text-[11px] font-black uppercase tracking-widest">{opt.label}</span>
+                       </div>
+                       {isActive ? <Check size={14} className="text-brand" /> : <Plus size={14} className="opacity-20" />}
+                    </button>
+                  );
+                })}
+             </div>
+          </div>
+
+          <button 
+            onClick={handleSave}
+            disabled={isSaving}
+            className="w-full py-5 bg-brand text-dark rounded-2xl font-black uppercase tracking-widest text-[11px] hover:bg-white transition-all shadow-xl shadow-brand/10 flex items-center justify-center gap-2"
+          >
+             {isSaving ? <Loader2 className="animate-spin" size={18} /> : <><ShieldCheck size={18} /> Update Authority</>}
+          </button>
+       </div>
+    </div>
+  );
+};
 
 const TransactionDossier: React.FC<{ booking: Booking | null; onClose: () => void; users: UserType[] }> = ({ booking, onClose, users }) => {
   if (!booking) return null;
@@ -89,27 +186,16 @@ const AdminPanel: React.FC = () => {
   const location = useLocation();
   const t = TRANSLATIONS[language];
   
-  const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'trainers' | 'finance' | 'users' | 'applications' | 'reviews'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'trainers' | 'finance' | 'users' | 'roles' | 'applications' | 'reviews'>('overview');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pendingSettlementId, setPendingSettlementId] = useState<string | null>(null);
   const [isSettling, setIsSettling] = useState(false);
   const [viewingDossier, setViewingDossier] = useState<Booking | null>(null);
-  const [activeRoleMenu, setActiveRoleMenu] = useState<string | null>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const [userForRoles, setUserForRoles] = useState<UserType | null>(null);
 
   useEffect(() => {
     if (location.state?.activeTab) setActiveTab(location.state.activeTab);
   }, [location.state]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setActiveRoleMenu(null);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   const awaitingPaymentList = bookings.filter(b => b.status === 'trainer_completed');
   const completedBookings = bookings.filter(b => b.status === 'completed');
@@ -136,33 +222,6 @@ const AdminPanel: React.FC = () => {
     } finally {
       setIsSettling(false);
     }
-  };
-
-  const handleToggleRole = (userId: string, targetRole: UserRole) => {
-    const user = users.find(u => u.id === userId);
-    if (!user) return;
-
-    let newRoles: UserRole[];
-    const hasRole = user.roles.includes(targetRole);
-
-    // Sticky Logic: Management role cannot be removed via UI
-    if (hasRole && targetRole === 'management') {
-      alert(language === 'bg' ? 'Ролята "Management" не може да бъде премахната от никого.' : 'The "Management" role cannot be removed by anyone.');
-      return;
-    }
-
-    if (hasRole) {
-      newRoles = user.roles.filter(r => r !== targetRole);
-      if (newRoles.length === 0) newRoles = ['user'];
-    } else {
-      newRoles = Array.from(new Set([...user.roles, targetRole]));
-    }
-
-    confirmAction({
-      title: hasRole ? 'Revoke Authority' : 'Grant Authority',
-      message: `Update roles for ${user.name.split('(')[0].trim()}?`,
-      onConfirm: async () => await updateUser(userId, { roles: newRoles })
-    });
   };
 
   const handleDeleteUserAccount = (userId: string) => {
@@ -210,7 +269,8 @@ const AdminPanel: React.FC = () => {
               { id: 'bookings', icon: ListFilter, label: t.tabBookings },
               { id: 'trainers', icon: Briefcase, label: t.trainer },
               { id: 'applications', icon: UserCheck, label: t.tabRecruitment, badge: pendingApps.length },
-              { id: 'users', icon: Users, label: t.tabUsers }
+              { id: 'users', icon: Users, label: t.tabUsers },
+              { id: 'roles', icon: ShieldCheck, label: 'Authority' }
             ].map(tab => (
                 <button key={tab.id} onClick={() => setActiveTab(tab.id as any)} className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all ${activeTab === tab.id ? 'bg-brand text-dark' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
                     <tab.icon size={14} /> {tab.label}
@@ -315,22 +375,27 @@ const AdminPanel: React.FC = () => {
          <div className="animate-in slide-in-from-bottom-2 duration-500 pb-32">
             <div className="flex items-center gap-4 mb-8">
                 <div className="w-12 h-12 bg-brand/10 text-brand rounded-2xl flex items-center justify-center"><Users size={24} /></div>
-                <div><h3 className="text-2xl font-black uppercase italic text-white tracking-tighter leading-none">User Directory</h3><p className="text-[9px] font-black uppercase tracking-widest text-slate-500 italic mt-1">Authority Management & Permissions</p></div>
+                <div><h3 className="text-2xl font-black uppercase italic text-white tracking-tighter leading-none">User Directory</h3><p className="text-[9px] font-black uppercase tracking-widest text-slate-500 italic mt-1">Global Member Registry & Identity Access</p></div>
             </div>
             
             <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-visible">
                <table className="w-full">
                   <thead className="bg-dark/30 text-[9px] font-black uppercase text-slate-500">
                      <tr>
+                        <th className="px-8 py-5 text-left">Ref ID</th>
                         <th className="px-8 py-5 text-left">Identity</th>
                         <th className="px-8 py-5 text-left">Joined</th>
-                        <th className="px-8 py-5 text-left">Assigned Authority</th>
-                        <th className="px-8 py-5 text-right">Security</th>
+                        <th className="px-8 py-5 text-right">Action</th>
                      </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
                      {users.length === 0 ? <tr><td colSpan={4} className="px-8 py-20 text-center text-slate-500 font-bold italic">No user accounts found.</td></tr> : users.map(user => (
                         <tr key={user.id} className="hover:bg-white/5 transition-colors">
+                           <td className="px-8 py-6">
+                              <span className="text-[10px] font-mono text-slate-600 bg-dark/50 px-2 py-1 rounded border border-white/5" title={user.id}>
+                                {user.id.substring(0, 8)}...
+                              </span>
+                           </td>
                            <td className="px-8 py-6">
                               <div className="flex items-center gap-4">
                                  <div className="w-10 h-10 rounded-xl bg-dark border border-white/10 flex items-center justify-center text-brand font-black overflow-hidden shrink-0">
@@ -343,57 +408,6 @@ const AdminPanel: React.FC = () => {
                               </div>
                            </td>
                            <td className="px-8 py-6 text-slate-400 text-xs font-bold uppercase tracking-widest">{new Date(user.joinedDate).toLocaleDateString()}</td>
-                           <td className="px-8 py-6 relative overflow-visible">
-                              <div className="flex flex-wrap gap-2 items-center">
-                                 {user.roles.map(role => {
-                                    const option = roleOptions.find(o => o.id === role);
-                                    return (
-                                       <span key={role} className={`px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-widest italic border ${option?.color || 'bg-white/5 text-slate-400 border-white/10'}`}>
-                                          {option?.label || role}
-                                       </span>
-                                    );
-                                 })}
-                                 
-                                 <div className="relative inline-block ml-1">
-                                    <button 
-                                       onClick={() => setActiveRoleMenu(activeRoleMenu === user.id ? null : user.id)}
-                                       className="p-1.5 rounded-lg bg-brand/10 text-brand border border-brand/20 hover:bg-brand hover:text-dark transition-all"
-                                    >
-                                       <Plus size={12} strokeWidth={3} />
-                                    </button>
-
-                                    {activeRoleMenu === user.id && (
-                                       <div ref={menuRef} className="absolute top-full left-0 mt-2 w-52 bg-dark/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl z-[100] overflow-hidden animate-in fade-in slide-in-from-top-2">
-                                          <div className="p-3 border-b border-white/5 bg-white/5">
-                                             <p className="text-[8px] font-black uppercase tracking-widest text-slate-500 italic">Toggle Roles</p>
-                                          </div>
-                                          {roleOptions.map(option => {
-                                             const isActive = user.roles.includes(option.id);
-                                             return (
-                                                <button 
-                                                   key={option.id}
-                                                   onClick={() => handleToggleRole(user.id, option.id)}
-                                                   className={`w-full px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest flex items-center justify-between transition-all hover:bg-white/5 ${
-                                                      isActive ? 'text-brand' : 'text-slate-400 hover:text-white'
-                                                   }`}
-                                                >
-                                                   <span className="flex items-center gap-2">
-                                                      <div className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-brand shadow-[0_0_8px_rgba(197,217,45,0.7)]' : 'bg-slate-700'}`}></div>
-                                                      {option.label}
-                                                   </span>
-                                                   {isActive ? (
-                                                      option.id === 'management' ? <ShieldCheck size={10} className="text-purple-400 opacity-50" /> : <X size={10} className="text-red-500" />
-                                                   ) : (
-                                                      <Plus size={10} className="opacity-40" />
-                                                   )}
-                                                </button>
-                                             );
-                                          })}
-                                       </div>
-                                    )}
-                                 </div>
-                              </div>
-                           </td>
                            <td className="px-8 py-6 text-right">
                               <div className="flex justify-end gap-2">
                                  {!user.roles.includes('management') && (
@@ -405,6 +419,62 @@ const AdminPanel: React.FC = () => {
                                     </button>
                                  )}
                               </div>
+                           </td>
+                        </tr>
+                     ))}
+                  </tbody>
+               </table>
+            </div>
+         </div>
+      )}
+
+      {activeTab === 'roles' && (
+         <div className="animate-in slide-in-from-bottom-2 duration-500 pb-32">
+            <div className="flex items-center gap-4 mb-8">
+                <div className="w-12 h-12 bg-purple-500/10 text-purple-400 rounded-2xl flex items-center justify-center"><ShieldCheck size={24} /></div>
+                <div><h3 className="text-2xl font-black uppercase italic text-white tracking-tighter leading-none">Authority Management</h3><p className="text-[9px] font-black uppercase tracking-widest text-slate-500 italic mt-1">Advanced Role Assignment & Access Levels</p></div>
+            </div>
+            
+            <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-visible">
+               <table className="w-full">
+                  <thead className="bg-dark/30 text-[9px] font-black uppercase text-slate-500">
+                     <tr>
+                        <th className="px-8 py-5 text-left">USER ID</th>
+                        <th className="px-8 py-5 text-left">Username</th>
+                        <th className="px-8 py-5 text-left">Current Authority</th>
+                        <th className="px-8 py-5 text-right">Management</th>
+                     </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                     {users.map(user => (
+                        <tr key={user.id} className="hover:bg-white/5 transition-colors">
+                           <td className="px-8 py-6">
+                              <span className="text-[10px] font-mono text-slate-400 bg-dark/50 px-2 py-1 rounded border border-white/5">
+                                {user.id}
+                              </span>
+                           </td>
+                           <td className="px-8 py-6">
+                              <p className="text-white font-black uppercase italic text-xs leading-none">{cleanName(user.name)}</p>
+                              <p className="text-[8px] text-slate-600 font-bold uppercase tracking-widest mt-1">{user.email}</p>
+                           </td>
+                           <td className="px-8 py-6">
+                              <div className="flex flex-wrap gap-1">
+                                 {user.roles.map(role => (
+                                    <span key={role} className={`px-2 py-0.5 rounded text-[8px] font-black uppercase italic tracking-tighter ${
+                                      roleOptions.find(o => o.id === role)?.color || 'bg-white/5 text-slate-500'
+                                    }`}>
+                                      {roleOptions.find(o => o.id === role)?.label || role}
+                                    </span>
+                                 ))}
+                              </div>
+                           </td>
+                           <td className="px-8 py-6 text-right">
+                              <button 
+                                 onClick={() => setUserForRoles(user)}
+                                 className="px-4 py-2 bg-white/5 hover:bg-brand hover:text-dark text-slate-400 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all border border-white/5 flex items-center gap-2 ml-auto"
+                              >
+                                 <Plus size={14} strokeWidth={3} /> Change Roles
+                              </button>
                            </td>
                         </tr>
                      ))}
@@ -444,13 +514,26 @@ const AdminPanel: React.FC = () => {
                      </div>
                      <div className="flex gap-4">
                         <button 
-                           onClick={() => handleToggleRole(app.id, 'trainer')}
+                           onClick={() => {
+                             const newRoles: UserRole[] = ['user', 'trainer'];
+                             confirmAction({
+                               title: 'Hire Coach',
+                               message: `Grant trainer authority to ${cleanName(app.name)}?`,
+                               onConfirm: async () => await updateUser(app.id, { roles: newRoles })
+                             });
+                           }}
                            className="flex-1 py-4 bg-brand text-dark rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-white transition-all shadow-xl shadow-brand/10 flex items-center justify-center gap-2"
                         >
                            <Check size={16} /> Hire Coach
                         </button>
                         <button 
-                           onClick={() => handleToggleRole(app.id, 'trainer_pending')}
+                           onClick={() => {
+                             confirmAction({
+                               title: 'Reject Application',
+                               message: `Dismiss recruitment request from ${cleanName(app.name)}?`,
+                               onConfirm: async () => await updateUser(app.id, { roles: ['user'] })
+                             });
+                           }}
                            className="px-6 py-4 bg-white/5 text-slate-500 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-red-500 hover:text-white transition-all"
                         >
                            <Ban size={16} />
@@ -547,6 +630,14 @@ const AdminPanel: React.FC = () => {
             </div>
          </div>
       )}
+
+      <RoleManagementModal 
+        user={userForRoles}
+        onClose={() => setUserForRoles(null)}
+        onUpdate={async (uid, rs) => await updateUser(uid, { roles: rs })}
+        roleOptions={roleOptions}
+        language={language}
+      />
 
       <TransactionDossier 
          booking={viewingDossier} 
