@@ -29,12 +29,12 @@ const Home: React.FC = () => {
             
             <div className="mb-8">
                 <Reveal delay={100} direction="left">
-                    <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-white leading-[0.9] uppercase italic block">
+                    <h1 className="text-4xl sm:text-6xl md:text-8xl font-black tracking-tighter text-white leading-[0.9] uppercase italic block">
                         {t.transform}
                     </h1>
                 </Reveal>
                 <Reveal delay={300} direction="right">
-                    <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-brand leading-[0.9] uppercase italic block">
+                    <h1 className="text-4xl sm:text-6xl md:text-8xl font-black tracking-tighter text-brand leading-[0.9] uppercase italic block">
                         {t.yourself}
                     </h1>
                 </Reveal>

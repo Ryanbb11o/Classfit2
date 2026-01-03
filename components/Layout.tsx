@@ -220,16 +220,16 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <div className="min-h-screen flex flex-col bg-dark text-white font-sans selection:bg-brand selection:text-dark">
       <header className="fixed top-0 left-0 right-0 bg-dark/80 backdrop-blur-xl z-50 border-b border-white/5">
-        <div className="max-w-[1600px] mx-auto px-6 h-20 flex items-center justify-between">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
           <NavLink to="/" className="flex items-center gap-3 shrink-0">
-            <span className="text-2xl font-black tracking-tighter uppercase italic leading-none text-white">
+            <span className="text-xl sm:text-2xl font-black tracking-tighter uppercase italic leading-none text-white">
               CLASS<span className="text-brand">FIT</span>
             </span>
           </NavLink>
 
           <div className="flex-grow"></div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3 sm:gap-6">
             <div className="hidden md:flex items-center gap-6">
                {currentUser ? (
                  <div className="flex items-center gap-4">
@@ -263,8 +263,11 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                    </NavLink>
                  </div>
                )}
-               
                <div className="h-6 w-px bg-white/10"></div>
+            </div>
+
+            {/* Language switcher visible on all devices now */}
+            <div className="shrink-0 scale-90 sm:scale-100">
                <LanguageSwitcher />
             </div>
 
@@ -281,7 +284,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                     </button>
 
                     {showNotifications && (
-                      <div className="absolute top-full right-0 mt-4 w-80 bg-surface rounded-2xl border border-white/10 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 z-[70]">
+                      <div className="absolute top-full right-0 mt-4 w-72 sm:w-80 bg-surface rounded-2xl border border-white/10 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 z-[70]">
                          <div className="p-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
                             <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Notifications</span>
                             <span className="bg-brand text-dark text-[10px] font-bold px-1.5 py-0.5 rounded">{totalNotifications}</span>
