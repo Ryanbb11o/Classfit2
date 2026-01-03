@@ -1,7 +1,7 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { LayoutDashboard, ListFilter, MessageSquare, Briefcase, UserCheck, FileSpreadsheet, Users, RefreshCw, Star, Trash2, Eye, X, Save, Loader2, TrendingUp, Wallet, Check, Ban, DollarSign, PieChart, History, CreditCard, Banknote, Calendar, Clock, User, Phone, Mail, ShieldCheck, AlertCircle, UserPlus, ShieldAlert } from 'lucide-react';
+import { LayoutDashboard, ListFilter, MessageSquare, Briefcase, UserCheck, FileSpreadsheet, Users, RefreshCw, Star, Trash2, Eye, X, Save, Loader2, TrendingUp, Wallet, Check, Ban, DollarSign, PieChart, History, CreditCard, Banknote, Calendar, Clock, User, Phone, Mail, ShieldCheck, AlertCircle, UserPlus, ShieldAlert, ChevronDown, Plus } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, DEFAULT_PROFILE_IMAGE } from '../constants';
 import { User as UserType, Booking } from '../types';
@@ -85,7 +85,6 @@ const TransactionDossier: React.FC<{ booking: Booking | null; onClose: () => voi
 };
 
 const AdminPanel: React.FC = () => {
-  // Fix: Extract currentUser from useAppContext to ensure it's available in the component scope for identity checks.
   const { language, bookings, refreshData, updateBooking, updateUser, deleteUser, isAdmin, users, confirmAction, currentUser } = useAppContext();
   const location = useLocation();
   const t = TRANSLATIONS[language];
@@ -95,10 +94,22 @@ const AdminPanel: React.FC = () => {
   const [pendingSettlementId, setPendingSettlementId] = useState<string | null>(null);
   const [isSettling, setIsSettling] = useState(false);
   const [viewingDossier, setViewingDossier] = useState<Booking | null>(null);
+  const [activeRoleMenu, setActiveRoleMenu] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (location.state?.activeTab) setActiveTab(location.state.activeTab);
   }, [location.state]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setActiveRoleMenu(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const awaitingPaymentList = bookings.filter(b => b.status === 'trainer_completed');
   const completedBookings = bookings.filter(b => b.status === 'completed');
@@ -129,6 +140,7 @@ const AdminPanel: React.FC = () => {
   };
 
   const handleRoleUpdate = (userId: string, newRole: UserType['role']) => {
+    setActiveRoleMenu(null);
     confirmAction({
       title: 'Update Authority',
       message: `Are you sure you want to change this user's role to ${newRole.toUpperCase()}?`,
@@ -145,6 +157,13 @@ const AdminPanel: React.FC = () => {
   };
 
   const cleanName = (name: string | undefined) => (name || 'Member').split('(')[0].trim();
+
+  const roleOptions: { id: UserType['role'], label: string, color: string }[] = [
+    { id: 'admin', label: 'Administrator', color: 'text-red-500 bg-red-500/10 border-red-500/20' },
+    { id: 'trainer', label: 'Gym Coach', color: 'text-brand bg-brand/10 border-brand/20' },
+    { id: 'user', label: 'Club Member', color: 'text-slate-400 bg-white/5 border-white/10' },
+    { id: 'trainer_pending', label: 'Pending Review', color: 'text-yellow-500 bg-yellow-500/10 border-yellow-500/20' }
+  ];
 
   if (!isAdmin) return <div className="p-20 text-center text-white">{t.accessDenied}</div>;
 
@@ -268,19 +287,19 @@ const AdminPanel: React.FC = () => {
       )}
 
       {activeTab === 'users' && (
-         <div className="animate-in slide-in-from-bottom-2 duration-500">
+         <div className="animate-in slide-in-from-bottom-2 duration-500 pb-32">
             <div className="flex items-center gap-4 mb-8">
                 <div className="w-12 h-12 bg-brand/10 text-brand rounded-2xl flex items-center justify-center"><Users size={24} /></div>
                 <div><h3 className="text-2xl font-black uppercase italic text-white tracking-tighter leading-none">User Directory</h3><p className="text-[9px] font-black uppercase tracking-widest text-slate-500 italic mt-1">Member Accounts & Authority Control</p></div>
             </div>
             
-            <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-hidden">
+            <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-visible">
                <table className="w-full">
                   <thead className="bg-dark/30 text-[9px] font-black uppercase text-slate-500">
                      <tr>
                         <th className="px-8 py-5 text-left">Member</th>
                         <th className="px-8 py-5 text-left">Join Date</th>
-                        <th className="px-8 py-5 text-left">Role</th>
+                        <th className="px-8 py-5 text-left">Authority / Role</th>
                         <th className="px-8 py-5 text-right">Management</th>
                      </tr>
                   </thead>
@@ -299,32 +318,48 @@ const AdminPanel: React.FC = () => {
                               </div>
                            </td>
                            <td className="px-8 py-6 text-slate-400 text-xs font-bold uppercase tracking-widest">{new Date(user.joinedDate).toLocaleDateString()}</td>
-                           <td className="px-8 py-6">
-                              <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest italic border ${
-                                 user.role === 'admin' ? 'bg-red-500/10 text-red-500 border-red-500/20' : 
-                                 user.role === 'trainer' ? 'bg-brand/10 text-brand border-brand/20' : 
-                                 'bg-white/5 text-slate-400 border-white/10'
-                              }`}>
-                                 {user.role.replace('_', ' ')}
-                              </span>
+                           <td className="px-8 py-6 relative overflow-visible">
+                              <div className="relative inline-block">
+                                 <button 
+                                    onClick={() => setActiveRoleMenu(activeRoleMenu === user.id ? null : user.id)}
+                                    className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest italic border flex items-center gap-2 transition-all hover:brightness-125 ${
+                                       roleOptions.find(o => o.id === user.role)?.color || 'bg-white/5 text-slate-400 border-white/10'
+                                    }`}
+                                 >
+                                    {user.role.replace('_', ' ')}
+                                    <ChevronDown size={10} className={`transition-transform duration-300 ${activeRoleMenu === user.id ? 'rotate-180' : ''}`} />
+                                 </button>
+
+                                 {activeRoleMenu === user.id && (
+                                    <div ref={menuRef} className="absolute top-full left-0 mt-2 w-48 bg-dark/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl z-[100] overflow-hidden animate-in fade-in slide-in-from-top-2">
+                                       <div className="p-3 border-b border-white/5 bg-white/5">
+                                          <p className="text-[8px] font-black uppercase tracking-widest text-slate-500 italic">Select Authority</p>
+                                       </div>
+                                       {roleOptions.map(option => (
+                                          <button 
+                                             key={option.id}
+                                             onClick={() => handleRoleUpdate(user.id, option.id)}
+                                             className={`w-full px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest flex items-center justify-between transition-all hover:bg-white/5 ${
+                                                user.role === option.id ? 'text-brand' : 'text-slate-400 hover:text-white'
+                                             }`}
+                                          >
+                                             {option.label}
+                                             {user.role === option.id ? <Check size={12} /> : <Plus size={12} className="opacity-30 group-hover:opacity-100" />}
+                                          </button>
+                                       ))}
+                                    </div>
+                                 )}
+                              </div>
                            </td>
                            <td className="px-8 py-6 text-right">
                               <div className="flex justify-end gap-2">
                                  {user.id !== currentUser?.id && (
-                                    <>
-                                       <button 
-                                          onClick={() => handleRoleUpdate(user.id, user.role === 'user' ? 'trainer' : user.role === 'trainer' ? 'admin' : 'user')}
-                                          className="px-3 py-1.5 bg-white/5 hover:bg-brand hover:text-dark text-slate-400 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all border border-white/5 flex items-center gap-1.5"
-                                       >
-                                          <UserPlus size={12} /> Toggle Role
-                                       </button>
-                                       <button 
-                                          onClick={() => handleDeleteUserAccount(user.id)}
-                                          className="p-2 text-slate-600 hover:text-red-500 transition-colors"
-                                       >
-                                          <Trash2 size={16} />
-                                       </button>
-                                    </>
+                                    <button 
+                                       onClick={() => handleDeleteUserAccount(user.id)}
+                                       className="p-2 text-slate-600 hover:text-red-500 transition-colors"
+                                    >
+                                       <Trash2 size={16} />
+                                    </button>
                                  )}
                               </div>
                            </td>
