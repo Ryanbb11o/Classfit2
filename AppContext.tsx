@@ -58,7 +58,6 @@ const MASTER_ID = '26e38fa6-50ce-4a03-8b8d-cb76da6594b0';
 const MASTER_EMAIL = 'admin@classfit.bg';
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Fixed syntax error: closed the Language generic type bracket and correctly initialized with 'bg'
   const [language, setLanguage] = useState<Language>('bg');
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -175,17 +174,40 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const updateUser = async (id: string, updates: Partial<User>) => {
+    // Optimistic UI update
+    const prevUsers = [...users];
+    const updatedUsers = users.map(u => u.id === id ? { ...u, ...updates } : u);
+    setUsers(updatedUsers);
+    
+    // Sync current user if it's the one being updated
+    if (currentUser?.id === id) {
+      const newUser = { ...currentUser, ...updates };
+      setCurrentUser(newUser);
+      localStorage.setItem('classfit_user', JSON.stringify(newUser));
+    }
+
     if (isDemoMode) {
-        const updatedUsers = users.map(u => u.id === id ? { ...u, ...updates } : u);
-        setUsers(updatedUsers);
         localStorage.setItem('classfit_users', JSON.stringify(updatedUsers));
         return;
     }
 
-    const { error } = await supabase.from('users').update({ ...updates }).eq('id', id);
+    // Map columns and OMIT missing 'blockedDates' to avoid schema errors
+    const dbPayload: any = {};
+    if (updates.name !== undefined) dbPayload.name = updates.name;
+    if (updates.email !== undefined) dbPayload.email = updates.email;
+    if (updates.password !== undefined) dbPayload.password = updates.password;
+    if (updates.phone !== undefined) dbPayload.phone = updates.phone;
+    if (updates.image !== undefined) dbPayload.image = updates.image;
+    if (updates.bio !== undefined) dbPayload.bio = updates.bio;
+    if (updates.roles !== undefined) dbPayload.roles = updates.roles;
+    if (updates.commissionRate !== undefined) dbPayload.commission_rate = updates.commissionRate;
+    if (updates.approvedBy !== undefined) dbPayload.approved_by = updates.approvedBy;
+
+    const { error } = await supabase.from('users').update(dbPayload).eq('id', id);
     if (error) {
         console.error("Supabase User Update Error:", error);
-        alert(`Account update failed: ${error.message}`);
+        setUsers(prevUsers); // Rollback
+        alert(`Account update failed: ${error.message}. Some specialized columns may be missing from your database schema.`);
         return;
     }
     await refreshData();
@@ -208,7 +230,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       finalUpdates.settledBy = adminName;
     }
 
-    // Optimistic state update for instant UI feedback
     const previousBookings = [...bookings];
     const newBookings = bookings.map(b => b.id === id ? { ...b, ...finalUpdates } : b);
     setBookings(newBookings);
@@ -218,8 +239,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return;
     }
 
-    // Database Update - ONLY update columns known to exist in a standard setup
-    // Removed 'last_modified_by' and 'modified_at' to prevent schema errors
     const { error } = await supabase.from('bookings').update({
        status: finalUpdates.status,
        payment_method: finalUpdates.paymentMethod,
@@ -231,7 +250,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     
     if (error) {
        console.error("Supabase Booking Update Error:", error);
-       setBookings(previousBookings); // Rollback on error
+       setBookings(previousBookings); 
        alert(`Database Error: ${error.message}. Ensure your Supabase schema supports these updates.`);
        return;
     }
