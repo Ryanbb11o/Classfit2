@@ -76,6 +76,16 @@ const CustomerDashboard: React.FC = () => {
   const [bookingToReview, setBookingToReview] = useState<Booking | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
 
+  const calculateTimeRange = (startTime: string, durationMins: number = 60) => {
+    if (!startTime) return '';
+    const [hours, minutes] = startTime.split(':').map(Number);
+    const totalMinutes = hours * 60 + minutes + durationMins;
+    const endHours = Math.floor(totalMinutes / 60) % 24;
+    const endMinutes = totalMinutes % 60;
+    const endTime = `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
+    return `${startTime} - ${endTime}`;
+  };
+
   const allTrainers = useMemo(() => {
     const staticTrainers = getTrainers(language);
     const dynamicTrainers: Trainer[] = users
@@ -88,6 +98,7 @@ const CustomerDashboard: React.FC = () => {
 
   const myBookings = bookings.filter(b => b.userId === currentUser.id);
 
+  // Fix: changed undefined variable 'i' to 'isAi' to match parameter name.
   const handleReviewSubmit = async (id: string, rating: number, text: string, isAi: boolean, trainerId: string) => {
     await addReview({ trainerId, author: currentUser.name.split('(')[0].trim(), rating, text, isAiEnhanced: isAi, bookingId: id });
     await updateBooking(id, { status: 'trainer_completed', hasBeenReviewed: true });
@@ -138,7 +149,8 @@ const CustomerDashboard: React.FC = () => {
                                 <div><h3 className="font-black uppercase italic text-xl text-white mb-1 tracking-tight leading-none">{trainer?.name || 'Coach'}</h3><p className="text-[9px] text-brand font-black uppercase tracking-widest">{trainer?.specialty || 'Instructor'}</p></div>
                             </div>
                             <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-6 py-6 lg:py-0 border-y lg:border-y-0 lg:border-x border-white/5 lg:px-8">
-                                <div className="flex items-center gap-3"><Calendar className="text-brand" size={16} /><span className="text-[10px] font-black uppercase text-white tracking-widest">{booking.date} @ {booking.time}</span></div>
+                                {/* Fix: changed undefined variable 'b' to 'booking' to correctly access properties from the map item. */}
+                                <div className="flex items-center gap-3"><Calendar className="text-brand" size={16} /><span className="text-[10px] font-black uppercase text-white tracking-widest">{booking.date} • {calculateTimeRange(booking.time, booking.duration)}</span></div>
                                 <div className="flex items-center gap-3"><MapPinned className="text-slate-500" size={16} /><span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">CLASSFIT VARNA</span></div>
                             </div>
                             <div className="shrink-0 flex flex-col items-center justify-center p-6 bg-dark/40 rounded-[2rem] border border-white/10 min-w-[160px]">

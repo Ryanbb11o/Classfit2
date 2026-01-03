@@ -36,6 +36,16 @@ const AdminPanel: React.FC = () => {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  const calculateTimeRange = (startTime: string, durationMins: number = 60) => {
+    if (!startTime) return '';
+    const [hours, minutes] = startTime.split(':').map(Number);
+    const totalMinutes = hours * 60 + minutes + durationMins;
+    const endHours = Math.floor(totalMinutes / 60) % 24;
+    const endMinutes = totalMinutes % 60;
+    const endTime = `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
+    return `${startTime} - ${endTime}`;
+  };
+
   // Data Selectors
   const awaitingPaymentList = bookings.filter(b => b.status === 'trainer_completed');
   const completedBookings = bookings.filter(b => b.status === 'completed');
@@ -56,6 +66,7 @@ const AdminPanel: React.FC = () => {
             id: b.id, 
             label: `Session: ${b.customerName}`, 
             time: b.date, 
+            subLabel: calculateTimeRange(b.time, b.duration),
             icon: Calendar, 
             color: 'text-blue-500',
             status: b.status,
@@ -66,6 +77,7 @@ const AdminPanel: React.FC = () => {
             id: r.id, 
             label: `New Review: ${r.author}`, 
             time: r.time, 
+            subLabel: 'Member Feedback',
             icon: Star, 
             color: 'text-brand',
             status: r.isPublished ? 'published' : 'pending'
@@ -75,6 +87,7 @@ const AdminPanel: React.FC = () => {
             id: u.id, 
             label: `New Member: ${u.name.split('(')[0]}`, 
             time: u.joinedDate.split('T')[0], 
+            subLabel: 'Registration Complete',
             icon: User, 
             color: 'text-purple-500',
             status: 'active'
@@ -260,7 +273,7 @@ const AdminPanel: React.FC = () => {
                                     <div className="flex-1">
                                         <p className="text-white font-black uppercase italic text-sm leading-none mb-1.5">{act.label}</p>
                                         <div className="flex items-center gap-3">
-                                            <p className="text-[10px] font-black uppercase text-slate-600 tracking-widest italic">{act.time}</p>
+                                            <p className="text-[10px] font-black uppercase text-slate-600 tracking-widest italic">{act.time} {act.subLabel ? `• ${act.subLabel}` : ''}</p>
                                             <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${
                                                 act.status === 'completed' ? 'bg-green-500/10 text-green-500' : 
                                                 act.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500' : 
@@ -347,7 +360,7 @@ const AdminPanel: React.FC = () => {
                   <tbody className="divide-y divide-white/5">
                      {awaitingPaymentList.length === 0 ? <tr><td colSpan={5} className="px-8 py-20 text-center text-slate-500 font-bold italic">Clear Ledger. No payments outstanding.</td></tr> : awaitingPaymentList.map(b => (
                         <tr key={b.id} className="hover:bg-white/5 transition-colors text-xs">
-                           <td className="px-8 py-6 font-bold text-white italic">{b.date} <span className="text-[10px] text-slate-500 ml-2">{b.time}</span></td>
+                           <td className="px-8 py-6 font-bold text-white italic">{b.date} <span className="text-[10px] text-slate-500 ml-2">{calculateTimeRange(b.time, b.duration)}</span></td>
                            <td className="px-8 py-6 uppercase italic text-slate-300">{cleanName(users.find(u => u.id === b.trainerId)?.name)}</td>
                            <td className="px-8 py-6 text-slate-400 uppercase font-black tracking-tighter">{b.customerName}</td>
                            <td className="px-8 py-6 text-right font-black text-brand tracking-tighter">{b.price.toFixed(2)} BGN</td>
@@ -375,7 +388,7 @@ const AdminPanel: React.FC = () => {
                               className="px-8 py-6 hover:bg-white/5 transition-all cursor-pointer group flex items-center justify-between"
                            >
                               <div className="grid grid-cols-4 flex-1 items-center">
-                                 <span className="text-slate-500 text-[10px] font-black italic">{b.date}</span>
+                                 <span className="text-slate-500 text-[10px] font-black italic">{b.date} • {calculateTimeRange(b.time, b.duration)}</span>
                                  <span className="text-white font-black uppercase italic text-xs tracking-tight">{cleanName(users.find(u => u.id === b.trainerId)?.name)}</span>
                                  <span className="text-slate-400 text-xs font-black uppercase tracking-tighter">{b.customerName}</span>
                                  <span className="text-right text-brand font-black italic text-xs pr-8">{b.price.toFixed(2)} BGN</span>
@@ -403,7 +416,7 @@ const AdminPanel: React.FC = () => {
                   <tbody className="divide-y divide-white/5">
                      {activeBookings.length === 0 ? <tr><td colSpan={4} className="px-8 py-20 text-center text-slate-500 italic">No active operations.</td></tr> : activeBookings.map(b => (
                         <tr key={b.id} className="hover:bg-white/5 transition-colors text-xs text-white">
-                           <td className="px-8 py-6 italic font-bold">{b.date} <span className="opacity-50 ml-2">@ {b.time}</span></td>
+                           <td className="px-8 py-6 italic font-bold">{b.date} <span className="opacity-50 ml-2">@ {calculateTimeRange(b.time, b.duration)}</span></td>
                            <td className="px-8 py-6 font-black italic uppercase tracking-tighter">{b.customerName}</td>
                            <td className="px-8 py-6 text-slate-400 italic">{cleanName(users.find(u => u.id === b.trainerId)?.name)}</td>
                            <td className="px-8 py-6 text-right">
@@ -595,7 +608,7 @@ const AdminPanel: React.FC = () => {
                            />
                         </div>
                         <div className="space-y-2">
-                           <label className="text-[9px] font-black uppercase tracking-widest text-slate-600 ml-2">Session Time</label>
+                           <label className="text-[9px] font-black uppercase tracking-widest text-slate-600 ml-2">Session Start Time</label>
                            <input 
                                 type="time" 
                                 value={editingBooking.time} 
@@ -603,6 +616,11 @@ const AdminPanel: React.FC = () => {
                                 className="w-full bg-dark/40 border border-white/10 rounded-xl px-4 py-3 text-white font-bold text-xs outline-none focus:border-brand transition-all"
                            />
                         </div>
+                    </div>
+
+                    <div className="p-4 bg-white/5 rounded-2xl">
+                      <p className="text-[8px] font-black uppercase text-slate-500 mb-1">Estimated Slot (60 min)</p>
+                      <p className="text-xs text-white font-black italic">{calculateTimeRange(editingBooking.time, editingBooking.duration)}</p>
                     </div>
 
                     <div className="space-y-2">

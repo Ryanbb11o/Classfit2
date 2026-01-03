@@ -29,6 +29,16 @@ const TrainerDashboard: React.FC = () => {
     setTimeout(() => setIsRefreshing(false), 500);
   };
 
+  const calculateTimeRange = (startTime: string, durationMins: number = 60) => {
+    if (!startTime) return '';
+    const [hours, minutes] = startTime.split(':').map(Number);
+    const totalMinutes = hours * 60 + minutes + durationMins;
+    const endHours = Math.floor(totalMinutes / 60) % 24;
+    const endMinutes = totalMinutes % 60;
+    const endTime = `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
+    return `${startTime} - ${endTime}`;
+  };
+
   const handleAction = (bookingId: string, action: 'confirmed' | 'cancelled' | 'trainer_completed') => {
     const title = action === 'trainer_completed' ? 'Mark Completed' : 'Status Update';
     confirmAction({
@@ -209,7 +219,7 @@ const TrainerDashboard: React.FC = () => {
                      {confirmedSessions.length === 0 ? <p className="text-center py-20 text-slate-500 font-bold italic">No sessions scheduled.</p> : confirmedSessions.sort((a,b) => a.date.localeCompare(b.date)).map(b => (
                         <div key={b.id} className="p-6 bg-dark/20 border border-white/5 rounded-[2rem] flex items-center justify-between">
                            <div>
-                              <p className="text-[9px] font-black uppercase text-brand tracking-widest mb-1 italic">{b.date} @ {b.time}</p>
+                              <p className="text-[9px] font-black uppercase text-brand tracking-widest mb-1 italic">{b.date} • {calculateTimeRange(b.time, b.duration)}</p>
                               <h4 className="text-lg font-black uppercase italic text-white leading-none">{b.customerName}</h4>
                            </div>
                            <div className="flex items-center gap-3">
@@ -240,7 +250,7 @@ const TrainerDashboard: React.FC = () => {
                            <tr key={b.id} className="hover:bg-white/5 transition-colors">
                               <td className="px-8 py-6">
                                  <p className="text-white font-black uppercase italic tracking-tighter text-sm mb-1">{b.customerName}</p>
-                                 <p className="text-[9px] text-slate-500 font-black tracking-widest">{b.date} @ {b.time}</p>
+                                 <p className="text-[9px] text-slate-500 font-black tracking-widest">{b.date} • {calculateTimeRange(b.time, b.duration)}</p>
                               </td>
                               <td className="px-8 py-6 text-center"><span className="px-3 py-1 bg-brand/10 text-brand rounded-lg text-[10px] font-black border border-brand/20 italic">{b.checkInCode}</span></td>
                               <td className="px-8 py-6 text-right">
@@ -304,7 +314,7 @@ const TrainerDashboard: React.FC = () => {
                       myBookings.filter(b => b.date === selectedDay.toISOString().split('T')[0]).map(b => (
                          <div key={b.id} className="p-6 bg-dark/40 border border-white/5 rounded-2xl flex items-center justify-between group">
                             <div className="flex items-center gap-6">
-                               <div className="text-center shrink-0"><p className="text-[9px] font-black text-slate-500 uppercase">TIME</p><p className="text-lg font-black text-white italic">{b.time}</p></div>
+                               <div className="text-center shrink-0"><p className="text-[9px] font-black text-slate-500 uppercase">TIME</p><p className="text-lg font-black text-white italic">{calculateTimeRange(b.time, b.duration)}</p></div>
                                <div>
                                   <h4 className="text-white font-black uppercase italic tracking-tighter leading-none mb-1">{b.customerName}</h4>
                                   <div className="flex items-center gap-2">
