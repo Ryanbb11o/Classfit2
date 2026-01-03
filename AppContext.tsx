@@ -154,6 +154,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           if ((u.email === MASTER_EMAIL || String(u.id) === MASTER_ID)) {
             roles = Array.from(new Set([...roles, 'management', 'admin']));
           }
+
+          // Fallback languages for trainers if DB column is empty/null
+          const isTrainer = roles.some(r => r === 'trainer' || r === 'trainer_pending');
+          const defaultLangs = isTrainer ? ['Bulgarian', 'English'] : [];
+
           return {
             id: String(u.id),
             name: u.name || 'User',
@@ -167,7 +172,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             approvedBy: u.approved_by,
             commissionRate: u.commission_rate || 25,
             blockedDates: u.blocked_dates || [],
-            languages: u.languages || []
+            languages: (u.languages && u.languages.length > 0) ? u.languages : defaultLangs
           };
       }));
     } catch (e) {
@@ -242,7 +247,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
 
     // SAFE UPDATE: Only sending columns that are guaranteed to exist.
-    // Excluded potentially missing columns: settled_at, settled_by, has_been_reviewed, commission_amount, trainer_earnings
     const { error } = await supabase.from('bookings').update({
        status: finalUpdates.status,
        payment_method: finalUpdates.payment_method,

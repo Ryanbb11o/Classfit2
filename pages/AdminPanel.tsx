@@ -441,9 +441,11 @@ const AdminPanel: React.FC = () => {
                            </td>
                            <td className="px-8 py-6">
                               <div className="flex flex-wrap gap-1.5">
-                                 {t.languages?.map(l => (
+                                 {t.languages && t.languages.length > 0 ? t.languages.map(l => (
                                     <span key={l} className="px-2 py-0.5 bg-white/5 rounded-md text-[10px] font-black uppercase tracking-tighter text-slate-400 border border-white/5 italic">{l}</span>
-                                 ))}
+                                 )) : (
+                                    <span className="text-[10px] text-slate-600 font-black uppercase italic">Unspecified</span>
+                                 )}
                               </div>
                            </td>
                            <td className="px-8 py-6 text-right">

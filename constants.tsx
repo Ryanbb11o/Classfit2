@@ -17,7 +17,8 @@ export const getTrainers = (lang: Language): Trainer[] => {
       bio: isBg 
         ? 'С над 10 години опит в бодибилдинга, Иван специализира в изграждане на мускулна маса и силова издръжливост. Неговата философия е "дисциплина над мотивация".'
         : 'With over 10 years of bodybuilding experience, Ivan specializes in muscle hypertrophy and strength endurance. His philosophy is "discipline over motivation".',
-      availability: ['08:00', '09:00', '10:00', '14:00', '15:00', '16:00']
+      availability: ['08:00', '09:00', '10:00', '14:00', '15:00', '16:00'],
+      languages: ['Bulgarian', 'English']
     },
     {
       id: '2',
@@ -29,7 +30,8 @@ export const getTrainers = (lang: Language): Trainer[] => {
       bio: isBg
         ? 'Мария комбинира древни йога практики със съвременни методи за възстановяване. Тя помага на клиентите да намерят баланс между тялото и ума.'
         : 'Maria combines ancient yoga practices with modern recovery methods. She helps clients find balance between body and mind.',
-      availability: ['07:00', '11:00', '12:00', '17:00', '18:00']
+      availability: ['07:00', '11:00', '12:00', '17:00', '18:00'],
+      languages: ['Bulgarian', 'English', 'Russian']
     },
     {
       id: '3',
@@ -41,7 +43,8 @@ export const getTrainers = (lang: Language): Trainer[] => {
       bio: isBg
         ? 'Бивш състезател по лека атлетика, Елена води високоинтензивни тренировки, които предизвикват границите ви. Експерт по функционален фитнес.'
         : 'A former track and field athlete, Elena leads high-intensity workouts that push your limits. Expert in functional fitness.',
-      availability: ['09:00', '10:00', '11:00', '15:00', '19:00']
+      availability: ['09:00', '10:00', '11:00', '15:00', '19:00'],
+      languages: ['Bulgarian', 'English']
     }
   ];
 };
@@ -366,7 +369,7 @@ export const TRANSLATIONS = {
     professionalDetails: 'ПРОФЕСИОНАЛНИ ДЕТАЙЛИ',
     coachPhilosophy: 'Разкажете ни за вашата експертиза и защо мястото ви е в ClassFit.',
     applicationFiled: 'ЗАЯВКАТА Е ПРИЕТА',
-    pendingReviewMsg: 'Профилът ви беше създаден успешно със статус "Изчакващ". Екипът на ClassFit ще прегледа вашата експертиза и ще се свърже с вас за интервю.',
+    pendingReviewMsg: 'Профилът ви беше создаден успешно със статус "Изчакващ". Екипът на ClassFit ще прегледа вашата експертиза и ще се свърже с вас за интервю.',
     returnToBase: 'Към началната страница'
   },
   en: {
