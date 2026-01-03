@@ -12,8 +12,9 @@ export interface User {
   joinedDate: string;
   role: 'user' | 'admin' | 'trainer_pending' | 'trainer';
   approvedBy?: string; 
-  commissionRate?: number; 
-  languages?: string[]; // New field for coaches
+  commissionRate?: number; // % that the gym takes
+  languages?: string[];
+  blockedDates?: string[]; // Dates the trainer is unavailable
 }
 
 export interface Trainer {
@@ -34,7 +35,7 @@ export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed' 
 
 export interface Booking {
   id: string;
-  checkInCode: string; // 6-digit verification code
+  checkInCode: string;
   trainerId: string;
   userId?: string; 
   customerName: string;
@@ -43,16 +44,14 @@ export interface Booking {
   language?: Language; 
   date: string; 
   time: string;
-  duration: number; // in minutes
+  duration: number;
   price: number;
   status: BookingStatus;
   paymentMethod?: 'card' | 'cash';
-  commissionAmount?: number;
+  commissionAmount?: number; // What the gym makes
+  trainerEarnings?: number; // What the trainer makes
   gymAddress?: string;
   hasBeenReviewed?: boolean;
-  rating?: number;
-  reviewText?: string;
-  isAiEnhanced?: boolean;
 }
 
 export interface Membership {
