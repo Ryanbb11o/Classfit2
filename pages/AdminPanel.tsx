@@ -1,14 +1,15 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { LayoutDashboard, ListFilter, Briefcase, UserCheck, FileSpreadsheet, Users, RefreshCw, Star, Trash2, Eye, X, Loader2, TrendingUp, Wallet, Check, Ban, DollarSign, PieChart, History, CreditCard, Banknote, Calendar, Clock, User, Phone, ShieldCheck, Key, Fingerprint, Settings2, Copy, CheckSquare, MessageSquare, Trash, Zap, ArrowUpRight, Activity, BellRing, ChevronDown, ChevronUp, Info, MapPinned, Edit3, Save, AlertTriangle, Percent, Languages } from 'lucide-react';
+import { LayoutDashboard, ListFilter, Briefcase, UserCheck, FileSpreadsheet, Users, RefreshCw, Star, Trash2, Eye, X, Loader2, TrendingUp, Wallet, Check, Ban, DollarSign, PieChart, History, CreditCard, Banknote, Calendar, Clock, User, Phone, ShieldCheck, Key, Fingerprint, Settings2, Copy, CheckSquare, MessageSquare, Trash, Zap, ArrowUpRight, Activity, BellRing, ChevronDown, ChevronUp, Info, MapPinned, Edit3, Save, AlertTriangle, Percent, Languages, ExternalLink } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, DEFAULT_PROFILE_IMAGE } from '../constants';
 import { User as UserType, Booking, Review } from '../types';
 import RoleManagementModal from '../components/RoleManagementModal';
 
 const AdminPanel: React.FC = () => {
-  const { language, bookings, refreshData, updateBooking, updateUser, deleteUser, isAdmin, isManagement, users, reviews, deleteReview, updateReview, confirmAction, deleteBooking } = useAppContext();
+  // Added currentUser to the destructuring to fix the error on line 504
+  const { language, bookings, refreshData, updateBooking, updateUser, deleteUser, isAdmin, isManagement, users, reviews, deleteReview, updateReview, confirmAction, deleteBooking, currentUser } = useAppContext();
   const location = useLocation();
   const t = TRANSLATIONS[language];
   
@@ -407,6 +408,121 @@ const AdminPanel: React.FC = () => {
                      ))}
                   </tbody>
               </table>
+           </div>
+        )}
+
+        {activeTab === 'trainers' && (
+           <div className="bg-surface rounded-[3rem] border border-white/5 overflow-hidden shadow-2xl">
+              <div className="px-8 py-6 bg-dark/30 border-b border-white/5 flex items-center justify-between">
+                <h3 className="text-lg font-black uppercase italic text-white flex items-center gap-3"><Briefcase className="text-brand" /> Active Coaches</h3>
+                <span className="text-[11px] font-black text-slate-500 uppercase italic">{activeTrainers.length} Registered Professionals</span>
+              </div>
+              <table className="w-full">
+                  <thead className="bg-dark/10 text-[11px] font-black uppercase text-slate-500">
+                     <tr><th className="px-8 py-5 text-left">Identity</th><th className="px-8 py-5 text-left">Terms</th><th className="px-8 py-5 text-left">Languages</th><th className="px-8 py-5 text-right">Control</th></tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                     {activeTrainers.map(t => (
+                        <tr key={t.id} className="hover:bg-white/5 transition-colors text-xs">
+                           <td className="px-8 py-6">
+                              <div className="flex items-center gap-4">
+                                 <img src={t.image || DEFAULT_PROFILE_IMAGE} className="w-12 h-12 rounded-xl object-cover" />
+                                 <div>
+                                    <p className="font-black text-white uppercase italic text-sm">{cleanName(t.name)}</p>
+                                    <p className="text-[11px] text-brand font-bold uppercase tracking-widest">{t.name.match(/\((.*)\)/)?.[1] || 'Instructor'}</p>
+                                 </div>
+                              </div>
+                           </td>
+                           <td className="px-8 py-6">
+                              <div className="space-y-1">
+                                 <p className="text-slate-400 font-bold italic">Gym Share: <span className="text-white">{t.commissionRate || 25}%</span></p>
+                                 <p className="text-[10px] text-slate-600 font-black uppercase">Coach Yield: {(100 - (t.commissionRate || 25))}%</p>
+                              </div>
+                           </td>
+                           <td className="px-8 py-6">
+                              <div className="flex flex-wrap gap-1.5">
+                                 {t.languages?.map(l => (
+                                    <span key={l} className="px-2 py-0.5 bg-white/5 rounded-md text-[10px] font-black uppercase tracking-tighter text-slate-400 border border-white/5 italic">{l}</span>
+                                 ))}
+                              </div>
+                           </td>
+                           <td className="px-8 py-6 text-right">
+                              <button onClick={() => setUserForRoles(t)} className="p-3 bg-white/5 hover:bg-brand hover:text-dark rounded-xl text-slate-500 transition-all">
+                                 <Settings2 size={16} />
+                              </button>
+                           </td>
+                        </tr>
+                     ))}
+                  </tbody>
+              </table>
+           </div>
+        )}
+
+        {activeTab === 'applications' && (
+           <div className="space-y-6">
+              {pendingApps.length === 0 ? (
+                 <div className="bg-surface rounded-[3rem] border border-white/5 p-20 text-center border-dashed">
+                    <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-6 text-slate-700">
+                       <UserCheck size={32} />
+                    </div>
+                    <p className="text-slate-500 font-black uppercase tracking-[0.3em] text-[11px] italic">No active recruitment files found.</p>
+                 </div>
+              ) : (
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">
+                    {pendingApps.map(app => (
+                       <div key={app.id} className="p-10 bg-surface rounded-[3rem] border border-white/10 shadow-2xl relative group overflow-hidden">
+                          <div className="absolute top-0 left-0 w-full h-1 bg-yellow-500"></div>
+                          <div className="flex items-center gap-6 mb-8">
+                             <div className="w-16 h-16 rounded-2xl bg-dark border border-white/10 overflow-hidden"><img src={app.image || DEFAULT_PROFILE_IMAGE} className="w-full h-full object-cover grayscale opacity-60" /></div>
+                             <div>
+                                <h4 className="text-xl font-black text-white uppercase italic tracking-tight">{cleanName(app.name)}</h4>
+                                <p className="text-[11px] text-yellow-500 font-black uppercase tracking-widest">{app.name.match(/\((.*)\)/)?.[1] || 'Applicant'}</p>
+                             </div>
+                          </div>
+                          
+                          <div className="space-y-6 mb-10">
+                             <div className="p-5 bg-dark/40 rounded-2xl border border-white/5 max-h-[200px] overflow-y-auto custom-scrollbar">
+                                <p className="text-[11px] font-black uppercase text-slate-500 mb-2 italic tracking-widest flex items-center gap-2"><Info size={12}/> Profile Statement</p>
+                                <p className="text-xs text-slate-300 font-medium italic leading-relaxed whitespace-pre-line">{app.bio}</p>
+                             </div>
+                             <div className="grid grid-cols-2 gap-4">
+                                <div className="p-4 bg-dark/20 border border-white/5 rounded-xl">
+                                   <p className="text-[10px] font-black uppercase text-slate-600 mb-1">Direct Line</p>
+                                   <a href={`tel:${app.phone}`} className="text-[11px] font-bold text-white hover:text-brand transition-colors">{app.phone || 'N/A'}</a>
+                                </div>
+                                <div className="p-4 bg-dark/20 border border-white/5 rounded-xl">
+                                   <p className="text-[10px] font-black uppercase text-slate-600 mb-1">Joined Basis</p>
+                                   <p className="text-[11px] font-bold text-slate-400 italic">{new Date(app.joinedDate).toLocaleDateString()}</p>
+                                </div>
+                             </div>
+                          </div>
+
+                          <div className="flex gap-4">
+                             <button 
+                                onClick={() => confirmAction({ 
+                                   title: 'Approve Coach', 
+                                   message: `Induct ${cleanName(app.name)} into the ClassFit professional team?`, 
+                                   onConfirm: () => updateUser(app.id, { roles: ['user', 'trainer'], approvedBy: currentUser?.name }) 
+                                })}
+                                className="flex-1 py-5 bg-brand text-dark rounded-2xl font-black uppercase text-[11px] shadow-lg shadow-brand/10 hover:bg-white transition-all flex items-center justify-center gap-2"
+                             >
+                                <Check size={14} /> Approve Access
+                             </button>
+                             <button 
+                                onClick={() => confirmAction({ 
+                                   title: 'Decline Application', 
+                                   message: `Remove recruitment file for ${cleanName(app.name)}?`, 
+                                   onConfirm: () => updateUser(app.id, { roles: ['user'] }) 
+                                })}
+                                className="px-8 py-5 bg-white/5 text-slate-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all shadow-sm"
+                             >
+                                <X size={18} />
+                             </button>
+                          </div>
+                       </div>
+                    ))}
+                 </div>
+              )}
            </div>
         )}
 
