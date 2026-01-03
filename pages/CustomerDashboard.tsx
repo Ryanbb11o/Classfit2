@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { Calendar, Star, LogOut, Dumbbell, Loader2, X, MapPinned, Settings2, Trash2, AlertCircle, Sparkles, ShieldCheck, ChevronRight, Languages } from 'lucide-react';
+import { Calendar, Star, LogOut, Dumbbell, Loader2, X, MapPinned, Settings2, Trash2, AlertCircle, Sparkles, ShieldCheck, ChevronRight, Languages, MessageSquarePlus } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, getTrainers, DEFAULT_PROFILE_IMAGE } from '../constants';
 import { useNavigate } from 'react-router-dom';
@@ -52,16 +52,17 @@ const ReviewModal: React.FC<{
        <div className="bg-surface rounded-[2.5rem] border border-white/10 w-full max-w-md p-10 text-center relative shadow-2xl animate-in zoom-in-95 duration-300">
           <button onClick={onClose} className="absolute top-6 right-6 p-2 bg-white/5 rounded-full text-slate-500 hover:text-white"><X size={20} /></button>
           <div className="w-16 h-16 bg-brand text-dark rounded-[1.5rem] flex items-center justify-center mx-auto mb-6 shadow-xl shadow-brand/10"><Star size={28} className="fill-dark" /></div>
-          <h2 className="text-2xl font-black uppercase italic text-white mb-2 leading-none">Review Coach</h2>
+          <h2 className="text-2xl font-black uppercase italic text-white mb-2 leading-none">Share Experience</h2>
+          <p className="text-slate-500 text-[11px] font-black uppercase tracking-widest italic mb-6">How was your session at ClassFit?</p>
           <form onSubmit={(e) => { e.preventDefault(); setIsSubmitting(true); onSubmit(booking.id, rating, comment, isAiEnhanced, booking.trainerId).finally(() => setIsSubmitting(false)); }} className="space-y-6 text-left mt-8">
              <div className="flex justify-center gap-2 mb-6">
                 {[1,2,3,4,5].map(s => <button key={s} type="button" onClick={() => setRating(s)} className="p-1 transition-transform hover:scale-125"><Star size={32} className={`${s <= rating ? 'text-brand fill-brand' : 'text-slate-700'}`} /></button>)}
              </div>
              <div className="space-y-2 relative">
-                <div className="flex items-center justify-between mb-1"><label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Your Feedback</label><button type="button" onClick={handleAiEnhance} disabled={isEnhancing || !comment.trim()} className="flex items-center gap-1.5 px-3 py-1 bg-brand/10 text-brand rounded-full text-[11px] font-black uppercase transition-all">{isEnhancing ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />} AI Enhance</button></div>
-                <textarea rows={4} value={comment} onChange={(e) => setComment(e.target.value)} placeholder="How was it?" className="w-full bg-dark/50 border border-white/5 rounded-2xl px-5 py-4 text-white font-medium italic outline-none focus:border-brand resize-none text-sm" />
+                <div className="flex items-center justify-between mb-1"><label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Feedback</label><button type="button" onClick={handleAiEnhance} disabled={isEnhancing || !comment.trim()} className="flex items-center gap-1.5 px-3 py-1 bg-brand/10 text-brand rounded-full text-[11px] font-black uppercase transition-all">{isEnhancing ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />} AI Enhance</button></div>
+                <textarea rows={4} value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Type your thoughts here..." className="w-full bg-dark/50 border border-white/5 rounded-2xl px-5 py-4 text-white font-medium italic outline-none focus:border-brand resize-none text-sm" />
              </div>
-             <button type="submit" disabled={isSubmitting} className="w-full py-5 bg-brand text-dark rounded-2xl font-black uppercase text-[11px] hover:bg-white transition-all shadow-xl">{isSubmitting ? <Loader2 className="animate-spin mx-auto" size={16} /> : 'Submit for Moderation'}</button>
+             <button type="submit" disabled={isSubmitting} className="w-full py-5 bg-brand text-dark rounded-2xl font-black uppercase text-[11px] hover:bg-white transition-all shadow-xl">{isSubmitting ? <Loader2 className="animate-spin mx-auto" size={16} /> : 'Submit Review'}</button>
           </form>
        </div>
     </div>
@@ -102,18 +103,9 @@ const CustomerDashboard: React.FC = () => {
 
   const handleReviewSubmit = async (id: string, rating: number, text: string, isAi: boolean, trainerId: string) => {
     const booking = bookings.find(b => b.id === id);
-    // Submit the review to the system
     await addReview({ trainerId, author: currentUser.name.split('(')[0].trim(), rating, text, isAiEnhanced: isAi, bookingId: id });
-    
-    // Update booking state: set hasBeenReviewed to true
-    // Only set status to trainer_completed if it wasn't already confirmed or higher
     const newStatus = booking?.status === 'confirmed' ? 'trainer_completed' : booking?.status;
-    
-    await updateBooking(id, { 
-      status: newStatus as any, 
-      hasBeenReviewed: true 
-    });
-    
+    await updateBooking(id, { status: newStatus as any, hasBeenReviewed: true });
     setBookingToReview(null);
     await refreshData();
   };
@@ -159,7 +151,11 @@ const CustomerDashboard: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-8">
-        <h2 className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-500 mb-2 italic">Session Registry</h2>
+        <div className="flex items-center justify-between mb-2">
+            <h2 className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-500 italic">Session Registry</h2>
+            <div className="flex items-center gap-2 text-[10px] font-bold text-slate-700 uppercase tracking-widest"><AlertCircle size={10}/> Reviews help our community grow</div>
+        </div>
+        
         {myBookings.length === 0 ? (
             <div className="text-center py-24 bg-surface/50 rounded-[3rem] border border-white/5 border-dashed">
                 <p className="text-slate-500 font-black uppercase tracking-widest text-[11px]">{t.noBookings}</p>
@@ -194,8 +190,8 @@ const CustomerDashboard: React.FC = () => {
                         <div className="mt-6 pt-6 border-t border-white/5 flex flex-wrap items-center justify-between gap-4">
                             <div className="flex gap-2">
                                 {canReview && (
-                                  <button onClick={() => setBookingToReview(booking)} className="flex items-center gap-2 px-6 py-3 bg-brand text-dark rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-lg">
-                                    <Star size={14} /> {booking.status === 'confirmed' ? 'Finish & Review' : 'Review Coach'}
+                                  <button onClick={() => setBookingToReview(booking)} className="flex items-center gap-2 px-6 py-3 bg-brand text-dark rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-lg hover:scale-[1.02] active:scale-95">
+                                    <Star size={14} className="fill-dark" /> {booking.status === 'confirmed' ? 'Finish & Review' : 'Leave a Review'}
                                   </button>
                                 )}
                                 {booking.hasBeenReviewed && <span className="flex items-center gap-2 px-4 py-2 bg-white/5 text-slate-500 rounded-xl text-[11px] font-black uppercase border border-white/5"><Star size={12} className="text-brand fill-brand" /> Feedback Sent</span>}

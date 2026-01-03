@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, Calendar as CalendarIcon, Clock, User, Phone, X, Mail, Loader2, ChevronLeft, ChevronRight, ArrowLeft, Star, Award, Zap, Quote, ThumbsUp, MapPin, Target, ShieldCheck, CalendarPlus, MessageSquare, Sparkles, Languages } from 'lucide-react';
+import { Check, Calendar as CalendarIcon, Clock, User, Phone, X, Mail, Loader2, ChevronLeft, ChevronRight, ArrowLeft, Star, Award, Zap, Quote, ThumbsUp, MapPin, Target, ShieldCheck, CalendarPlus, MessageSquare, Sparkles, Languages, MessageSquarePlus } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { getTrainers, TRANSLATIONS, DEFAULT_PROFILE_IMAGE, getTrainerReviews } from '../constants';
 import { Trainer, Booking } from '../types';
@@ -54,6 +54,17 @@ const BookingPage: React.FC = () => {
     const demoReviews = getTrainerReviews(selectedTrainer.id, language);
     return [...realReviews, ...demoReviews].slice(0, 10);
   }, [selectedTrainer, language, liveReviews]);
+
+  // Check for unreviewed bookings with this trainer for the current user
+  const needsReview = useMemo(() => {
+    if (!currentUser || !selectedTrainer) return null;
+    return bookings.find(b => 
+      b.trainerId === selectedTrainer.id && 
+      (b.userId === currentUser.id || b.customerEmail === currentUser.email) &&
+      !b.hasBeenReviewed &&
+      (b.status === 'confirmed' || b.status === 'trainer_completed' || b.status === 'completed')
+    );
+  }, [currentUser, selectedTrainer, bookings]);
 
   useEffect(() => {
     if (selectedTrainer) {
@@ -344,9 +355,20 @@ const BookingPage: React.FC = () => {
                   </div>
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-10 pt-10 border-t border-white/5 mt-12">
                       <div className="text-center sm:text-left"><p className="text-[11px] font-black uppercase tracking-widest text-slate-600 mb-2">Session Fee</p><div className="text-4xl font-black uppercase italic text-white leading-none tracking-tighter">{selectedTrainer.price} <span className="text-lg text-brand font-bold not-italic ml-1">BGN</span></div></div>
-                      <button onClick={initiateBooking} disabled={!selectedTime || isSubmitting} className={`w-full sm:w-auto px-16 py-6 rounded-full font-black uppercase italic tracking-[0.2em] text-[11px] transition-all shadow-xl ${selectedTime && !isSubmitting ? 'bg-brand text-dark hover:scale-105' : 'bg-white/5 text-slate-700 cursor-not-allowed border border-white/5'}`}>
-                         {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : (language === 'bg' ? 'Запази час' : 'Confirm Session')}
-                      </button>
+                      
+                      <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                        {needsReview && (
+                          <button 
+                            onClick={() => navigate('/profile')} 
+                            className="px-8 py-6 bg-surface border border-brand/50 text-brand rounded-full font-black uppercase italic tracking-[0.2em] text-[11px] transition-all hover:bg-brand hover:text-dark flex items-center justify-center gap-2 shadow-xl"
+                          >
+                             <Star size={16} className="fill-brand group-hover:fill-dark" /> Leave a Review
+                          </button>
+                        )}
+                        <button onClick={initiateBooking} disabled={!selectedTime || isSubmitting} className={`w-full sm:w-auto px-16 py-6 rounded-full font-black uppercase italic tracking-[0.2em] text-[11px] transition-all shadow-xl ${selectedTime && !isSubmitting ? 'bg-brand text-dark hover:scale-105' : 'bg-white/5 text-slate-700 cursor-not-allowed border border-white/5'}`}>
+                          {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : (language === 'bg' ? 'Запази час' : 'Confirm Session')}
+                        </button>
+                      </div>
                   </div>
                </div>
 
