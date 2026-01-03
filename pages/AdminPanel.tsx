@@ -47,7 +47,6 @@ const AdminPanel: React.FC = () => {
     return `${startTime} - ${endTime}`;
   };
 
-  // Data Selectors
   const awaitingPaymentList = bookings.filter(b => b.status === 'trainer_completed');
   const completedBookings = bookings.filter(b => b.status === 'completed');
   const activeBookings = bookings.filter(b => b.status === 'confirmed' || b.status === 'pending');
@@ -55,11 +54,9 @@ const AdminPanel: React.FC = () => {
   const activeTrainers = users.filter(u => u.roles?.includes('trainer'));
   const pendingReviews = reviews.filter(r => !r.isPublished);
 
-  // Stats Logic
   const totalRevenue = useMemo(() => completedBookings.reduce((sum, b) => sum + (Number(b.price) || 0), 0), [completedBookings]);
   const gymProfit = useMemo(() => completedBookings.reduce((sum, b) => sum + (Number(b.commissionAmount) || 0), 0), [completedBookings]);
   
-  // Overview Activity Feed
   const recentActivity = useMemo(() => {
     const activities = [
         ...bookings.map(b => ({ 
@@ -104,7 +101,6 @@ const AdminPanel: React.FC = () => {
 
   const cleanName = (name: string | undefined) => (name || 'Member').split('(')[0].trim();
 
-  // Components
   const SettlementDossier = ({ booking }: { booking: Booking }) => {
     const trainer = users.find(u => u.id === booking.trainerId);
     return (
@@ -190,7 +186,6 @@ const AdminPanel: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-16 animate-in fade-in duration-500 text-left">
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
         <div>
           <div className="flex items-center gap-4">
@@ -222,7 +217,6 @@ const AdminPanel: React.FC = () => {
         
         {activeTab === 'overview' && (
            <div className="space-y-8">
-              {/* Stats Grid */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                  <div className="p-8 bg-brand text-dark rounded-[2.5rem] shadow-xl relative overflow-hidden group">
                     <div className="absolute top-4 right-4 opacity-10"><PieChart size={48} /></div>
@@ -315,29 +309,6 @@ const AdminPanel: React.FC = () => {
                                 <button onClick={() => setActiveTab('applications')} className="p-2 bg-brand text-dark rounded-lg hover:scale-110 transition-transform"><ArrowUpRight size={14}/></button>
                              </div>
                           </div>
-                       </div>
-                    </div>
-
-                    <div className="bg-surface rounded-[3rem] border border-white/5 p-10">
-                       <h3 className="text-xl font-black uppercase italic text-white mb-8">Management Grid</h3>
-                       <div className="grid grid-cols-2 gap-3">
-                          <button onClick={() => setActiveTab('finance')} className="p-4 bg-dark/40 hover:bg-brand hover:text-dark rounded-2xl border border-white/5 text-slate-400 transition-all flex flex-col items-center gap-3">
-                             <DollarSign size={20} />
-                             <span className="text-[8px] font-black uppercase tracking-widest">Settlements</span>
-                          </button>
-                          <button onClick={() => setActiveTab('reviews')} className="p-4 bg-dark/40 hover:bg-brand hover:text-dark rounded-2xl border border-white/5 text-slate-400 transition-all flex flex-col items-center gap-3 relative">
-                             <MessageSquare size={20} />
-                             {pendingReviews.length > 0 && <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>}
-                             <span className="text-[8px] font-black uppercase tracking-widest">Moderation</span>
-                          </button>
-                          <button onClick={() => setActiveTab('bookings')} className="p-4 bg-dark/40 hover:bg-brand hover:text-dark rounded-2xl border border-white/5 text-slate-400 transition-all flex flex-col items-center gap-3">
-                             <Calendar size={20} />
-                             <span className="text-[8px] font-black uppercase tracking-widest">Schedule</span>
-                          </button>
-                          <button onClick={() => setActiveTab('trainers')} className="p-4 bg-dark/40 hover:bg-brand hover:text-dark rounded-2xl border border-white/5 text-slate-400 transition-all flex flex-col items-center gap-3">
-                             <Briefcase size={20} />
-                             <span className="text-[8px] font-black uppercase tracking-widest">Coaches</span>
-                          </button>
                        </div>
                     </div>
                  </div>
@@ -438,7 +409,6 @@ const AdminPanel: React.FC = () => {
            </div>
         )}
 
-        {/* Other tabs remain the same... */}
         {activeTab === 'trainers' && ( activeTrainers.length === 0 ? <p className="text-center py-20 text-slate-500">No active coaches.</p> :
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {activeTrainers.map(t => (
@@ -563,7 +533,6 @@ const AdminPanel: React.FC = () => {
 
       </div>
 
-      {/* MODAL: Administrative Booking Edit */}
       {editingBooking && (
          <div className="fixed inset-0 z-[220] flex items-center justify-center p-4 bg-dark/95 backdrop-blur-xl animate-in fade-in duration-300 text-left">
             <div className="bg-surface border border-white/10 rounded-[3rem] p-10 w-full max-w-lg shadow-2xl relative overflow-hidden">
@@ -573,7 +542,7 @@ const AdminPanel: React.FC = () => {
                 <div className="mb-10">
                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-yellow-500/10 text-yellow-500 rounded-lg text-[9px] font-black uppercase tracking-widest mb-4 italic"><Settings2 size={12} /> Management Override</div>
                    <h2 className="text-2xl font-black uppercase italic text-white tracking-tighter leading-none mb-1">Modify Operation</h2>
-                   <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest">Code: {editingBooking.checkInCode}</p>
+                   <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest">ID: {editingBooking.id.substring(0,8)}...</p>
                 </div>
 
                 <div className="space-y-6">
@@ -632,16 +601,15 @@ const AdminPanel: React.FC = () => {
                             }} 
                             className="w-full py-5 bg-brand text-dark rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl shadow-brand/10 hover:bg-white transition-all flex items-center justify-center gap-2"
                         >
-                            {isSavingBooking ? <Loader2 className="animate-spin" size={16} /> : <><Save size={16} /> Update Session & Log Audit</>}
+                            {isSavingBooking ? <Loader2 className="animate-spin" size={16} /> : <><Save size={16} /> Commit Overrides & Update Ledger</>}
                         </button>
-                        <p className="text-center text-[9px] text-slate-600 font-bold uppercase tracking-widest italic">Management action will be recorded in the audit trail.</p>
+                        <p className="text-center text-[9px] text-slate-600 font-bold uppercase tracking-widest italic">Management action will be logged to the secure audit trail.</p>
                     </div>
                 </div>
             </div>
          </div>
       )}
 
-      {/* Overlay: Final Settlement */}
       {pendingSettlementId && (
          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-dark/95 backdrop-blur-xl animate-in fade-in duration-300">
             <div className="bg-surface border border-white/10 rounded-[3rem] p-12 w-full max-w-md shadow-2xl relative text-center">

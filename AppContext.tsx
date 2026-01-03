@@ -177,25 +177,20 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const updateUser = async (id: string, updates: Partial<User>) => {
-    const updatedUsers = users.map(u => u.id === id ? { ...u, ...updates } : u);
-    setUsers(updatedUsers);
-    
-    if (currentUser?.id === id) {
-       const updated = { ...currentUser, ...updates } as User;
-       setCurrentUser(updated);
-       localStorage.setItem('classfit_user', JSON.stringify(updated));
-    }
-
     if (isDemoMode) {
+        const updatedUsers = users.map(u => u.id === id ? { ...u, ...updates } : u);
+        setUsers(updatedUsers);
         localStorage.setItem('classfit_users', JSON.stringify(updatedUsers));
         return;
     }
 
     const { error } = await supabase.from('users').update({ ...updates }).eq('id', id);
     if (error) {
-        await refreshData();
-        throw error;
+        console.error("Supabase User Update Error:", error);
+        alert(`Account update failed: ${error.message}`);
+        return;
     }
+    await refreshData();
   };
 
   const updateBooking = async (id: string, updates: Partial<Booking>) => {
@@ -215,7 +210,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       finalUpdates.settledBy = adminName;
     }
 
-    // Record audit details if modified by Management/Admin
     if (isAdmin) {
       finalUpdates.lastModifiedBy = adminName;
       finalUpdates.modifiedAt = new Date().toISOString();
@@ -228,6 +222,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return;
     }
 
+    // Explicitly update Supabase - Ensure standard column mapping
     const { error } = await supabase.from('bookings').update({
        status: finalUpdates.status,
        payment_method: finalUpdates.paymentMethod,
@@ -241,7 +236,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
        booking_time: finalUpdates.time
     }).eq('id', id);
     
-    if (error) throw error;
+    if (error) {
+       console.error("Supabase Booking Update Error:", error);
+       alert(`Database Error: ${error.message}. Ensure your Supabase schema allows updates to these columns.`);
+       return;
+    }
+    
     await refreshData();
   };
 

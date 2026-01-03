@@ -14,7 +14,7 @@ const BookingPage: React.FC = () => {
   const trainers = useMemo(() => {
     const staticTrainers = getTrainers(language);
     const dynamicTrainers: Trainer[] = users
-      .filter(u => u.role === 'trainer')
+      .filter(u => u.roles?.includes('trainer'))
       .map(u => {
         const match = u.name.match(/^(.*)\s\((.*)\)$/);
         const displayName = match ? match[1] : u.name;
@@ -47,7 +47,6 @@ const BookingPage: React.FC = () => {
   const [guestPhone, setGuestPhone] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
 
-  // Moderation Filtering: only show isPublished reviews
   const allTrainerReviews = useMemo(() => {
     if (!selectedTrainer) return [];
     const realReviews = liveReviews.filter(r => r.trainerId === selectedTrainer.id && r.isPublished);
@@ -70,7 +69,8 @@ const BookingPage: React.FC = () => {
   const getFirstDayOfMonth = (date: Date) => {
     const year = date.getFullYear();
     const month = date.getMonth();
-    return new Date(year, month, 1).getDay();
+    const d = new Date(year, month, 1).getDay();
+    return d === 0 ? 6 : d - 1;
   };
 
   const handlePrevMonth = () => {
@@ -95,10 +95,9 @@ const BookingPage: React.FC = () => {
   const renderCalendar = () => {
     const daysInMonth = getDaysInMonth(currentMonth);
     const firstDay = getFirstDayOfMonth(currentMonth); 
-    const startDayIndex = firstDay === 0 ? { start: 6 } : { start: firstDay - 1 }; 
 
     const days = [];
-    for (let i = 0; i < startDayIndex.start; i++) {
+    for (let i = 0; i < firstDay; i++) {
         days.push(<div key={`empty-${i}`} className="h-8 w-8"></div>);
     }
 
@@ -153,7 +152,6 @@ const BookingPage: React.FC = () => {
   const handleGuestSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (guestName && guestPhone && guestEmail) {
-      // Name validation for Guest
       const nameParts = guestName.trim().split(/\s+/);
       if (nameParts.length < 2) {
         alert(language === 'bg' ? 'Моля въведете име и фамилия (напр. Иван Петров).' : 'Please enter your first and last name (e.g. John Doe).');
@@ -173,11 +171,13 @@ const BookingPage: React.FC = () => {
     const localDate = new Date(selectedDate.getTime() - (offset*60*1000));
     const formattedDate = localDate.toISOString().split('T')[0];
 
-    const bookingId = Math.random().toString(36).substr(2, 9).toUpperCase();
+    // FIX: Generate standard UUID for Supabase compatibility
+    const bookingId = crypto.randomUUID();
+    const checkInCode = bookingId.substring(0, 6).toUpperCase();
     
     const newBooking: Booking = {
-      id: String(bookingId),
-      checkInCode: bookingId.substring(0, 6),
+      id: bookingId,
+      checkInCode: checkInCode,
       trainerId: String(selectedTrainer.id),
       userId: userId ? String(userId) : undefined, 
       customerName: name,
@@ -189,7 +189,7 @@ const BookingPage: React.FC = () => {
       duration: 60,
       price: selectedTrainer.price,
       status: 'pending',
-      gymAddress: 'ЛевскиПриморски, ул. „Студентска“ 1 а, 9010 Варна'
+      gymAddress: 'бул. „Осми приморски полк“ 128 (Спирка МИР)'
     };
 
     try {
@@ -257,7 +257,7 @@ const BookingPage: React.FC = () => {
           <div className="mb-16">
             <h1 className="text-5xl md:text-7xl font-black uppercase italic mb-4 tracking-tighter text-white">{t.booking}</h1>
             <p className="text-slate-500 font-black uppercase tracking-[0.3em] text-[10px]">
-              {language === 'bg' ? 'ClassFit Варна • ЛевскиПриморски • Изберете Треньор' : 'ClassFit Varna • LevskiPrimorski • Select Trainer'}
+              {language === 'bg' ? 'ClassFit Варна • сп. Мир • Изберете Треньор' : 'ClassFit Varna • Mir Stop • Select Trainer'}
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -331,7 +331,6 @@ const BookingPage: React.FC = () => {
                   </div>
                </div>
 
-               {/* REVIEWS SECTION - RELOCATED TO BOTTOM */}
                <div className="bg-surface/10 rounded-[3rem] border border-white/5 p-8 md:p-12">
                   <div className="flex items-center justify-between mb-10">
                      <h3 className="text-2xl font-black uppercase italic text-white tracking-tighter flex items-center gap-4">
