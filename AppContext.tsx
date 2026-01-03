@@ -54,6 +54,9 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+const MASTER_ID = '26e38fa6-50ce-4a03-8b8d-cb76da6594b0';
+const MASTER_EMAIL = 'admin@classfit.bg';
+
 const parseBioField = (bio: string | undefined, key: string) => {
   if (!bio) return '';
   const regex = new RegExp(`${key}: (.*)(\\n|$)`, 'i');
@@ -170,8 +173,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           let roles: UserRole[] = u.roles || (u.role ? [u.role as UserRole] : ['user']);
           if (roles.length === 0) roles = ['user'];
 
-          // Auto-inject for the specific master admin email
-          if (u.email === 'admin@classfit.bg' && !roles.includes('management')) {
+          // Auto-inject for master accounts
+          if ((u.email === MASTER_EMAIL || u.id === MASTER_ID) && !roles.includes('management')) {
             roles = Array.from(new Set([...roles, 'management', 'admin']));
           }
 
@@ -319,7 +322,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (isDemoMode) {
       const u = users.find(u => u.email === email && u.password === pass);
       if (u) { 
-        if (email === 'admin@classfit.bg' && !u.roles.includes('management')) {
+        if ((email === MASTER_EMAIL || u.id === MASTER_ID) && !u.roles.includes('management')) {
           u.roles = Array.from(new Set([...u.roles, 'management', 'admin']));
         }
         setCurrentUser(u); localStorage.setItem('classfit_user', JSON.stringify(u)); return true; 
@@ -331,7 +334,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         let roles: UserRole[] = data.roles || (data.role ? [data.role as UserRole] : ['user']);
         if (roles.length === 0) roles = ['user'];
         
-        if (email === 'admin@classfit.bg' && !roles.includes('management')) {
+        if ((email === MASTER_EMAIL || String(data.id) === MASTER_ID) && !roles.includes('management')) {
            roles = Array.from(new Set([...roles, 'management', 'admin']));
         }
 
@@ -357,7 +360,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const register = async (name: string, email: string, pass: string): Promise<boolean> => {
     let roles: UserRole[] = ['user'];
-    if (email === 'admin@classfit.bg') {
+    if (email === MASTER_EMAIL) {
       roles = ['user', 'admin', 'management'];
     }
 

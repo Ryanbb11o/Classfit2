@@ -189,8 +189,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             <NavLink onClick={closeMenu} to="/contact" className="text-2xl font-black italic uppercase tracking-tighter text-white">Contact</NavLink>
             <div className="h-px bg-white/10 my-4"></div>
             {currentUser ? (
-              <button onClick={handleLogout} className="text-xl font-bold uppercase tracking-widest text-slate-500 text-left flex items-center gap-3 hover:text-brand transition-all group">
-                Logout <LogOut size={22} className="text-brand group-hover:scale-110 transition-transform" />
+              <button onClick={handleLogout} className="text-xl font-bold uppercase tracking-widest text-slate-500 text-left flex items-center gap-4 hover:text-brand transition-all group">
+                Logout <div className="p-2 bg-brand/10 rounded-lg group-hover:bg-brand group-hover:text-dark transition-all"><LogOut size={20} /></div>
               </button>
             ) : (
               <NavLink onClick={closeMenu} to="/login" className="text-xl font-bold uppercase tracking-widest text-white">Login</NavLink>
