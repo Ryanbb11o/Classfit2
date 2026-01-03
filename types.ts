@@ -10,6 +10,7 @@ export interface User {
   password: string; 
   phone?: string; 
   image?: string; 
+  role?: string; // Legacy field for safety
   bio?: string;   
   joinedDate: string;
   roles: UserRole[]; 
@@ -55,6 +56,7 @@ export interface Booking {
   gymAddress?: string;
   hasBeenReviewed?: boolean;
   settledAt?: string; // Timestamp of admin settlement
+  settledBy?: string; // Name of the admin who confirmed the payment
 }
 
 export interface Membership {

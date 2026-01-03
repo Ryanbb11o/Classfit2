@@ -130,7 +130,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           trainerEarnings: Number(b.trainer_earnings || 0),
           gymAddress: b.gym_address,
           hasBeenReviewed: b.has_been_reviewed || false,
-          settledAt: b.settled_at
+          settledAt: b.settled_at,
+          settledBy: b.settled_by
       })));
 
       const { data: rData } = await supabase.from('reviews').select('*').order('created_at', { ascending: false });
@@ -206,6 +207,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         finalUpdates.commissionAmount = gymCut;
         finalUpdates.trainerEarnings = booking.price - gymCut;
         finalUpdates.settledAt = new Date().toISOString();
+        finalUpdates.settledBy = currentUser?.name.split('(')[0].trim() || 'Admin';
       }
     }
 
@@ -216,7 +218,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return;
     }
 
-    const { error } = await supabase.from('bookings').update(finalUpdates).eq('id', id);
+    const { error } = await supabase.from('bookings').update({
+       status: finalUpdates.status,
+       payment_method: finalUpdates.paymentMethod,
+       commission_amount: finalUpdates.commissionAmount,
+       trainer_earnings: finalUpdates.trainerEarnings,
+       settled_at: finalUpdates.settledAt,
+       settled_by: finalUpdates.settledBy
+    }).eq('id', id);
     if (error) throw error;
     await refreshData();
   };
