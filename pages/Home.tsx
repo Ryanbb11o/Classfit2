@@ -22,7 +22,7 @@ const Home: React.FC = () => {
         <div className="relative z-10 max-w-7xl mx-auto px-6 w-full flex flex-col lg:flex-row items-center gap-16">
           <div className="flex-1 text-center lg:text-left">
             <Reveal>
-              <div className="inline-flex items-center gap-3 bg-surface text-brand px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.3em] mb-8 border border-white/5 justify-center lg:justify-start">
+              <div className="inline-flex items-center gap-3 bg-surface text-brand px-5 py-2 rounded-full text-[11px] font-black uppercase tracking-[0.3em] mb-8 border border-white/5 justify-center lg:justify-start">
                 <Zap size={14} className="text-brand fill-brand" /> {t.joinMovement}
               </div>
             </Reveal>
@@ -123,7 +123,7 @@ const Home: React.FC = () => {
           <div className="bg-surface rounded-[3rem] border border-white/10 p-8 md:p-16 flex flex-col md:flex-row items-center gap-12 overflow-hidden relative">
             <div className="flex-1 relative z-10">
               <Reveal>
-                <div className="text-brand font-black uppercase tracking-[0.3em] text-[10px] mb-4 italic">Локация Варна</div>
+                <div className="text-brand font-black uppercase tracking-[0.3em] text-[11px] mb-4 italic">Локация Варна</div>
                 <h2 className="text-4xl md:text-5xl font-black uppercase italic text-white mb-6 leading-none">
                   В СЪРЦЕТО НА <span className="text-brand">ВАРНА</span>
                 </h2>
@@ -131,10 +131,10 @@ const Home: React.FC = () => {
                   Намираме се в <span className="text-white font-bold">ЛевскиПриморски, ул. „Студентска“ 1 а</span>. Лесен достъп с автомобил и градски транспорт в една от най-комуникативните точки на града.
                 </p>
                 <div className="space-y-4">
-                  <div className="flex items-center gap-4 text-white font-black uppercase italic tracking-widest text-xs">
+                  <div className="flex items-center gap-4 text-white font-black uppercase italic tracking-widest text-[11px]">
                     <Navigation className="text-brand" size={20} /> ул. „Студентска“ 1А
                   </div>
-                  <div className="flex items-center gap-4 text-white font-black uppercase italic tracking-widest text-xs">
+                  <div className="flex items-center gap-4 text-white font-black uppercase italic tracking-widest text-[11px]">
                     <MapPin className="text-brand" size={20} /> Варна, 9010
                   </div>
                 </div>
@@ -142,7 +142,7 @@ const Home: React.FC = () => {
                   href="https://www.google.com/maps/search/?api=1&query=ClassFit+Varna+Studentska+1A"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 mt-10 px-8 py-4 bg-white text-dark rounded-full font-black uppercase italic tracking-widest text-xs hover:bg-brand transition-colors"
+                  className="inline-flex items-center gap-2 mt-10 px-8 py-4 bg-white text-dark rounded-full font-black uppercase italic tracking-widest text-[11px] hover:bg-brand transition-colors"
                 >
                   Отвори в Google Maps <ArrowRight size={14} />
                 </a>
@@ -177,7 +177,7 @@ const Home: React.FC = () => {
             <Reveal delay={200}>
               <div className="grid grid-cols-2 gap-6">
                 {t.features.map((item: string, i: number) => (
-                  <div key={i} className="flex items-center gap-3 text-xs font-black uppercase tracking-widest text-slate-500">
+                  <div key={i} className="flex items-center gap-3 text-[11px] font-black uppercase tracking-widest text-slate-500">
                      <CheckCircle size={16} className="text-brand" /> {item}
                   </div>
                 ))}

@@ -16,7 +16,7 @@ const Memberships: React.FC = () => {
             <Shield size={32} className="text-brand fill-brand/20" />
         </div>
         <h1 className="text-5xl md:text-7xl font-black uppercase italic mb-4 tracking-tighter leading-none text-white">{t.memberships}</h1>
-        <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-xs max-w-xl mx-auto">{t.choosePower}</p>
+        <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[11px] max-w-xl mx-auto">{t.choosePower}</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
@@ -28,7 +28,7 @@ const Memberships: React.FC = () => {
             }`}
           >
             {tier.isPopular && (
-              <span className="absolute -top-4 left-1/2 -translate-x-1/2 bg-brand text-dark px-6 py-1.5 rounded-full text-[10px] font-black tracking-[0.3em] uppercase italic">
+              <span className="absolute -top-4 left-1/2 -translate-x-1/2 bg-brand text-dark px-6 py-1.5 rounded-full text-[11px] font-black tracking-[0.3em] uppercase italic">
                 {t.mostPopular}
               </span>
             )}
@@ -58,7 +58,7 @@ const Memberships: React.FC = () => {
               {t.payAtDesk}
             </div>
             
-            <button className={`w-full mt-5 text-[10px] font-black uppercase tracking-[0.2em] opacity-40 hover:opacity-100 transition-quick text-white`}>
+            <button className={`w-full mt-5 text-[11px] font-black uppercase tracking-[0.2em] opacity-40 hover:opacity-100 transition-quick text-white`}>
               {t.learnMore}
             </button>
           </div>

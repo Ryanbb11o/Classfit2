@@ -21,7 +21,7 @@ const Shop: React.FC = () => {
     <div className="max-w-7xl mx-auto px-4 py-24 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row items-end justify-between mb-20 gap-8">
         <div>
-          <div className="inline-flex items-center gap-2 text-brand font-black uppercase tracking-[0.3em] text-[10px] mb-4">
+          <div className="inline-flex items-center gap-2 text-brand font-black uppercase tracking-[0.3em] text-[11px] mb-4">
             <ShoppingCart size={12} /> {t.store}
           </div>
           <h1 className="text-5xl md:text-6xl font-black uppercase italic mb-4 tracking-tight leading-none text-white">{t.shop}</h1>
@@ -32,7 +32,7 @@ const Shop: React.FC = () => {
             <button 
                 key={idx} 
                 onClick={() => setActiveCategory(cat)}
-                className={`px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-[0.2em] transition-quick whitespace-nowrap ${activeCategory === cat ? 'bg-brand text-dark' : 'bg-surface text-slate-400 hover:bg-white/10 hover:text-white'}`}
+                className={`px-8 py-3 rounded-full text-[11px] font-black uppercase tracking-[0.2em] transition-quick whitespace-nowrap ${activeCategory === cat ? 'bg-brand text-dark' : 'bg-surface text-slate-400 hover:bg-white/10 hover:text-white'}`}
             >
               {cat}
             </button>
@@ -55,7 +55,7 @@ const Shop: React.FC = () => {
                   </div>
               </div>
               <div className="absolute top-4 left-4">
-                  <span className="bg-dark/90 backdrop-blur px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-white border border-white/10">
+                  <span className="bg-dark/90 backdrop-blur px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-widest text-white border border-white/10">
                     {product.category}
                   </span>
               </div>
@@ -94,7 +94,7 @@ const Shop: React.FC = () => {
                   {/* Product Details */}
                   <div className="md:w-1/2 p-8 md:p-12 flex flex-col">
                       <div className="mb-8">
-                        <span className="inline-block px-4 py-1.5 bg-brand/10 text-brand text-[10px] font-black uppercase tracking-widest rounded-lg mb-4">
+                        <span className="inline-block px-4 py-1.5 bg-brand/10 text-brand text-[11px] font-black uppercase tracking-widest rounded-lg mb-4">
                             {selectedProduct.category}
                         </span>
                         <h2 className="text-4xl font-black uppercase italic tracking-tighter text-white leading-none mb-4">
@@ -113,11 +113,11 @@ const Shop: React.FC = () => {
                         </div>
 
                         <div className="space-y-4">
-                            <div className="flex items-center gap-3 px-6 py-4 bg-brand rounded-2xl text-dark font-black uppercase italic tracking-widest text-sm shadow-xl shadow-brand/10">
+                            <div className="flex items-center gap-3 px-6 py-4 bg-brand rounded-2xl text-dark font-black uppercase italic tracking-widest text-[11px] shadow-xl shadow-brand/10">
                                 <Banknote size={20} />
                                 {t.ableToPayAtDesk}
                             </div>
-                            <p className="text-center text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
+                            <p className="text-center text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">
                                 {language === 'bg' ? 'ЗАПИТАЙТЕ НА РЕЦЕПЦИЯ' : 'ASK AT RECEPTION'}
                             </p>
                         </div>

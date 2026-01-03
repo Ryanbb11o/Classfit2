@@ -128,7 +128,7 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
                    {isTrainerMode ? 'COACH PROFILE' : 'MEMBER IDENTITY'}
                 </h2>
              </div>
-             <p className="text-slate-500 text-[9px] font-black uppercase tracking-widest italic ml-11">
+             <p className="text-slate-500 text-[11px] font-black uppercase tracking-widest italic ml-11">
                 {isTrainerMode ? 'Refine your professional profile and club terms' : 'Manage your member profile and workout preferences'}
              </p>
           </div>
@@ -147,15 +147,15 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
                    <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
                 </div>
                 <div className="text-center">
-                   <p className="text-[9px] font-black uppercase text-white tracking-widest mb-1">Profile Photo</p>
-                   <p className="text-[8px] text-slate-500 font-bold italic uppercase">PNG/JPG up to 2MB</p>
+                   <p className="text-[11px] font-black uppercase text-white tracking-widest mb-1">Profile Photo</p>
+                   <p className="text-[11px] text-slate-500 font-bold italic uppercase">PNG/JPG up to 2MB</p>
                 </div>
             </div>
 
             {/* Core Identity Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                   <label className="text-[9px] font-black uppercase text-slate-500 ml-2">Име / Name</label>
+                   <label className="text-[11px] font-black uppercase text-slate-500 ml-2">Име / Name</label>
                    <input 
                       value={editName} 
                       onChange={(e) => setEditName(e.target.value)} 
@@ -163,7 +163,7 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
                    />
                 </div>
                 <div className="space-y-2">
-                   <label className="text-[9px] font-black uppercase text-slate-500 ml-2">
+                   <label className="text-[11px] font-black uppercase text-slate-500 ml-2">
                       {isTrainerMode ? 'Specialty' : 'Primary Goal'}
                    </label>
                    <input 
@@ -177,7 +177,7 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
 
             {/* Languages Section - Styled after the screenshot */}
             <div className="space-y-4">
-               <label className="flex items-center gap-2 text-[9px] font-black uppercase text-brand ml-2">
+               <label className="flex items-center gap-2 text-[11px] font-black uppercase text-brand ml-2">
                   <Languages size={14} /> {isTrainerMode ? 'Coach Languages' : 'Communication Preferences'}
                </label>
                <div className="flex flex-wrap gap-2">
@@ -185,7 +185,7 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
                      <button 
                         key={lang} 
                         onClick={() => handleToggleLang(lang)}
-                        className={`px-4 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border ${
+                        className={`px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all border ${
                            editLangs.includes(lang) 
                            ? 'bg-brand text-dark border-brand shadow-lg shadow-brand/10' 
                            : 'bg-white/5 text-slate-500 border-white/5 hover:border-brand/40'
@@ -203,8 +203,8 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
                   {/* Commission - Specifically Styled like the screenshot box */}
                   <div className="p-8 bg-[#1e293b]/50 rounded-[2.5rem] border border-white/10 relative group">
                     <div className="flex justify-between items-center mb-6">
-                       <label className="text-[9px] font-black uppercase text-brand tracking-widest">Club Commission Share</label>
-                       <span className="text-[8px] font-black text-slate-500 uppercase">Current Ledger: {user.commissionRate}%</span>
+                       <label className="text-[11px] font-black uppercase text-brand tracking-widest">Club Commission Share</label>
+                       <span className="text-[11px] font-black text-slate-500 uppercase">Current Ledger: {user.commissionRate}%</span>
                     </div>
                     <div className="relative">
                        <input 
@@ -219,7 +219,7 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
 
                   {/* Authority - Management Only */}
                   <div className="pt-6 border-t border-white/5">
-                    <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-6 italic">Authority Delegation</h3>
+                    <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-500 mb-6 italic">Authority Delegation</h3>
                     <div className="grid grid-cols-2 gap-2">
                        {roleOptions.map((opt) => {
                           const active = selectedRoles.includes(opt.id);
@@ -227,7 +227,7 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
                              <button 
                                 key={opt.id} 
                                 onClick={() => handleToggleRole(opt.id)}
-                                className={`flex items-center justify-between p-4 rounded-2xl border text-[9px] font-black uppercase transition-all ${
+                                className={`flex items-center justify-between p-4 rounded-2xl border text-[11px] font-black uppercase transition-all ${
                                    active ? 'bg-white/5 border-brand/50 text-white' : 'bg-dark/20 border-white/5 text-slate-600'
                                 }`}
                              >
@@ -243,16 +243,16 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
             
             {/* Manual Image Link (Optional) */}
             <div className="space-y-2">
-               <label className="text-[9px] font-black uppercase text-slate-500 ml-2">Public Image Link (Optional)</label>
+               <label className="text-[11px] font-black uppercase text-slate-500 ml-2">Public Image Link (Optional)</label>
                <input 
                   value={editImage.startsWith('data:') ? 'Local Image Base64 Uploaded' : editImage} 
                   onChange={(e) => setEditImage(e.target.value)} 
                   disabled={editImage.startsWith('data:')}
                   placeholder="https://..."
-                  className="w-full bg-[#131b27] border border-white/5 focus:border-brand rounded-2xl px-6 py-4 text-[10px] font-medium text-slate-400 outline-none transition-all truncate" 
+                  className="w-full bg-[#131b27] border border-white/5 focus:border-brand rounded-2xl px-6 py-4 text-[11px] font-medium text-slate-400 outline-none transition-all truncate" 
                />
                {editImage.startsWith('data:') && (
-                 <button onClick={() => setEditImage('')} className="text-[8px] text-red-500 uppercase font-black ml-2 hover:underline">Clear Uploaded Image</button>
+                 <button onClick={() => setEditImage('')} className="text-[11px] text-red-500 uppercase font-black ml-2 hover:underline">Clear Uploaded Image</button>
                )}
             </div>
           </div>

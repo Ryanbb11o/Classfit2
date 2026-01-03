@@ -171,7 +171,6 @@ const BookingPage: React.FC = () => {
     const localDate = new Date(selectedDate.getTime() - (offset*60*1000));
     const formattedDate = localDate.toISOString().split('T')[0];
 
-    // FIX: Generate standard UUID for Supabase compatibility
     const bookingId = crypto.randomUUID();
     const checkInCode = bookingId.substring(0, 6).toUpperCase();
     
@@ -213,11 +212,11 @@ const BookingPage: React.FC = () => {
             <Check size={40} strokeWidth={3} />
           </div>
           <h2 className="text-4xl font-black uppercase italic mb-4 text-white tracking-tighter leading-none">{t.reqSent}</h2>
-          <p className="text-slate-400 mb-2 text-sm max-w-sm mx-auto">{t.trainerReviewMsg}</p>
+          <p className="text-slate-400 mb-2 text-[11px] max-w-sm mx-auto">{t.trainerReviewMsg}</p>
         </div>
 
         <div className="bg-surface border border-white/5 rounded-[2.5rem] p-8 mb-10 shadow-2xl relative overflow-hidden group">
-           <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-brand mb-6 italic">Session Confirmation</h3>
+           <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-brand mb-6 italic">Session Confirmation</h3>
            <div className="space-y-6">
               <div className="flex items-center justify-between group/row">
                  <div className="flex items-center gap-4">
@@ -225,7 +224,7 @@ const BookingPage: React.FC = () => {
                        <User size={18} />
                     </div>
                     <div>
-                       <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">{t.trainerPhoneLabel}</p>
+                       <p className="text-[11px] font-black uppercase text-slate-500 tracking-widest">{t.trainerPhoneLabel}</p>
                        <p className="text-white font-bold text-sm uppercase italic">{selectedTrainer.name}</p>
                     </div>
                  </div>
@@ -238,11 +237,11 @@ const BookingPage: React.FC = () => {
 
         <div className="flex flex-col gap-3 max-w-xs mx-auto">
           {currentUser && (
-            <button onClick={() => navigate('/profile')} className="w-full py-4 bg-white text-dark rounded-full font-black uppercase tracking-widest text-xs hover:bg-brand transition-all">
+            <button onClick={() => navigate('/profile')} className="w-full py-4 bg-white text-dark rounded-full font-black uppercase tracking-widest text-[11px] hover:bg-brand transition-all">
               {t.myBookings}
             </button>
           )}
-          <button onClick={() => { setIsSuccess(false); setSelectedTrainer(null); }} className="w-full py-4 bg-surface text-white rounded-full font-black uppercase tracking-widest text-xs hover:bg-white/10 transition-all border border-white/5">
+          <button onClick={() => { setIsSuccess(false); setSelectedTrainer(null); }} className="w-full py-4 bg-surface text-white rounded-full font-black uppercase tracking-widest text-[11px] hover:bg-white/10 transition-all border border-white/5">
             {t.newBooking}
           </button>
         </div>
@@ -256,7 +255,7 @@ const BookingPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-6">
           <div className="mb-16">
             <h1 className="text-5xl md:text-7xl font-black uppercase italic mb-4 tracking-tighter text-white">{t.booking}</h1>
-            <p className="text-slate-500 font-black uppercase tracking-[0.3em] text-[10px]">
+            <p className="text-slate-500 font-black uppercase tracking-[0.3em] text-[11px]">
               {language === 'bg' ? 'ClassFit Варна • сп. Мир • Изберете Треньор' : 'ClassFit Varna • Mir Stop • Select Trainer'}
             </p>
           </div>
@@ -271,7 +270,7 @@ const BookingPage: React.FC = () => {
                    <img src={trainer.image} className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" />
                    <div className="absolute inset-0 bg-gradient-to-t from-dark/90 via-transparent to-transparent"></div>
                    <div className="absolute bottom-0 left-0 p-6 w-full">
-                      <p className="text-[9px] font-black uppercase tracking-widest text-brand mb-1">{trainer.specialty}</p>
+                      <p className="text-[11px] font-black uppercase tracking-widest text-brand mb-1">{trainer.specialty}</p>
                       <h3 className="text-xl font-black uppercase italic text-white leading-tight">{trainer.name}</h3>
                    </div>
                 </div>
@@ -281,7 +280,7 @@ const BookingPage: React.FC = () => {
         </div>
       ) : (
         <div className="max-w-7xl mx-auto px-6 animate-in slide-in-from-bottom-4 duration-500">
-          <button onClick={() => { setSelectedTrainer(null); setSelectedTime(null); }} className="mb-12 flex items-center gap-2 text-slate-500 hover:text-white font-black uppercase tracking-widest text-[9px] transition-all">
+          <button onClick={() => { setSelectedTrainer(null); setSelectedTime(null); }} className="mb-12 flex items-center gap-2 text-slate-500 hover:text-white font-black uppercase tracking-widest text-[11px] transition-all">
             <ArrowLeft size={14} /> {language === 'bg' ? 'Всички Треньори' : 'All Coaches'}
           </button>
           
@@ -291,7 +290,7 @@ const BookingPage: React.FC = () => {
                   <div className="aspect-[4/5] overflow-hidden"><img src={selectedTrainer.image} className="w-full h-full object-cover" /></div>
                   <div className="p-10">
                      <h2 className="text-4xl font-black uppercase italic text-white mb-2 leading-tight">{selectedTrainer.name}</h2>
-                     <div className="inline-block px-4 py-1 bg-brand text-dark rounded-full text-[10px] font-black uppercase tracking-widest mb-6">{selectedTrainer.specialty}</div>
+                     <div className="inline-block px-4 py-1 bg-brand text-dark rounded-full text-[11px] font-black uppercase tracking-widest mb-6">{selectedTrainer.specialty}</div>
                      <p className="text-xs text-slate-400 font-medium italic leading-relaxed border-t border-white/5 pt-6">{selectedTrainer.bio}</p>
                   </div>
                </div>
@@ -312,20 +311,20 @@ const BookingPage: React.FC = () => {
                      </div>
                   </div>
                   <div className="mb-16">
-                      <div className="grid grid-cols-7 gap-1 mb-6 text-center">{weekDays.map(day => (<div key={day} className="text-[10px] font-black text-slate-600 uppercase tracking-widest">{day}</div>))}</div>
+                      <div className="grid grid-cols-7 gap-1 mb-6 text-center">{weekDays.map(day => (<div key={day} className="text-[11px] font-black text-slate-600 uppercase tracking-widest">{day}</div>))}</div>
                       <div className="grid grid-cols-7 gap-3 place-items-center">{renderCalendar()}</div>
                   </div>
                   <div className="pt-12 border-t border-white/5">
-                     <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 italic mb-8 flex items-center gap-2"><Clock className="text-brand" size={14} /> Available Slots</h3>
+                     <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-500 italic mb-8 flex items-center gap-2"><Clock className="text-brand" size={14} /> Available Slots</h3>
                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
                         {selectedTrainer.availability.map(time => (
-                           <button key={time} onClick={() => setSelectedTime(time)} className={`py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border ${selectedTime === time ? 'bg-brand text-dark border-brand' : 'bg-white/5 text-slate-400 border-white/5 hover:border-brand/40'}`}>{time}</button>
+                           <button key={time} onClick={() => setSelectedTime(time)} className={`py-4 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all border ${selectedTime === time ? 'bg-brand text-dark border-brand' : 'bg-white/5 text-slate-400 border-white/5 hover:border-brand/40'}`}>{time}</button>
                         ))}
                      </div>
                   </div>
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-10 pt-10 border-t border-white/5 mt-12">
-                      <div className="text-center sm:text-left"><p className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-2">Session Fee</p><div className="text-4xl font-black uppercase italic text-white leading-none tracking-tighter">{selectedTrainer.price} <span className="text-lg text-brand font-bold not-italic ml-1">BGN</span></div></div>
-                      <button onClick={initiateBooking} disabled={!selectedTime || isSubmitting} className={`w-full sm:w-auto px-16 py-6 rounded-full font-black uppercase italic tracking-[0.2em] text-xs transition-all shadow-xl ${selectedTime && !isSubmitting ? 'bg-brand text-dark hover:scale-105' : 'bg-white/5 text-slate-700 cursor-not-allowed border border-white/5'}`}>
+                      <div className="text-center sm:text-left"><p className="text-[11px] font-black uppercase tracking-widest text-slate-600 mb-2">Session Fee</p><div className="text-4xl font-black uppercase italic text-white leading-none tracking-tighter">{selectedTrainer.price} <span className="text-lg text-brand font-bold not-italic ml-1">BGN</span></div></div>
+                      <button onClick={initiateBooking} disabled={!selectedTime || isSubmitting} className={`w-full sm:w-auto px-16 py-6 rounded-full font-black uppercase italic tracking-[0.2em] text-[11px] transition-all shadow-xl ${selectedTime && !isSubmitting ? 'bg-brand text-dark hover:scale-105' : 'bg-white/5 text-slate-700 cursor-not-allowed border border-white/5'}`}>
                          {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : (language === 'bg' ? 'Запази час' : 'Confirm Session')}
                       </button>
                   </div>
@@ -340,13 +339,13 @@ const BookingPage: React.FC = () => {
                         <div className="flex text-brand">
                            {[1,2,3,4,5].map(i => <Star key={i} size={10} fill="currentColor" />)}
                         </div>
-                        <span className="text-[10px] font-black text-white">{allTrainerReviews.length} Reviews</span>
+                        <span className="text-[11px] font-black text-white">{allTrainerReviews.length} Reviews</span>
                      </div>
                   </div>
 
                   {allTrainerReviews.length === 0 ? (
                     <div className="text-center py-12 border-2 border-dashed border-white/5 rounded-[2rem]">
-                       <p className="text-slate-500 font-black uppercase tracking-widest text-[10px]">No verified feedback yet.</p>
+                       <p className="text-slate-500 font-black uppercase tracking-widest text-[11px]">No verified feedback yet.</p>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -354,10 +353,10 @@ const BookingPage: React.FC = () => {
                           <div key={i} className="p-6 bg-dark/40 rounded-[2rem] border border-white/5 space-y-4">
                              <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                   <div className="w-8 h-8 rounded-xl bg-brand text-dark text-[10px] font-black flex items-center justify-center">{review.avatar}</div>
+                                   <div className="w-8 h-8 rounded-xl bg-brand text-dark text-[11px] font-black flex items-center justify-center">{review.avatar}</div>
                                    <div>
                                       <p className="text-[11px] font-black text-white uppercase italic tracking-tight">{review.author}</p>
-                                      <p className="text-[8px] font-black uppercase text-slate-600 tracking-widest">{review.time}</p>
+                                      <p className="text-[11px] font-black uppercase text-slate-600 tracking-widest">{review.time}</p>
                                    </div>
                                 </div>
                                 <div className="flex gap-0.5">
@@ -382,15 +381,15 @@ const BookingPage: React.FC = () => {
            <div className="bg-surface rounded-[3rem] p-10 md:p-12 max-w-md w-full shadow-2xl relative border border-white/10 overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-brand"></div>
               <button onClick={() => setShowGuestForm(false)} className="absolute top-8 right-8 text-slate-500 hover:text-white transition-all bg-white/5 p-2 rounded-full"><X size={20} /></button>
-              <div className="mb-8"><h2 className="text-3xl font-black uppercase italic text-white tracking-tighter mb-2">{t.finalize}</h2><p className="text-slate-500 text-xs font-medium">Please provide contact details to finalize your ClassFit booking.</p></div>
+              <div className="mb-8"><h2 className="text-3xl font-black uppercase italic text-white tracking-tighter mb-2">{t.finalize}</h2><p className="text-slate-500 text-[11px] font-medium">Please provide contact details to finalize your ClassFit booking.</p></div>
               <form onSubmit={handleGuestSubmit} className="space-y-4">
                 <div className="space-y-1">
-                   <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-2">First & Last Name</label>
+                   <label className="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-2">First & Last Name</label>
                    <input type="text" required value={guestName} onChange={(e) => setGuestName(e.target.value)} className="w-full bg-dark/50 border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white outline-none focus:border-brand transition-all" />
                 </div>
-                <div className="space-y-1"><label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-2">Phone</label><input type="tel" required value={guestPhone} onChange={(e) => setGuestPhone(e.target.value)} className="w-full bg-dark/50 border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white outline-none focus:border-brand transition-all" /></div>
-                <div className="space-y-1"><label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-2">Email</label><input type="email" required value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} className="w-full bg-dark/50 border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white outline-none focus:border-brand transition-all" /></div>
-                <button type="submit" disabled={isSubmitting} className="w-full bg-brand text-dark py-5 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-brand/10 mt-6 hover:scale-[1.02] transition-all">
+                <div className="space-y-1"><label className="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-2">Phone</label><input type="tel" required value={guestPhone} onChange={(e) => setGuestPhone(e.target.value)} className="w-full bg-dark/50 border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white outline-none focus:border-brand transition-all" /></div>
+                <div className="space-y-1"><label className="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-2">Email</label><input type="email" required value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} className="w-full bg-dark/50 border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white outline-none focus:border-brand transition-all" /></div>
+                <button type="submit" disabled={isSubmitting} className="w-full bg-brand text-dark py-5 rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl shadow-brand/10 mt-6 hover:scale-[1.02] transition-all">
                    {isSubmitting ? <Loader2 className="animate-spin mx-auto" /> : t.confirmBooking}
                 </button>
               </form>

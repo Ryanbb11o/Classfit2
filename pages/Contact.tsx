@@ -14,7 +14,7 @@ const Contact: React.FC = () => {
       {/* Header */}
       <div className="text-center mb-20">
          <Reveal>
-            <div className="inline-flex items-center gap-2 text-brand font-black uppercase tracking-[0.3em] text-[10px] mb-4">
+            <div className="inline-flex items-center gap-2 text-brand font-black uppercase tracking-[0.3em] text-[11px] mb-4">
                <Mail size={12} /> {t.connect}
             </div>
          </Reveal>
@@ -66,11 +66,11 @@ const Contact: React.FC = () => {
                        </div>
                        <div className="space-y-3 flex-grow w-full">
                            <div className="flex justify-between items-center border-b border-white/5 pb-2">
-                              <span className="text-slate-500 text-xs font-black uppercase tracking-widest">{t.monFri}</span>
+                              <span className="text-slate-500 text-[11px] font-black uppercase tracking-widest">{t.monFri}</span>
                               <span className="text-white font-bold">07:00 - 22:00</span>
                            </div>
                            <div className="flex justify-between items-center border-b border-white/5 pb-2">
-                              <span className="text-slate-500 text-xs font-black uppercase tracking-widest">{t.satSun}</span>
+                              <span className="text-slate-500 text-[11px] font-black uppercase tracking-widest">{t.satSun}</span>
                               <span className="text-white font-bold">09:00 - 20:00</span>
                            </div>
                        </div>
@@ -96,7 +96,7 @@ const Contact: React.FC = () => {
                   <MapPin size={20} className="text-brand shrink-0" />
                   <div>
                      <p className="text-xs font-bold text-white uppercase">{t.address}</p>
-                     <p className="text-[10px] text-slate-400">{t.stop}</p>
+                     <p className="text-[11px] text-slate-400">{t.stop}</p>
                   </div>
                </div>
             </div>

@@ -13,7 +13,7 @@ const About: React.FC = () => {
     <div className="max-w-7xl mx-auto px-4 py-24">
       <div className="max-w-4xl mb-32">
         <Reveal>
-          <div className="text-brand font-black uppercase tracking-[0.3em] text-[10px] mb-6 italic">{t.ourDna}</div>
+          <div className="text-brand font-black uppercase tracking-[0.3em] text-[11px] mb-6 italic">{t.ourDna}</div>
         </Reveal>
         <Reveal delay={100}>
           <h1 className="text-6xl md:text-8xl font-black uppercase italic mb-8 tracking-tighter leading-[0.9]">{t.weAre}</h1>

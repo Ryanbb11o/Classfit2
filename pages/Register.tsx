@@ -45,13 +45,13 @@ const Register: React.FC = () => {
 
         <form onSubmit={handleSubmit} className="bg-surface/50 backdrop-blur-md p-8 rounded-[2rem] border border-white/5 shadow-2xl space-y-5">
           {error && (
-            <div className="bg-red-500/10 text-red-500 p-3 rounded-xl flex items-center gap-2 text-[10px] font-bold uppercase tracking-wide border border-red-500/20">
+            <div className="bg-red-500/10 text-red-500 p-3 rounded-xl flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide border border-red-500/20">
                <AlertCircle size={14} /> {error}
             </div>
           )}
           
           <div className="space-y-1.5">
-            <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-2">
+            <label className="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-2">
               {language === 'bg' ? 'Име и Фамилия' : 'First & Last Name'}
             </label>
             <input 
@@ -68,7 +68,7 @@ const Register: React.FC = () => {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-2">{t.email}</label>
+            <label className="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-2">{t.email}</label>
             <input 
               type="email" 
               required
@@ -80,7 +80,7 @@ const Register: React.FC = () => {
           </div>
           
           <div className="space-y-1.5">
-            <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-2">{t.password}</label>
+            <label className="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-2">{t.password}</label>
             <input 
               type="password" 
               required

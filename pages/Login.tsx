@@ -48,13 +48,13 @@ const Login: React.FC = () => {
 
         <form onSubmit={handleSubmit} className="bg-surface/50 backdrop-blur-md p-8 rounded-[2rem] border border-white/5 shadow-2xl space-y-5">
           {error && (
-            <div className="bg-red-500/10 text-red-500 p-3 rounded-xl flex items-center gap-2 text-[10px] font-bold uppercase tracking-wide border border-red-500/20">
+            <div className="bg-red-500/10 text-red-500 p-3 rounded-xl flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide border border-red-500/20">
                <AlertCircle size={14} /> {error}
             </div>
           )}
           
           <div className="space-y-1.5">
-            <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-2">{t.email}</label>
+            <label className="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-2">{t.email}</label>
             <input 
               type="email" 
               required
@@ -66,7 +66,7 @@ const Login: React.FC = () => {
           </div>
           
           <div className="space-y-1.5">
-            <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-2">{t.password}</label>
+            <label className="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-2">{t.password}</label>
             <input 
               type="password" 
               required
@@ -90,7 +90,7 @@ const Login: React.FC = () => {
         </p>
         
         <div className="mt-6 pt-6 border-t border-white/5 text-center">
-             <Link to="/trainer-signup" className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors">
+             <Link to="/trainer-signup" className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors">
                 <Briefcase size={12} /> {t.trainerRegistration}
              </Link>
         </div>
@@ -99,7 +99,7 @@ const Login: React.FC = () => {
         <div className="mt-8 text-center opacity-30 hover:opacity-100 transition-opacity">
             <button 
               onClick={handleHardReset}
-              className="text-[9px] uppercase font-black tracking-widest text-slate-600 hover:text-red-500 transition-colors flex items-center justify-center gap-2 mx-auto"
+              className="text-[11px] uppercase font-black tracking-widest text-slate-600 hover:text-red-500 transition-colors flex items-center justify-center gap-2 mx-auto"
             >
               <RefreshCw size={10} /> Reset App Data (Dev)
             </button>

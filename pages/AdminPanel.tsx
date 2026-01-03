@@ -102,10 +102,10 @@ const AdminPanel: React.FC = () => {
          <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2 text-brand">
                 <ShieldCheck size={14} />
-                <h4 className="text-[10px] font-black uppercase tracking-widest italic">Chain of Custody Dossier</h4>
+                <h4 className="text-[11px] font-black uppercase tracking-widest italic">Chain of Custody Dossier</h4>
             </div>
             {isManagement && (
-                <button onClick={() => setEditingBooking(booking)} className="flex items-center gap-2 px-3 py-1 bg-white/5 hover:bg-brand hover:text-dark text-slate-500 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all">
+                <button onClick={() => setEditingBooking(booking)} className="flex items-center gap-2 px-3 py-1 bg-white/5 hover:bg-brand hover:text-dark text-slate-500 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all">
                     <Edit3 size={10} /> Administrative Override
                 </button>
             )}
@@ -118,7 +118,7 @@ const AdminPanel: React.FC = () => {
                      <Briefcase size={16} className="text-slate-500" />
                   </div>
                   <div>
-                     <p className="text-[8px] font-black uppercase text-slate-600 mb-0.5">Primary Coach</p>
+                     <p className="text-[11px] font-black uppercase text-slate-600 mb-0.5">Primary Coach</p>
                      <p className="text-xs font-black text-white italic">{cleanName(trainer?.name)}</p>
                   </div>
                </div>
@@ -127,7 +127,7 @@ const AdminPanel: React.FC = () => {
                      <User size={16} className="text-slate-500" />
                   </div>
                   <div>
-                     <p className="text-[8px] font-black uppercase text-slate-600 mb-0.5">Verification Identity</p>
+                     <p className="text-[11px] font-black uppercase text-slate-600 mb-0.5">Verification Identity</p>
                      <p className="text-xs font-black text-white italic">{booking.settledBy || 'System/Pending'}</p>
                   </div>
                </div>
@@ -136,7 +136,7 @@ const AdminPanel: React.FC = () => {
                      {booking.paymentMethod === 'card' ? <CreditCard size={16} className="text-brand" /> : <Banknote size={16} className="text-brand" />}
                   </div>
                   <div>
-                     <p className="text-[8px] font-black uppercase text-slate-600 mb-0.5">Methodology</p>
+                     <p className="text-[11px] font-black uppercase text-slate-600 mb-0.5">Methodology</p>
                      <p className="text-xs font-black text-brand uppercase italic tracking-widest">{booking.paymentMethod || 'PENDING'}</p>
                   </div>
                </div>
@@ -144,16 +144,16 @@ const AdminPanel: React.FC = () => {
 
             <div className="space-y-4">
                 <div className="bg-dark/40 p-5 rounded-xl border border-white/5 space-y-3">
-                   <div className="flex justify-between items-center text-[10px]">
+                   <div className="flex justify-between items-center text-[11px]">
                       <span className="text-slate-500 font-bold uppercase">Transaction Value</span>
                       <span className="text-white font-black italic">{booking.price.toFixed(2)} BGN</span>
                    </div>
                    <div className="h-px bg-white/5"></div>
-                   <div className="flex justify-between items-center text-[10px]">
+                   <div className="flex justify-between items-center text-[11px]">
                       <span className="text-brand font-black uppercase">Gym P&L</span>
                       <span className="text-brand font-black italic">{booking.commissionAmount?.toFixed(2)} BGN</span>
                    </div>
-                   <div className="flex justify-between items-center text-[10px]">
+                   <div className="flex justify-between items-center text-[11px]">
                       <span className="text-slate-500 font-bold uppercase italic">Coach Yield</span>
                       <span className="text-white font-black italic">{booking.trainerEarnings?.toFixed(2)} BGN</span>
                    </div>
@@ -174,7 +174,7 @@ const AdminPanel: React.FC = () => {
              <h1 className="text-4xl font-black uppercase italic text-white tracking-tighter leading-none">Console</h1>
              <button onClick={handleManualRefresh} className={`p-2 rounded-xl bg-white/5 ${isRefreshing ? 'animate-spin text-brand' : 'text-slate-500'}`}><RefreshCw size={18} /></button>
           </div>
-          <p className="text-slate-500 font-black uppercase tracking-[0.3em] text-[10px] mt-2 italic">ClassFit Varna Admin • Mir Stop</p>
+          <p className="text-slate-500 font-black uppercase tracking-[0.3em] text-[11px] mt-2 italic">ClassFit Varna Admin • Mir Stop</p>
         </div>
         <div className="flex flex-wrap gap-2 bg-surface p-1.5 rounded-2xl border border-white/5">
             {[
@@ -187,9 +187,9 @@ const AdminPanel: React.FC = () => {
               { id: 'roles', icon: Key, label: 'Authority' },
               { id: 'reviews', icon: MessageSquare, label: 'Moderation', badge: pendingReviews.length }
             ].map(tab => (
-                <button key={tab.id} onClick={() => setActiveTab(tab.id as any)} className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all ${activeTab === tab.id ? 'bg-brand text-dark' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
+                <button key={tab.id} onClick={() => setActiveTab(tab.id as any)} className={`px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest flex items-center gap-2 transition-all ${activeTab === tab.id ? 'bg-brand text-dark' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
                     <tab.icon size={14} /> {tab.label}
-                    {tab.badge ? <span className="ml-1 px-1.5 py-0.5 rounded-full text-[8px] bg-red-500 text-white">{tab.badge}</span> : null}
+                    {tab.badge ? <span className="ml-1 px-1.5 py-0.5 rounded-full text-[11px] bg-red-500 text-white">{tab.badge}</span> : null}
                 </button>
             ))}
         </div>
@@ -206,9 +206,9 @@ const AdminPanel: React.FC = () => {
                     className="p-8 bg-brand text-dark rounded-[2.5rem] shadow-xl relative overflow-hidden group cursor-pointer hover:scale-[1.02] active:scale-95 transition-all"
                  >
                     <div className="absolute top-4 right-4 opacity-10"><PieChart size={48} /></div>
-                    <p className="text-[10px] font-black uppercase mb-4 tracking-widest italic opacity-60">Total Revenue</p>
+                    <p className="text-[11px] font-black uppercase mb-4 tracking-widest italic opacity-60">Total Revenue</p>
                     <p className="text-4xl font-black italic tracking-tighter">{totalRevenue.toFixed(2)} <span className="text-xs">BGN</span></p>
-                    <div className="mt-4 inline-flex items-center gap-1.5 px-2.5 py-1 bg-dark/10 rounded-lg text-[9px] font-black uppercase italic group-hover:bg-dark group-hover:text-brand transition-colors">
+                    <div className="mt-4 inline-flex items-center gap-1.5 px-2.5 py-1 bg-dark/10 rounded-lg text-[11px] font-black uppercase italic group-hover:bg-dark group-hover:text-brand transition-colors">
                        <ArrowUpRight size={12} /> Financial Report
                     </div>
                  </div>
@@ -219,9 +219,9 @@ const AdminPanel: React.FC = () => {
                     className="p-8 bg-surface border border-white/5 rounded-[2.5rem] relative overflow-hidden group cursor-pointer hover:border-brand/40 hover:scale-[1.02] active:scale-95 transition-all"
                  >
                     <div className="absolute top-4 right-4 opacity-10"><TrendingUp size={48} className="text-brand" /></div>
-                    <p className="text-[10px] font-black uppercase mb-4 tracking-widest italic text-slate-500">Gym Profit</p>
+                    <p className="text-[11px] font-black uppercase mb-4 tracking-widest italic text-slate-500">Gym Profit</p>
                     <p className="text-4xl font-black italic text-brand tracking-tighter">{gymProfit.toFixed(2)} <span className="text-xs">BGN</span></p>
-                    <p className="text-[9px] text-slate-600 font-bold uppercase mt-4 italic tracking-widest group-hover:text-brand transition-colors">Profit Analysis →</p>
+                    <p className="text-[11px] text-slate-600 font-bold uppercase mt-4 italic tracking-widest group-hover:text-brand transition-colors">Profit Analysis →</p>
                  </div>
 
                  {/* Pending Pay Hyperlink -> Finance */}
@@ -230,9 +230,9 @@ const AdminPanel: React.FC = () => {
                     className="p-8 bg-surface border border-white/5 rounded-[2.5rem] relative overflow-hidden group cursor-pointer hover:border-yellow-500/40 hover:scale-[1.02] active:scale-95 transition-all"
                  >
                     <div className="absolute top-4 right-4 opacity-5"><Wallet size={48} className="text-yellow-500" /></div>
-                    <p className="text-[10px] font-black uppercase mb-4 tracking-widest italic text-slate-500">Pending Pay</p>
+                    <p className="text-[11px] font-black uppercase mb-4 tracking-widest italic text-slate-500">Pending Pay</p>
                     <p className="text-4xl font-black italic text-yellow-500 tracking-tighter">{awaitingPaymentList.length}</p>
-                    <div className="mt-4 text-[9px] font-black uppercase text-slate-400 group-hover:text-yellow-500 transition-colors">Awaiting Verification →</div>
+                    <div className="mt-4 text-[11px] font-black uppercase text-slate-400 group-hover:text-yellow-500 transition-colors">Awaiting Verification →</div>
                  </div>
 
                  {/* Community Hyperlink -> Users */}
@@ -241,9 +241,9 @@ const AdminPanel: React.FC = () => {
                     className="p-8 bg-surface border border-white/5 rounded-[2.5rem] relative overflow-hidden group cursor-pointer hover:border-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all"
                  >
                     <div className="absolute top-4 right-4 opacity-5"><Users size={48} className="text-blue-500" /></div>
-                    <p className="text-[10px] font-black uppercase mb-4 tracking-widest italic text-slate-500">Community</p>
+                    <p className="text-[11px] font-black uppercase mb-4 tracking-widest italic text-slate-500">Community</p>
                     <p className="text-4xl font-black italic text-white tracking-tighter">{users.length}</p>
-                    <p className="text-[9px] text-slate-600 font-bold uppercase mt-4 italic tracking-widest group-hover:text-blue-400 transition-colors">Member Registry →</p>
+                    <p className="text-[11px] text-slate-600 font-bold uppercase mt-4 italic tracking-widest group-hover:text-blue-400 transition-colors">Member Registry →</p>
                  </div>
               </div>
 
@@ -251,7 +251,7 @@ const AdminPanel: React.FC = () => {
                  <div className="lg:col-span-8 bg-surface rounded-[3rem] border border-white/5 p-10">
                     <div className="flex items-center justify-between mb-10">
                        <h3 className="text-xl font-black uppercase italic text-white flex items-center gap-3"><Activity className="text-brand" /> Activity Log</h3>
-                       <span className="text-[9px] font-black uppercase tracking-widest text-slate-600 italic">Audit Track</span>
+                       <span className="text-[11px] font-black uppercase tracking-widest text-slate-600 italic">Audit Track</span>
                     </div>
                     <div className="space-y-4">
                        {recentActivity.length === 0 ? <p className="text-center py-20 text-slate-500 italic">No activity recorded.</p> : recentActivity.map((act) => {
@@ -269,8 +269,8 @@ const AdminPanel: React.FC = () => {
                                     <div className="flex-1">
                                         <p className="text-white font-black uppercase italic text-sm leading-none mb-1.5">{act.label}</p>
                                         <div className="flex items-center gap-3">
-                                            <p className="text-[10px] font-black uppercase text-slate-600 tracking-widest italic">{act.time} {act.subLabel ? `• ${act.subLabel}` : ''}</p>
-                                            <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${
+                                            <p className="text-[11px] font-black uppercase text-slate-600 tracking-widest italic">{act.time} {act.subLabel ? `• ${act.subLabel}` : ''}</p>
+                                            <span className={`text-[11px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${
                                                 act.status === 'completed' ? 'bg-green-500/10 text-green-500' : 
                                                 act.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500' : 
                                                 act.status === 'confirmed' ? 'bg-blue-500/10 text-blue-500' : 'bg-white/5 text-slate-500'
@@ -297,14 +297,14 @@ const AdminPanel: React.FC = () => {
                        <h3 className="text-xl font-black uppercase italic text-white flex items-center gap-3 mb-8"><Zap className="text-brand" /> Today's Pulse</h3>
                        <div className="space-y-6">
                           <div className="p-6 bg-dark/40 rounded-2xl border border-white/5">
-                             <p className="text-[9px] font-black uppercase text-slate-500 mb-2 tracking-widest italic">Sessions Scheduled</p>
+                             <p className="text-[11px] font-black uppercase text-slate-500 mb-2 tracking-widest italic">Sessions Scheduled</p>
                              <div className="flex items-end justify-between">
                                 <span className="text-3xl font-black italic text-white">{todaySessions.length}</span>
-                                <span className="text-[10px] font-black uppercase text-brand">Live Schedule</span>
+                                <span className="text-[11px] font-black uppercase text-brand">Live Schedule</span>
                              </div>
                           </div>
                           <div className="p-6 bg-dark/40 rounded-2xl border border-white/5">
-                             <p className="text-[9px] font-black uppercase text-slate-500 mb-2 tracking-widest italic">Pending Recruits</p>
+                             <p className="text-[11px] font-black uppercase text-slate-500 mb-2 tracking-widest italic">Pending Recruits</p>
                              <div className="flex items-end justify-between">
                                 <span className="text-3xl font-black italic text-white">{pendingApps.length}</span>
                                 <button onClick={() => setActiveTab('applications')} className="p-2 bg-brand text-dark rounded-lg hover:scale-110 transition-transform"><ArrowUpRight size={14}/></button>
@@ -322,23 +322,23 @@ const AdminPanel: React.FC = () => {
             <div className="bg-surface rounded-[3rem] border border-white/5 overflow-hidden shadow-2xl">
                <div className="px-8 py-6 bg-dark/30 border-b border-white/5 flex items-center justify-between">
                   <h3 className="text-lg font-black uppercase italic text-white flex items-center gap-3"><Wallet className="text-brand" /> Awaiting Settlement</h3>
-                  <div className="flex items-center gap-2 text-[10px] font-black uppercase text-slate-500 italic">
+                  <div className="flex items-center gap-2 text-[11px] font-black uppercase text-slate-500 italic">
                      <Clock size={12} /> {awaitingPaymentList.length} Units Pending
                   </div>
                </div>
                <table className="w-full">
-                  <thead className="bg-dark/10 text-[9px] font-black uppercase text-slate-500">
+                  <thead className="bg-dark/10 text-[11px] font-black uppercase text-slate-500">
                      <tr><th className="px-8 py-5 text-left">Session</th><th className="px-8 py-5 text-left">Coach</th><th className="px-8 py-5 text-left">Member</th><th className="px-8 py-5 text-right">Fee</th><th className="px-8 py-5 text-right">Action</th></tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
                      {awaitingPaymentList.length === 0 ? <tr><td colSpan={5} className="px-8 py-20 text-center text-slate-500 font-bold italic">Clear Ledger. No payments outstanding.</td></tr> : awaitingPaymentList.map(b => (
                         <tr key={b.id} className="hover:bg-white/5 transition-colors text-xs">
-                           <td className="px-8 py-6 font-bold text-white italic">{b.date} <span className="text-[10px] text-slate-500 ml-2">{calculateTimeRange(b.time, b.duration)}</span></td>
+                           <td className="px-8 py-6 font-bold text-white italic">{b.date} <span className="text-[11px] text-slate-500 ml-2">{calculateTimeRange(b.time, b.duration)}</span></td>
                            <td className="px-8 py-6 uppercase italic text-slate-300">{cleanName(users.find(u => u.id === b.trainerId)?.name)}</td>
                            <td className="px-8 py-6 text-slate-400 uppercase font-black tracking-tighter">{b.customerName}</td>
                            <td className="px-8 py-6 text-right font-black text-brand tracking-tighter">{b.price.toFixed(2)} BGN</td>
                            <td className="px-8 py-6 text-right">
-                              <button onClick={() => setPendingSettlementId(b.id)} className="px-5 py-2.5 bg-brand text-dark rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-xl shadow-brand/10">Settle Transaction</button>
+                              <button onClick={() => setPendingSettlementId(b.id)} className="px-5 py-2.5 bg-brand text-dark rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-xl shadow-brand/10">Settle Transaction</button>
                            </td>
                         </tr>
                      ))}
@@ -348,7 +348,7 @@ const AdminPanel: React.FC = () => {
 
             <div className="bg-surface/50 rounded-[3rem] border border-white/5 overflow-hidden shadow-xl">
                <div className="px-8 py-6 bg-dark/20 border-b border-white/5 flex items-center justify-between">
-                  <h3 className="text-sm font-black uppercase italic text-slate-400">Archived Ledger & Verification History</h3>
+                  <h3 className="text-[11px] font-black uppercase italic text-slate-400">Archived Ledger & Verification History</h3>
                   <Info size={14} className="text-slate-600" />
                </div>
                <div className="divide-y divide-white/5">
@@ -361,13 +361,13 @@ const AdminPanel: React.FC = () => {
                               className="px-8 py-6 hover:bg-white/5 transition-all cursor-pointer group flex items-center justify-between"
                            >
                               <div className="grid grid-cols-4 flex-1 items-center">
-                                 <span className="text-slate-500 text-[10px] font-black italic">{b.date} • {calculateTimeRange(b.time, b.duration)}</span>
+                                 <span className="text-slate-500 text-[11px] font-black italic">{b.date} • {calculateTimeRange(b.time, b.duration)}</span>
                                  <span className="text-white font-black uppercase italic text-xs tracking-tight">{cleanName(users.find(u => u.id === b.trainerId)?.name)}</span>
                                  <span className="text-slate-400 text-xs font-black uppercase tracking-tighter">{b.customerName}</span>
                                  <span className="text-right text-brand font-black italic text-xs pr-8">{b.price.toFixed(2)} BGN</span>
                               </div>
                               <div className="flex items-center gap-4">
-                                 <span className="text-[8px] font-black uppercase tracking-widest text-slate-600 border border-white/10 px-2 py-1 rounded italic">{b.paymentMethod || 'CASH'}</span>
+                                 <span className="text-[11px] font-black uppercase tracking-widest text-slate-600 border border-white/10 px-2 py-1 rounded italic">{b.paymentMethod || 'CASH'}</span>
                                  {isExpanded ? <ChevronUp size={16} className="text-brand" /> : <ChevronDown size={16} className="text-slate-600 group-hover:text-white" />}
                               </div>
                            </div>
@@ -383,7 +383,7 @@ const AdminPanel: React.FC = () => {
         {activeTab === 'bookings' && (
            <div className="bg-surface rounded-[3rem] border border-white/5 overflow-hidden shadow-2xl">
               <table className="w-full">
-                  <thead className="bg-dark/30 text-[9px] font-black uppercase text-slate-500">
+                  <thead className="bg-dark/30 text-[11px] font-black uppercase text-slate-500">
                      <tr><th className="px-8 py-5 text-left">Session</th><th className="px-8 py-5 text-left">Client</th><th className="px-8 py-5 text-left">Coach</th><th className="px-8 py-5 text-right">Status / Actions</th></tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
@@ -394,7 +394,7 @@ const AdminPanel: React.FC = () => {
                            <td className="px-8 py-6 text-slate-400 italic">{cleanName(users.find(u => u.id === b.trainerId)?.name)}</td>
                            <td className="px-8 py-6 text-right">
                               <div className="flex items-center justify-end gap-3">
-                                 <span className={`px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest ${b.status === 'confirmed' ? 'bg-green-500/10 text-green-500' : 'bg-yellow-500/10 text-yellow-500'}`}>{b.status}</span>
+                                 <span className={`px-3 py-1 rounded-lg text-[11px] font-black uppercase tracking-widest ${b.status === 'confirmed' ? 'bg-green-500/10 text-green-500' : 'bg-yellow-500/10 text-yellow-500'}`}>{b.status}</span>
                                  {isManagement && (
                                     <div className="flex gap-1.5 ml-4 border-l border-white/10 pl-4">
                                        <button onClick={() => setEditingBooking(b)} className="p-2 bg-white/5 hover:bg-brand hover:text-dark rounded-lg text-slate-500 transition-all"><Edit3 size={14}/></button>
@@ -418,11 +418,11 @@ const AdminPanel: React.FC = () => {
                        <img src={t.image || DEFAULT_PROFILE_IMAGE} className="w-16 h-16 rounded-2xl object-cover grayscale" />
                        <div>
                           <h4 className="text-xl font-black uppercase italic text-white leading-none mb-1">{cleanName(t.name)}</h4>
-                          <p className="text-[9px] font-black uppercase tracking-widest text-brand">{t.name.match(/\((.*)\)/)?.[1] || 'Coach'}</p>
+                          <p className="text-[11px] font-black uppercase tracking-widest text-brand">{t.name.match(/\((.*)\)/)?.[1] || 'Coach'}</p>
                        </div>
                     </div>
                     <div className="space-y-4 pt-6 border-t border-white/5">
-                       <div className="flex justify-between items-center text-[10px] font-bold">
+                       <div className="flex justify-between items-center text-[11px] font-bold">
                           <span className="text-slate-500 uppercase flex items-center gap-1.5"><Percent size={12} /> Commission Rate</span>
                           {isManagement ? (
                               <div className="flex items-center gap-2">
@@ -439,7 +439,7 @@ const AdminPanel: React.FC = () => {
                           )}
                        </div>
                     </div>
-                    <button onClick={() => setUserForRoles(t)} className="mt-8 w-full py-4 bg-white/5 hover:bg-brand hover:text-dark text-slate-500 text-[10px] font-black uppercase rounded-2xl border border-white/10 transition-all flex items-center justify-center gap-2 italic">
+                    <button onClick={() => setUserForRoles(t)} className="mt-8 w-full py-4 bg-white/5 hover:bg-brand hover:text-dark text-slate-500 text-[11px] font-black uppercase rounded-2xl border border-white/10 transition-all flex items-center justify-center gap-2 italic">
                        <Settings2 size={14} /> Identity Controls
                     </button>
                  </div>
@@ -455,14 +455,14 @@ const AdminPanel: React.FC = () => {
                        <div className="w-16 h-16 rounded-[2rem] bg-dark flex items-center justify-center text-2xl font-black text-brand italic">{app.name.charAt(0)}</div>
                        <div>
                           <h4 className="text-2xl font-black uppercase italic text-white leading-none mb-2">{cleanName(app.name)}</h4>
-                          <p className="text-[10px] font-black tracking-widest text-brand">{app.name.match(/\((.*)\)/)?.[1] || 'Coach'}</p>
+                          <p className="text-[11px] font-black tracking-widest text-brand">{app.name.match(/\((.*)\)/)?.[1] || 'Coach'}</p>
                        </div>
                     </div>
                     <div className="space-y-4 mb-10">
                        <p className="text-xs text-slate-400 italic leading-relaxed">"{app.bio}"</p>
                     </div>
                     <div className="flex gap-4">
-                       <button onClick={() => setUserForRoles(app)} className="flex-1 py-5 bg-brand text-dark rounded-2xl font-black uppercase text-xs hover:bg-white transition-all shadow-xl">Review & Hire</button>
+                       <button onClick={() => setUserForRoles(app)} className="flex-1 py-5 bg-brand text-dark rounded-2xl font-black uppercase text-[11px] hover:bg-white transition-all shadow-xl">Review & Hire</button>
                        <button onClick={() => confirmAction({ title: 'Reject Account', message: 'Dismiss this coach application?', onConfirm: () => updateUser(app.id, { roles: ['user'] }) })} className="px-6 py-4 bg-white/5 text-slate-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all"><Ban size={18} /></button>
                     </div>
                  </div>
@@ -473,7 +473,7 @@ const AdminPanel: React.FC = () => {
         {activeTab === 'users' && (
            <div className="bg-surface rounded-[3rem] border border-white/5 overflow-hidden shadow-2xl">
               <table className="w-full">
-                  <thead className="bg-dark/30 text-[9px] font-black uppercase text-slate-500">
+                  <thead className="bg-dark/30 text-[11px] font-black uppercase text-slate-500">
                      <tr><th className="px-8 py-5 text-left">Member Profile</th><th className="px-8 py-5 text-left">Registration</th><th className="px-8 py-5 text-right">Delete</th></tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
@@ -484,7 +484,7 @@ const AdminPanel: React.FC = () => {
                                  <img src={u.image || DEFAULT_PROFILE_IMAGE} className="w-10 h-10 rounded-xl grayscale opacity-60" />
                                  <div>
                                     <p className="font-black text-white uppercase italic leading-none mb-1">{cleanName(u.name)}</p>
-                                    <p className="text-[10px] text-slate-500 italic">{u.email}</p>
+                                    <p className="text-[11px] text-slate-500 italic">{u.email}</p>
                                  </div>
                               </div>
                            </td>
@@ -502,15 +502,15 @@ const AdminPanel: React.FC = () => {
         {activeTab === 'roles' && (
            <div className="bg-surface rounded-[3rem] border border-white/5 overflow-hidden shadow-2xl">
               <table className="w-full">
-                  <thead className="bg-dark/30 text-[9px] font-black uppercase text-slate-500">
+                  <thead className="bg-dark/30 text-[11px] font-black uppercase text-slate-500">
                      <tr><th className="px-8 py-5 text-left">Identity</th><th className="px-8 py-5 text-left">Authority Delegation</th><th className="px-8 py-5 text-right">Action</th></tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
                      {users.map(u => (
                         <tr key={u.id} className="hover:bg-white/5 transition-colors text-xs">
-                           <td className="px-8 py-6"><p className="text-white font-black uppercase italic text-xs leading-none">{cleanName(u.name)}</p><p className="text-[8px] text-slate-600 font-bold uppercase tracking-widest mt-1 italic">{u.email}</p></td>
-                           <td className="px-8 py-6"><div className="flex flex-wrap gap-2">{u.roles.map(r => (<span key={r} className="px-2.5 py-1 bg-white/5 border border-white/10 rounded-lg text-[8px] font-black uppercase italic tracking-tighter text-slate-400">{r}</span>))}</div></td>
-                           <td className="px-8 py-6 text-right"><button onClick={() => setUserForRoles(u)} className="px-5 py-2.5 bg-white/5 hover:bg-brand hover:text-dark text-slate-400 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all border border-white/10 flex items-center gap-2 ml-auto shadow-sm italic"><Settings2 size={14} /> Update Authority</button></td>
+                           <td className="px-8 py-6"><p className="text-white font-black uppercase italic text-xs leading-none">{cleanName(u.name)}</p><p className="text-[11px] text-slate-600 font-bold uppercase tracking-widest mt-1 italic">{u.email}</p></td>
+                           <td className="px-8 py-6"><div className="flex flex-wrap gap-2">{u.roles.map(r => (<span key={r} className="px-2.5 py-1 bg-white/5 border border-white/10 rounded-lg text-[11px] font-black uppercase italic tracking-tighter text-slate-400">{r}</span>))}</div></td>
+                           <td className="px-8 py-6 text-right"><button onClick={() => setUserForRoles(u)} className="px-5 py-2.5 bg-white/5 hover:bg-brand hover:text-dark text-slate-400 text-[11px] font-black uppercase tracking-widest rounded-xl transition-all border border-white/10 flex items-center gap-2 ml-auto shadow-sm italic"><Settings2 size={14} /> Update Authority</button></td>
                         </tr>
                      ))}
                   </tbody>
@@ -527,7 +527,7 @@ const AdminPanel: React.FC = () => {
                           <div className="w-12 h-12 bg-brand text-dark rounded-2xl flex items-center justify-center font-black italic">{r.avatar}</div>
                           <div>
                              <h4 className="text-sm font-black uppercase text-white italic tracking-tight">{r.author}</h4>
-                             <p className="text-[10px] text-slate-500 font-bold italic">Reviewing: {cleanName(users.find(u => u.id === r.trainerId)?.name)}</p>
+                             <p className="text-[11px] text-slate-500 font-bold italic">Reviewing: {cleanName(users.find(u => u.id === r.trainerId)?.name)}</p>
                           </div>
                        </div>
                        <div className="flex text-brand gap-1">{[...Array(r.rating)].map((_, i) => <Star key={i} size={12} fill="currentColor" />)}</div>
@@ -536,7 +536,7 @@ const AdminPanel: React.FC = () => {
                         <p className="text-xs text-slate-300 italic leading-relaxed">"{r.text}"</p>
                     </div>
                     <div className="flex gap-4">
-                       <button onClick={() => updateReview(r.id, { isPublished: true })} className="flex-1 py-5 bg-brand text-dark rounded-2xl font-black uppercase text-[10px] shadow-lg shadow-brand/10 hover:bg-white transition-all">Publish Live</button>
+                       <button onClick={() => updateReview(r.id, { isPublished: true })} className="flex-1 py-5 bg-brand text-dark rounded-2xl font-black uppercase text-[11px] shadow-lg shadow-brand/10 hover:bg-white transition-all">Publish Live</button>
                        <button onClick={() => deleteReview(r.id)} className="px-8 py-5 bg-white/5 text-slate-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all shadow-sm"><Trash size={18} /></button>
                     </div>
                  </div>
@@ -545,7 +545,7 @@ const AdminPanel: React.FC = () => {
         )}
 
       </div>
-
+      {/* (Remaining modal code kept same but with updated classes) */}
       {editingBooking && (
          <div className="fixed inset-0 z-[220] flex items-center justify-center p-4 bg-dark/95 backdrop-blur-xl animate-in fade-in duration-300 text-left">
             <div className="bg-surface border border-white/10 rounded-[3rem] p-10 w-full max-w-lg shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh]">
@@ -553,15 +553,15 @@ const AdminPanel: React.FC = () => {
                 <button onClick={() => setEditingBooking(null)} className="absolute top-8 right-8 text-slate-500 hover:text-white bg-white/5 p-2 rounded-full"><X size={20} /></button>
                 
                 <div className="mb-10">
-                   <div className="inline-flex items-center gap-2 px-3 py-1 bg-yellow-500/10 text-yellow-500 rounded-lg text-[9px] font-black uppercase tracking-widest mb-4 italic"><Settings2 size={12} /> Management Override</div>
+                   <div className="inline-flex items-center gap-2 px-3 py-1 bg-yellow-500/10 text-yellow-500 rounded-lg text-[11px] font-black uppercase tracking-widest mb-4 italic"><Settings2 size={12} /> Management Override</div>
                    <h2 className="text-2xl font-black uppercase italic text-white tracking-tighter leading-none mb-1">Modify Operation</h2>
-                   <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest">ID: {editingBooking.id.substring(0,8)}...</p>
+                   <p className="text-slate-500 text-[11px] font-black uppercase tracking-widest">ID: {editingBooking.id.substring(0,8)}...</p>
                 </div>
 
                 <div className="space-y-6 overflow-y-auto pr-2 custom-scrollbar">
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                           <label className="text-[9px] font-black uppercase tracking-widest text-slate-600 ml-2">Session Date</label>
+                           <label className="text-[11px] font-black uppercase tracking-widest text-slate-600 ml-2">Session Date</label>
                            <input 
                                 type="date" 
                                 value={editingBooking.date} 
@@ -570,7 +570,7 @@ const AdminPanel: React.FC = () => {
                            />
                         </div>
                         <div className="space-y-2">
-                           <label className="text-[9px] font-black uppercase tracking-widest text-slate-600 ml-2">Session Start Time</label>
+                           <label className="text-[11px] font-black uppercase tracking-widest text-slate-600 ml-2">Session Start Time</label>
                            <input 
                                 type="time" 
                                 value={editingBooking.time} 
@@ -581,12 +581,12 @@ const AdminPanel: React.FC = () => {
                     </div>
 
                     <div className="p-4 bg-white/5 rounded-2xl">
-                      <p className="text-[8px] font-black uppercase text-slate-500 mb-1">Estimated Slot (60 min)</p>
+                      <p className="text-[11px] font-black uppercase text-slate-500 mb-1">Estimated Slot (60 min)</p>
                       <p className="text-xs text-white font-black italic">{calculateTimeRange(editingBooking.time, editingBooking.duration)}</p>
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-600 ml-2">Force Status Update</label>
+                        <label className="text-[11px] font-black uppercase tracking-widest text-slate-600 ml-2">Force Status Update</label>
                         <select 
                             value={editingBooking.status} 
                             onChange={(e) => setEditingBooking({...editingBooking, status: e.target.value as any})}
@@ -601,10 +601,10 @@ const AdminPanel: React.FC = () => {
                     </div>
 
                     <div className="bg-dark/40 p-6 rounded-2xl border border-white/5 space-y-4">
-                       <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 italic mb-2">P&L Overrides</h4>
+                       <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-500 italic mb-2">P&L Overrides</h4>
                        <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
-                             <label className="text-[8px] font-black uppercase text-slate-600 ml-1 italic">Gym Profit (BGN)</label>
+                             <label className="text-[11px] font-black uppercase text-slate-600 ml-1 italic">Gym Profit (BGN)</label>
                              <input 
                                 type="number" 
                                 value={editingBooking.commissionAmount} 
@@ -620,7 +620,7 @@ const AdminPanel: React.FC = () => {
                              />
                           </div>
                           <div className="space-y-2">
-                             <label className="text-[8px] font-black uppercase text-slate-600 ml-1 italic">Coach Yield (BGN)</label>
+                             <label className="text-[11px] font-black uppercase text-slate-600 ml-1 italic">Coach Yield (BGN)</label>
                              <input 
                                 type="number" 
                                 value={editingBooking.trainerEarnings} 
@@ -636,7 +636,7 @@ const AdminPanel: React.FC = () => {
                              />
                           </div>
                        </div>
-                       <p className="text-[8px] text-slate-600 font-bold italic text-center">Base Price: {editingBooking.price} BGN • Adjustments will be saved to the ledger.</p>
+                       <p className="text-[11px] text-slate-600 font-bold italic text-center">Base Price: {editingBooking.price} BGN • Adjustments will be saved to the ledger.</p>
                     </div>
 
                     <div className="pt-6 border-t border-white/5 space-y-3">
@@ -667,12 +667,12 @@ const AdminPanel: React.FC = () => {
                <div className="absolute top-0 left-0 w-full h-1.5 bg-brand"></div>
                <div className="w-20 h-20 bg-brand/10 text-brand rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-xl shadow-brand/10">{isSettling ? <Loader2 size={32} className="animate-spin" /> : <ShieldCheck size={32} />}</div>
                <h2 className="text-2xl font-black uppercase italic text-white mb-2 tracking-tighter">Finalize Settlement</h2>
-               <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest italic mb-10">Identity Check Complete. Choose Method.</p>
+               <p className="text-slate-500 text-[11px] font-black uppercase tracking-widest italic mb-10">Identity Check Complete. Choose Method.</p>
                <div className="grid grid-cols-2 gap-4">
                   <button onClick={async () => { setIsSettling(true); await updateBooking(pendingSettlementId, { status: 'completed', paymentMethod: 'cash' }); setPendingSettlementId(null); setIsSettling(false); }} className="p-10 bg-white/5 rounded-[2rem] hover:bg-brand/5 border border-white/5 flex flex-col items-center gap-4 transition-all group"><Banknote className="text-brand group-hover:scale-110 transition-transform" size={28} /><span className="text-[11px] font-black uppercase text-white italic">Cash</span></button>
                   <button onClick={async () => { setIsSettling(true); await updateBooking(pendingSettlementId, { status: 'completed', paymentMethod: 'card' }); setPendingSettlementId(null); setIsSettling(false); }} className="p-10 bg-white/5 rounded-[2rem] hover:bg-brand/5 border border-white/5 flex flex-col items-center gap-4 transition-all group"><CreditCard className="text-brand group-hover:scale-110 transition-transform" size={28} /><span className="text-[11px] font-black uppercase text-white italic">Card</span></button>
                </div>
-               <button onClick={() => setPendingSettlementId(null)} className="mt-10 text-[9px] font-black uppercase tracking-widest text-slate-600 hover:text-white transition-all italic">Discard Settlement Request</button>
+               <button onClick={() => setPendingSettlementId(null)} className="mt-10 text-[11px] font-black uppercase tracking-widest text-slate-600 hover:text-white transition-all italic">Discard Settlement Request</button>
             </div>
          </div>
       )}

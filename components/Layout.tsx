@@ -27,17 +27,17 @@ const ConfirmModal: React.FC = () => {
           <h2 className="text-xl font-black uppercase italic text-white mb-2 tracking-tighter leading-none">
             {confirmState.title}
           </h2>
-          <p className="text-slate-400 text-xs mb-10 leading-relaxed font-medium italic">
+          <p className="text-slate-400 text-[11px] mb-10 leading-relaxed font-medium italic">
             {confirmState.message}
           </p>
           <div className="flex flex-col gap-3">
              <button 
                 onClick={() => { confirmState.onConfirm(); closeConfirm(); }}
-                className={`w-full py-4 rounded-xl font-black uppercase tracking-widest text-[9px] transition-all shadow-lg active:scale-95 ${isDelete ? 'bg-red-500 text-white' : 'bg-brand text-dark'}`}
+                className={`w-full py-4 rounded-xl font-black uppercase tracking-widest text-[11px] transition-all shadow-lg active:scale-95 ${isDelete ? 'bg-red-500 text-white' : 'bg-brand text-dark'}`}
              >
                 {confirmState.confirmText || (language === 'bg' ? 'Потвърди' : 'Confirm')}
              </button>
-             <button onClick={closeConfirm} className="w-full py-4 bg-white/5 text-slate-500 rounded-xl font-black uppercase tracking-widest text-[9px]">
+             <button onClick={closeConfirm} className="w-full py-4 bg-white/5 text-slate-500 rounded-xl font-black uppercase tracking-widest text-[11px]">
                 {confirmState.cancelText || (language === 'bg' ? 'Отказ' : 'Cancel')}
              </button>
           </div>
@@ -97,14 +97,14 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             <div className="hidden md:flex items-center gap-6">
                {currentUser ? (
                  <div className="flex items-center gap-4">
-                   {isAdmin && <NavLink to="/admin" className="text-xs font-black uppercase tracking-widest text-red-500 flex items-center gap-2 transition-all hover:brightness-125"><ShieldCheck size={14} /> Web Admin</NavLink>}
-                   {isTrainer && <NavLink to="/trainer" className="text-xs font-black uppercase tracking-widest text-brand flex items-center gap-2 transition-all hover:brightness-125"><Briefcase size={14} /> Gym Coach</NavLink>}
-                   <NavLink to="/profile" className="text-xs font-black uppercase tracking-widest text-white flex items-center gap-2 hover:text-brand transition-colors"><UserIcon size={14} /> {getDisplayName(currentUser.name)}</NavLink>
+                   {isAdmin && <NavLink to="/admin" className="text-[11px] font-black uppercase tracking-widest text-red-500 flex items-center gap-2 transition-all hover:brightness-125"><ShieldCheck size={14} /> Web Admin</NavLink>}
+                   {isTrainer && <NavLink to="/trainer" className="text-[11px] font-black uppercase tracking-widest text-brand flex items-center gap-2 transition-all hover:brightness-125"><Briefcase size={14} /> Gym Coach</NavLink>}
+                   <NavLink to="/profile" className="text-[11px] font-black uppercase tracking-widest text-white flex items-center gap-2 hover:text-brand transition-colors"><UserIcon size={14} /> {getDisplayName(currentUser.name)}</NavLink>
                  </div>
                ) : (
                  <div className="flex items-center gap-6">
-                   <NavLink to="/login" className="text-xs font-black uppercase tracking-widest text-white">{t.login}</NavLink>
-                   <NavLink to="/signup" className="px-5 py-2 bg-white text-dark rounded-full text-xs font-black uppercase tracking-widest">{t.register}</NavLink>
+                   <NavLink to="/login" className="text-[11px] font-black uppercase tracking-widest text-white">{t.login}</NavLink>
+                   <NavLink to="/signup" className="px-5 py-2 bg-white text-dark rounded-full text-[11px] font-black uppercase tracking-widest">{t.register}</NavLink>
                  </div>
                )}
             </div>
@@ -121,19 +121,19 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                     {showNotifications && (
                       <div className="absolute top-full right-0 mt-4 w-72 sm:w-80 bg-surface rounded-2xl border border-white/10 shadow-2xl overflow-hidden z-[70] text-left">
                          <div className="p-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
-                            <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 italic">Alert Center</span>
-                            <span className="bg-brand text-dark text-[10px] font-black px-2 py-0.5 rounded italic">{totalNotifications}</span>
+                            <span className="text-[11px] font-black uppercase tracking-widest text-slate-400 italic">Alert Center</span>
+                            <span className="bg-brand text-dark text-[11px] font-black px-2 py-0.5 rounded italic">{totalNotifications}</span>
                          </div>
                          <div className="max-h-[300px] overflow-y-auto">
-                            {totalNotifications === 0 ? <div className="p-10 text-center text-slate-500 text-[10px] font-black uppercase tracking-widest italic">No New Activity</div> : (
+                            {totalNotifications === 0 ? <div className="p-10 text-center text-slate-500 text-[11px] font-black uppercase tracking-widest italic">No New Activity</div> : (
                               <>
                                 {awaitingPayment.map(b => (
                                   <div key={b.id} onClick={() => handleNotificationClick('payment')} className="p-4 border-b border-white/5 hover:bg-brand/5 cursor-pointer bg-brand/5">
                                      <div className="flex items-start gap-3">
                                        <div className="p-2 bg-brand text-dark rounded-xl shrink-0"><Wallet size={14} /></div>
                                        <div>
-                                          <p className="text-[10px] font-black uppercase text-white tracking-tight">Payment Verification Required</p>
-                                          <p className="text-[9px] text-slate-400 italic mt-1">{getDisplayName(b.customerName)}'s session with {getDisplayName(users.find(u => u.id === b.trainerId)?.name || 'Coach')} finished.</p>
+                                          <p className="text-[11px] font-black uppercase text-white tracking-tight">Payment Verification Required</p>
+                                          <p className="text-[11px] text-slate-400 italic mt-1">{getDisplayName(b.customerName)}'s session with {getDisplayName(users.find(u => u.id === b.trainerId)?.name || 'Coach')} finished.</p>
                                        </div>
                                     </div>
                                   </div>
@@ -143,8 +143,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                                     <div className="flex items-start gap-3">
                                        <div className="p-2 bg-yellow-500/10 text-yellow-500 rounded-xl shrink-0"><UserIcon size={14} /></div>
                                        <div>
-                                          <p className="text-[10px] font-black uppercase text-white tracking-tight">New Coach Application</p>
-                                          <p className="text-[9px] text-yellow-500 italic mt-1">{getDisplayName(u.name)} is waiting for review.</p>
+                                          <p className="text-[11px] font-black uppercase text-white tracking-tight">New Coach Application</p>
+                                          <p className="text-[11px] text-yellow-500 italic mt-1">{getDisplayName(u.name)} is waiting for review.</p>
                                        </div>
                                     </div>
                                   </div>
@@ -154,8 +154,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                                     <div className="flex items-start gap-3">
                                        <div className="p-2 bg-blue-500/10 text-blue-500 rounded-xl shrink-0"><Calendar size={14} /></div>
                                        <div>
-                                          <p className="text-[10px] font-black uppercase text-white tracking-tight">New Training Request</p>
-                                          <p className="text-[9px] text-slate-400 italic mt-1">{b.customerName} @ {b.date} {b.time}</p>
+                                          <p className="text-[11px] font-black uppercase text-white tracking-tight">New Training Request</p>
+                                          <p className="text-[11px] text-slate-400 italic mt-1">{b.customerName} @ {b.date} {b.time}</p>
                                        </div>
                                     </div>
                                   </div>
@@ -208,7 +208,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             <p className="text-sm text-slate-400 leading-relaxed font-medium max-w-sm italic">{t.gymDesc}</p>
           </div>
           <div>
-            <h3 className="text-[10px] font-black uppercase tracking-[0.4em] mb-6 text-white/30 italic">Socials</h3>
+            <h3 className="text-[11px] font-black uppercase tracking-[0.4em] mb-6 text-white/30 italic">Socials</h3>
             <div className="flex gap-4 mb-8">
                <a href="https://facebook.com/classfit" target="_blank" rel="noopener noreferrer" className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-slate-400 hover:text-brand hover:bg-brand/10 transition-all border border-white/5 shadow-lg group">
                   <Facebook size={24} className="group-hover:scale-110 transition-transform" />
@@ -217,9 +217,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                   <Instagram size={24} className="group-hover:scale-110 transition-transform" />
                </a>
             </div>
-            <NavLink to="/trainer-signup" className="text-brand font-black uppercase tracking-widest text-[10px] italic hover:underline">Join Professional Team</NavLink>
+            <NavLink to="/trainer-signup" className="text-brand font-black uppercase tracking-widest text-[11px] italic hover:underline">Join Professional Team</NavLink>
           </div>
-          <div className="flex flex-col items-end justify-start text-[9px] font-black uppercase tracking-widest text-slate-700">© 2024 ClassFit Varna</div>
+          <div className="flex flex-col items-end justify-start text-[11px] font-black uppercase tracking-widest text-slate-700">© 2024 ClassFit Varna</div>
         </div>
       </footer>
       <ConfirmModal />

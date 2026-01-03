@@ -22,7 +22,7 @@ const GoogleReviews: React.FC = () => {
             <div className="flex flex-col md:flex-row items-end justify-between mb-16 gap-8">
                 <div>
                     <Reveal>
-                      <div className="inline-flex items-center gap-2 text-brand font-black uppercase tracking-[0.3em] text-[10px] mb-4">
+                      <div className="inline-flex items-center gap-2 text-brand font-black uppercase tracking-[0.3em] text-[11px] mb-4">
                           <Star size={12} className="fill-brand" /> {t.reviewsTitle}
                       </div>
                     </Reveal>
@@ -43,7 +43,7 @@ const GoogleReviews: React.FC = () => {
                           </div>
                           <span className="text-2xl font-black text-white">5.0</span>
                        </div>
-                       <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">{t.googleRating} • {t.basedOn}</p>
+                       <p className="text-slate-500 text-[11px] font-bold uppercase tracking-widest">{t.googleRating} • {t.basedOn}</p>
                      </Reveal>
                 </div>
             </div>
@@ -87,7 +87,7 @@ const GoogleReviews: React.FC = () => {
                       href={googleMapsUrl} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-3 px-8 py-4 bg-surface border-2 border-white/5 rounded-full text-xs font-black uppercase tracking-widest text-white hover:border-brand hover:bg-brand hover:text-dark transition-all duration-300 shadow-sm hover:shadow-xl"
+                      className="inline-flex items-center gap-3 px-8 py-4 bg-surface border-2 border-white/5 rounded-full text-[11px] font-black uppercase tracking-widest text-white hover:border-brand hover:bg-brand hover:text-dark transition-all duration-300 shadow-sm hover:shadow-xl"
                   >
                       <MapPin size={16} /> {t.viewOnGoogle} <ExternalLink size={14} className="opacity-50" />
                   </a>
