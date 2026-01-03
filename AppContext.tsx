@@ -24,6 +24,7 @@ interface AppContextType {
   updateBooking: (id: string, updates: Partial<Booking>) => Promise<void>;
   deleteBooking: (id: string) => Promise<void>;
   isAdmin: boolean;
+  isManagement: boolean;
   currentUser: User | null;
   users: User[];
   login: (email: string, pass: string) => Promise<boolean>;
@@ -74,6 +75,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [confirmState, setConfirmState] = useState<ConfirmConfig | null>(null);
 
   const isAdmin = currentUser?.roles?.some(r => r === 'admin' || r === 'management') || false;
+  const isManagement = currentUser?.roles?.includes('management') || false;
   const isDemoMode = !isSupabaseConfigured;
 
   const confirmAction = (config: ConfirmConfig) => setConfirmState(config);
@@ -173,8 +175,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           let roles: UserRole[] = u.roles || (u.role ? [u.role as UserRole] : ['user']);
           if (roles.length === 0) roles = ['user'];
 
-          // Auto-inject for master accounts
-          if ((u.email === MASTER_EMAIL || u.id === MASTER_ID) && !roles.includes('management')) {
+          if ((u.email === MASTER_EMAIL || String(u.id) === MASTER_ID) && !roles.includes('management')) {
             roles = Array.from(new Set([...roles, 'management', 'admin']));
           }
 
@@ -265,21 +266,28 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const updateUser = async (id: string, updates: Partial<User>) => {
+    // Optimistically update the users list to reflect changes immediately
+    setUsers(prev => prev.map(u => u.id === id ? { ...u, ...updates } : u));
+    
+    // If the current user is being updated, update the header etc.
+    if (currentUser?.id === id) {
+       const updated = { ...currentUser, ...updates } as User;
+       setCurrentUser(updated);
+       localStorage.setItem('classfit_user', JSON.stringify(updated));
+    }
+
     if (isDemoMode) {
-        const newUsers = users.map(u => u.id === id ? { ...u, ...updates } : u);
-        setUsers(newUsers);
-        localStorage.setItem('classfit_users', JSON.stringify(newUsers));
-        if (currentUser?.id === id) {
-           const updated = { ...currentUser, ...updates } as User;
-           setCurrentUser(updated);
-           localStorage.setItem('classfit_user', JSON.stringify(updated));
-        }
+        localStorage.setItem('classfit_users', JSON.stringify(users.map(u => u.id === id ? { ...u, ...updates } : u)));
         return;
     }
 
     const dbUpdates: any = { ...updates };
     const { error } = await supabase.from('users').update(dbUpdates).eq('id', id);
-    if (error) throw error;
+    if (error) {
+        // Revert on error
+        await refreshData();
+        throw error;
+    }
     await refreshData();
   };
 
@@ -409,7 +417,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   return (
     <AppContext.Provider value={{ 
-      language, setLanguage, bookings, reviews, addBooking, addReview, updateReview, deleteReview, updateBooking, deleteBooking, isAdmin, currentUser, users, login, register, registerTrainer, requestTrainerUpgrade, updateUser, deleteUser, logout, refreshData, isLoading, isDemoMode, confirmAction, confirmState, closeConfirm
+      language, setLanguage, bookings, reviews, addBooking, addReview, updateReview, deleteReview, updateBooking, deleteBooking, isAdmin, isManagement, currentUser, users, login, register, registerTrainer, requestTrainerUpgrade, updateUser, deleteUser, logout, refreshData, isLoading, isDemoMode, confirmAction, confirmState, closeConfirm
     }}>
       {children}
     </AppContext.Provider>
