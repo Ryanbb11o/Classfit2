@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { LayoutDashboard, ListFilter, MessageSquare, Briefcase, UserCheck, FileSpreadsheet, Users, RefreshCw, Star, Trash2, Eye, X, Save, Loader2, TrendingUp, Wallet, Check, Ban, DollarSign, PieChart } from 'lucide-react';
+import { LayoutDashboard, ListFilter, MessageSquare, Briefcase, UserCheck, FileSpreadsheet, Users, RefreshCw, Star, Trash2, Eye, X, Save, Loader2, TrendingUp, Wallet, Check, Ban, DollarSign, PieChart, History } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, DEFAULT_PROFILE_IMAGE } from '../constants';
 import { User as UserType, Booking } from '../types';
@@ -13,7 +13,6 @@ const AdminPanel: React.FC = () => {
   
   const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'trainers' | 'finance' | 'users' | 'applications' | 'reviews'>('overview');
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [editingUser, setEditingUser] = useState<UserType | null>(null);
 
   useEffect(() => {
     if (location.state?.activeTab) setActiveTab(location.state.activeTab);
@@ -22,10 +21,10 @@ const AdminPanel: React.FC = () => {
   const awaitingPaymentList = bookings.filter(b => b.status === 'trainer_completed');
   const completedBookings = bookings.filter(b => b.status === 'completed');
 
-  // Financial calculations
-  const totalRevenue = completedBookings.reduce((sum, b) => sum + (Number(b.price) || 0), 0);
-  const coachPayouts = completedBookings.reduce((sum, b) => sum + (Number(b.trainerEarnings) || 0), 0);
-  const gymProfit = completedBookings.reduce((sum, b) => sum + (Number(b.commissionAmount) || 0), 0);
+  // Financial calculations with robust safety
+  const totalRevenue = useMemo(() => completedBookings.reduce((sum, b) => sum + (Number(b.price) || 0), 0), [completedBookings]);
+  const coachPayouts = useMemo(() => completedBookings.reduce((sum, b) => sum + (Number(b.trainerEarnings) || 0), 0), [completedBookings]);
+  const gymProfit = useMemo(() => completedBookings.reduce((sum, b) => sum + (Number(b.commissionAmount) || 0), 0), [completedBookings]);
 
   const handleManualRefresh = () => {
     setIsRefreshing(true);
@@ -169,8 +168,6 @@ const AdminPanel: React.FC = () => {
             </div>
          </div>
       )}
-
-      {/* Rest of the tabs (trainers, users, etc.) would follow similar professional table patterns... */}
     </div>
   );
 };

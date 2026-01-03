@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-// Added missing X icon to the imports
-import { Calendar as CalendarIcon, Clock, CheckCircle, XCircle, User, Briefcase, RefreshCw, AlertCircle, Check, DollarSign, LayoutDashboard, Settings, Loader2, Star, QrCode, Grid, List, ChevronLeft, ChevronRight, Ban, Unlock, X } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, CheckCircle, XCircle, User, Briefcase, RefreshCw, AlertCircle, Check, DollarSign, LayoutDashboard, Settings, Loader2, Star, QrCode, Grid, List, ChevronLeft, ChevronRight, Ban, Unlock, X, CalendarPlus } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, DEFAULT_PROFILE_IMAGE, getTrainerReviews } from '../constants';
+import { Booking } from '../types';
 
 const TrainerDashboard: React.FC = () => {
   const { currentUser, bookings, updateBooking, updateUser, language, refreshData, isLoading, confirmAction } = useAppContext();
@@ -36,6 +36,20 @@ const TrainerDashboard: React.FC = () => {
     });
   };
 
+  const getGoogleCalendarUrl = (booking: Booking) => {
+    const [year, month, day] = booking.date.split('-');
+    const [hour, minute] = booking.time.split(':');
+    const startDate = `${year}${month}${day}T${hour.replace(':','')}${minute.replace(':','')}00`;
+    const endHour = (parseInt(hour) + 1).toString().padStart(2, '0');
+    const endDate = `${year}${month}${day}T${endHour}${minute}00`;
+    
+    const text = encodeURIComponent(`ClassFit Training: ${booking.customerName}`);
+    const details = encodeURIComponent(`Client: ${booking.customerName}\nStatus: Confirmed\nLocation: ClassFit Varna (near Bus Stop Mir)`);
+    const location = encodeURIComponent(`бул. „Осми приморски полк“ 128, Варна`);
+    
+    return `https://www.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${startDate}/${endDate}&details=${details}&location=${location}`;
+  };
+
   const myBookings = bookings.filter(b => b.trainerId === currentUser?.id);
   const pendingRequests = myBookings.filter(b => b.status === 'pending');
   const confirmedSessions = myBookings.filter(b => b.status === 'confirmed');
@@ -60,7 +74,7 @@ const TrainerDashboard: React.FC = () => {
     const firstDay = getFirstDayOfMonth(currentMonth);
     const days = [];
 
-    for (let i = 0; i < firstDay; i++) days.push(<div key={`empty-${i}`} className="h-24 md:h-32"></div>);
+    for (let i = 0; i < firstDay; i++) days.push(<div key={`empty-${i}`} className="h-32 md:h-40 border border-white/5"></div>);
 
     for (let i = 1; i <= daysInMonth; i++) {
         const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), i);
@@ -74,23 +88,27 @@ const TrainerDashboard: React.FC = () => {
             <div 
               key={i} 
               onClick={() => setSelectedDay(date)}
-              className={`h-24 md:h-32 p-3 border border-white/5 transition-all cursor-pointer relative group flex flex-col justify-between overflow-hidden
-                ${isBlocked ? 'bg-red-500/5' : 'bg-dark/20 hover:bg-white/5'}
+              className={`h-32 md:h-40 p-4 border border-white/10 transition-all cursor-pointer relative group flex flex-col justify-between overflow-hidden
+                ${isBlocked ? 'bg-red-500/5' : 'bg-dark/40 hover:bg-white/5'}
               `}
             >
                 <div className="flex justify-between items-start">
-                   <span className={`text-xs font-black uppercase tracking-widest ${isBlocked ? 'text-red-500/50' : 'text-slate-600'}`}>{i}</span>
-                   {isBlocked && <Ban size={10} className="text-red-500" />}
+                   <span className={`text-sm font-black uppercase tracking-widest ${isBlocked ? 'text-red-500/50' : 'text-slate-500'}`}>{i}</span>
+                   {isBlocked && <Ban size={12} className="text-red-500" />}
                 </div>
                 
-                <div className="space-y-1">
-                   {hasPending && <div className="h-1.5 w-1.5 rounded-full bg-yellow-500 animate-pulse shadow-[0_0_8px_rgba(234,179,8,0.5)]"></div>}
-                   {hasConfirmed && <div className="h-1.5 w-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]"></div>}
+                <div className="flex flex-wrap gap-1.5">
+                   {hasPending && <div className="h-2 w-2 rounded-full bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.7)]"></div>}
+                   {hasConfirmed && <div className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.7)]"></div>}
                 </div>
 
-                {dayBookings.length > 0 && (
-                   <span className="text-[8px] font-black uppercase tracking-tighter text-slate-500 italic">{dayBookings.length} SESSIONS</span>
-                )}
+                <div className="space-y-1">
+                  {dayBookings.length > 0 && (
+                     <div className="text-[9px] font-black uppercase tracking-widest text-white italic bg-white/5 px-2 py-1 rounded-lg border border-white/5 inline-block">
+                        {dayBookings.length} {dayBookings.length === 1 ? 'SESSION' : 'SESSIONS'}
+                     </div>
+                  )}
+                </div>
             </div>
         );
     }
@@ -163,12 +181,14 @@ const TrainerDashboard: React.FC = () => {
          <div className="p-0">
             {activeTab === 'calendar' && (
                calStyle === 'grid' ? (
-                  <div className="animate-in fade-in duration-500">
-                     <div className="grid grid-cols-7 text-center py-4 bg-dark/20 border-b border-white/5">
-                        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => <span key={d} className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-600">{d}</span>)}
-                     </div>
-                     <div className="grid grid-cols-7 border-collapse">
-                        {renderCalendar()}
+                  <div className="animate-in fade-in duration-500 overflow-x-auto">
+                     <div className="min-w-[800px]">
+                        <div className="grid grid-cols-7 text-center py-5 bg-dark/20 border-b border-white/5">
+                           {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => <span key={d} className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500">{d}</span>)}
+                        </div>
+                        <div className="grid grid-cols-7 border-collapse">
+                           {renderCalendar()}
+                        </div>
                      </div>
                   </div>
                ) : (
@@ -179,7 +199,17 @@ const TrainerDashboard: React.FC = () => {
                               <p className="text-[9px] font-black uppercase text-brand tracking-widest mb-1 italic">{b.date} @ {b.time}</p>
                               <h4 className="text-lg font-black uppercase italic text-white leading-none">{b.customerName}</h4>
                            </div>
-                           <button onClick={() => handleAction(b.id, 'trainer_completed')} className="px-5 py-2 bg-white/5 text-[9px] font-black uppercase tracking-widest text-slate-400 rounded-xl hover:bg-brand hover:text-dark transition-all border border-white/5">Mark Done</button>
+                           <div className="flex items-center gap-3">
+                              <a 
+                                 href={getGoogleCalendarUrl(b)}
+                                 target="_blank"
+                                 rel="noopener noreferrer"
+                                 className="p-3 bg-white/5 text-slate-400 rounded-xl hover:text-white transition-all border border-white/5"
+                              >
+                                 <CalendarPlus size={18} />
+                              </a>
+                              <button onClick={() => handleAction(b.id, 'trainer_completed')} className="px-5 py-2 bg-brand text-dark text-[9px] font-black uppercase tracking-widest rounded-xl hover:bg-white transition-all">Mark Done</button>
+                           </div>
                         </div>
                      ))}
                   </div>
@@ -235,7 +265,6 @@ const TrainerDashboard: React.FC = () => {
          <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-dark/95 backdrop-blur-xl animate-in fade-in duration-300 text-left">
             <div className="bg-surface border border-white/10 rounded-[3rem] p-10 w-full max-w-2xl shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh]">
                 <div className="absolute top-0 left-0 w-full h-1 bg-brand"></div>
-                {/* Fixed missing X icon by adding it to imports */}
                 <button onClick={() => setSelectedDay(null)} className="absolute top-8 right-8 text-slate-500 hover:text-white bg-white/5 p-2 rounded-full"><X size={20} /></button>
                 
                 <div className="mb-10">
@@ -265,14 +294,26 @@ const TrainerDashboard: React.FC = () => {
                                <div className="text-center shrink-0"><p className="text-[9px] font-black text-slate-500 uppercase">TIME</p><p className="text-lg font-black text-white italic">{b.time}</p></div>
                                <div>
                                   <h4 className="text-white font-black uppercase italic tracking-tighter leading-none mb-1">{b.customerName}</h4>
-                                  <p className={`text-[8px] font-black uppercase tracking-widest ${
-                                     b.status === 'confirmed' ? 'text-green-500' : b.status === 'pending' ? 'text-yellow-500' : 'text-slate-500'
-                                  }`}>{b.status.replace('_', ' ')}</p>
+                                  <div className="flex items-center gap-2">
+                                     <p className={`text-[8px] font-black uppercase tracking-widest ${
+                                        b.status === 'confirmed' ? 'text-green-500' : b.status === 'pending' ? 'text-yellow-500' : 'text-slate-500'
+                                     }`}>{b.status.replace('_', ' ')}</p>
+                                     {b.status === 'confirmed' && (
+                                       <a 
+                                          href={getGoogleCalendarUrl(b)}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="text-[8px] text-brand uppercase font-black hover:underline flex items-center gap-1"
+                                       >
+                                          <CalendarPlus size={10} /> Sync to G-Cal
+                                       </a>
+                                     )}
+                                  </div>
                                </div>
                             </div>
                             <div className="flex gap-2">
                                {b.status === 'pending' && <button onClick={() => handleAction(b.id, 'confirmed')} className="p-3 bg-brand text-dark rounded-xl shadow-lg shadow-brand/10"><Check size={16}/></button>}
-                               {b.status === 'confirmed' && <button onClick={() => handleAction(b.id, 'trainer_completed')} className="px-4 py-2 bg-white/10 text-white rounded-xl text-[9px] font-black uppercase hover:bg-brand hover:text-dark transition-all">Finish Session</button>}
+                               {b.status === 'confirmed' && <button onClick={() => handleAction(b.id, 'trainer_completed')} className="px-4 py-2 bg-brand text-dark rounded-xl text-[9px] font-black uppercase hover:bg-white transition-all shadow-md">Mark Finished</button>}
                             </div>
                          </div>
                       ))
