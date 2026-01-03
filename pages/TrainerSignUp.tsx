@@ -79,15 +79,15 @@ const TrainerSignUp: React.FC = () => {
 
   if (status === 'success') {
       return (
-          <div className="fixed inset-0 z-[100] bg-dark flex items-center justify-center p-6 animate-in zoom-in-95 duration-500">
-              <div className="text-center max-w-xl bg-surface/30 backdrop-blur-xl border border-white/10 p-16 rounded-[4rem] shadow-2xl relative">
+          <div className="min-h-screen bg-dark flex items-center justify-center p-6 animate-in zoom-in-95 duration-500">
+              <div className="text-center w-full max-w-xl bg-surface/30 backdrop-blur-xl border border-white/10 p-8 md:p-16 rounded-[3rem] md:rounded-[4rem] shadow-2xl relative">
                   <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-20 h-20 bg-brand text-dark rounded-full flex items-center justify-center shadow-2xl shadow-brand/20">
                       <CheckCircle size={40} />
                   </div>
-                  <h1 className="text-4xl font-black uppercase italic text-white mb-6 mt-4 tracking-tighter">
+                  <h1 className="text-3xl md:text-4xl font-black uppercase italic text-white mb-6 mt-4 tracking-tighter leading-none">
                       {t.applicationFiled}
                   </h1>
-                  <p className="text-slate-400 font-medium leading-relaxed mb-10 italic">
+                  <p className="text-slate-400 font-medium leading-relaxed mb-10 italic text-sm md:text-base">
                       {t.pendingReviewMsg}
                   </p>
                   <button 
@@ -102,16 +102,16 @@ const TrainerSignUp: React.FC = () => {
   }
 
   return (
-    <div className="fixed inset-0 z-[50] bg-dark flex flex-col md:flex-row overflow-hidden font-sans">
-      {/* LEFT SIDE: IMMERSIVE BRANDING */}
-      <div className="hidden md:flex md:w-[40%] lg:w-[35%] relative overflow-hidden bg-dark p-20 flex-col justify-between border-r border-white/5">
+    <div className="relative min-h-screen bg-dark flex flex-col md:flex-row font-sans selection:bg-brand selection:text-dark">
+      {/* LEFT SIDE: IMMERSIVE BRANDING (Hidden on Mobile) */}
+      <div className="hidden md:flex md:w-[35%] lg:w-[30%] fixed top-0 bottom-0 left-0 overflow-hidden bg-dark p-12 lg:p-20 flex-col justify-between border-r border-white/5">
          <div className="absolute inset-0 z-0">
             <img 
                src="https://images.unsplash.com/photo-1593079831268-3381b0db4a77?q=80&w=2069&auto=format&fit=crop" 
-               className="w-full h-full object-cover grayscale opacity-30 scale-110 blur-sm"
+               className="w-full h-full object-cover grayscale opacity-20 scale-110 blur-[2px]"
                alt="Gym"
             />
-            <div className="absolute inset-0 bg-gradient-to-tr from-dark via-dark/80 to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-tr from-dark via-dark/90 to-transparent"></div>
          </div>
 
          <div className="relative z-10">
@@ -120,10 +120,10 @@ const TrainerSignUp: React.FC = () => {
                <X size={18} className="text-slate-600 group-hover:text-white transition-colors" />
             </button>
 
-            <h1 className="text-7xl font-black uppercase italic text-white leading-[0.8] tracking-tighter mb-8">
+            <h1 className="text-5xl lg:text-7xl font-black uppercase italic text-white leading-[0.85] tracking-tighter mb-8">
                {t.joinThe} <br/> <span className="text-brand">{t.eliteTeam}</span>
             </h1>
-            <p className="text-slate-400 text-lg font-medium italic max-w-xs leading-relaxed mb-12">
+            <p className="text-slate-400 text-base lg:text-lg font-medium italic max-w-xs leading-relaxed mb-12">
                {t.varnaProfessionals}
             </p>
 
@@ -149,23 +149,32 @@ const TrainerSignUp: React.FC = () => {
          </div>
       </div>
 
-      {/* RIGHT SIDE: FULL APPLICATION FORM */}
-      <div className="flex-1 overflow-y-auto bg-surface/10 backdrop-blur-3xl p-8 md:p-16 lg:p-24 custom-scrollbar">
+      {/* RIGHT SIDE: FULL APPLICATION FORM (Mobile Friendly) */}
+      <div className="flex-1 md:ml-[35%] lg:ml-[30%] bg-surface/10 backdrop-blur-3xl p-6 sm:p-10 md:p-16 lg:p-24 min-h-screen">
          <div className="max-w-3xl mx-auto">
-            <div className="md:hidden flex justify-between items-center mb-12">
-               <span className="text-xl font-black italic text-white">CLASS<span className="text-brand">FIT</span></span>
-               <button onClick={() => navigate('/')} className="p-2 bg-white/5 rounded-full text-slate-400"><X size={20}/></button>
+            {/* Mobile-only Header */}
+            <div className="md:hidden flex justify-between items-center mb-10 pt-4">
+               <span className="text-2xl font-black italic text-white tracking-tighter uppercase">
+                  CLASS<span className="text-brand">FIT</span>
+               </span>
+               <button onClick={() => navigate('/')} className="p-3 bg-white/5 rounded-full text-slate-400">
+                  <X size={20}/>
+               </button>
             </div>
 
-            <div className="mb-16">
-               <div className="inline-flex items-center gap-3 bg-brand text-dark px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest mb-6 shadow-xl shadow-brand/20">
+            <div className="mb-12 md:mb-16">
+               <div className="inline-flex items-center gap-3 bg-brand text-dark px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest mb-6 shadow-xl shadow-brand/20">
                   <Briefcase size={12} /> {t.coachPortal}
                </div>
-               <h2 className="text-5xl font-black uppercase italic text-white tracking-tighter mb-4 leading-none">{t.professionalDetails}</h2>
-               <p className="text-slate-500 font-medium text-sm italic">{t.coachPhilosophy}</p>
+               <h2 className="text-3xl sm:text-4xl md:text-5xl font-black uppercase italic text-white tracking-tighter mb-4 leading-none">
+                  {t.professionalDetails}
+               </h2>
+               <p className="text-slate-500 font-medium text-sm italic leading-relaxed">
+                  {t.coachPhilosophy}
+               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-16">
+            <form onSubmit={handleSubmit} className="space-y-12 md:space-y-16">
                {status === 'error' && (
                   <div className="bg-red-500/10 text-red-500 p-6 rounded-3xl flex items-center gap-3 text-xs font-black uppercase tracking-wide border border-red-500/20 animate-in fade-in zoom-in-95">
                      <AlertCircle size={20} /> {errorMsg}
@@ -173,65 +182,73 @@ const TrainerSignUp: React.FC = () => {
                )}
 
                {/* SECTION 1: IDENTITY */}
-               <div className="space-y-8">
+               <div className="space-y-6 md:space-y-8">
                   <div className="flex items-center gap-4 border-b border-white/5 pb-4">
-                     <div className="w-8 h-8 rounded-lg bg-brand/10 text-brand flex items-center justify-center"><User size={14} /></div>
-                     <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 italic">{t.identityAndAccess}</h3>
+                     <div className="w-8 h-8 rounded-lg bg-brand/10 text-brand flex items-center justify-center shrink-0">
+                        <User size={14} />
+                     </div>
+                     <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 italic">
+                        {t.identityAndAccess}
+                     </h3>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                     <div className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 text-left">
+                     <div className="space-y-2">
                         <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">{t.trainerFullName}</label>
-                        <input name="name" type="text" required value={form.name} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-white font-bold outline-none focus:border-brand transition-all placeholder-slate-800" placeholder="Michael Jordan" />
+                        <input name="name" type="text" required value={form.name} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white font-bold outline-none focus:border-brand transition-all placeholder-slate-800 text-sm" placeholder="e.g. Michael Jordan" />
                      </div>
-                     <div className="space-y-3">
+                     <div className="space-y-2">
                         <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">{t.trainerEmail}</label>
-                        <input name="email" type="email" required value={form.email} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-white font-bold outline-none focus:border-brand transition-all placeholder-slate-800" placeholder="coach@classfit.bg" />
+                        <input name="email" type="email" required value={form.email} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white font-bold outline-none focus:border-brand transition-all placeholder-slate-800 text-sm" placeholder="coach@classfit.bg" />
                      </div>
-                     <div className="space-y-3">
+                     <div className="space-y-2">
                         <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">{t.trainerPassword}</label>
-                        <input name="password" type="password" required value={form.password} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-white font-bold outline-none focus:border-brand transition-all placeholder-slate-800" placeholder="••••••••" />
+                        <input name="password" type="password" required value={form.password} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white font-bold outline-none focus:border-brand transition-all placeholder-slate-800 text-sm" placeholder="••••••••" />
                      </div>
-                     <div className="space-y-3">
+                     <div className="space-y-2">
                         <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">{t.trainerPhone}</label>
-                        <input name="phone" type="tel" required value={form.phone} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-white font-bold outline-none focus:border-brand transition-all placeholder-slate-800" placeholder="+359..." />
+                        <input name="phone" type="tel" required value={form.phone} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white font-bold outline-none focus:border-brand transition-all placeholder-slate-800 text-sm" placeholder="+359..." />
                      </div>
                   </div>
                </div>
 
                {/* SECTION 2: EXPERTISE */}
-               <div className="space-y-8">
+               <div className="space-y-6 md:space-y-8">
                   <div className="flex items-center gap-4 border-b border-white/5 pb-4">
-                     <div className="w-8 h-8 rounded-lg bg-brand/10 text-brand flex items-center justify-center"><Dumbbell size={14} /></div>
-                     <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 italic">{t.expertiseAndExperience}</h3>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                     <div className="space-y-3">
-                        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">{t.trainerSpecialty}</label>
-                        <input name="specialty" type="text" required value={form.specialty} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-white font-bold outline-none focus:border-brand transition-all placeholder-slate-800" placeholder="Powerlifting, CrossFit, Yoga..." />
+                     <div className="w-8 h-8 rounded-lg bg-brand/10 text-brand flex items-center justify-center shrink-0">
+                        <Dumbbell size={14} />
                      </div>
-                     <div className="space-y-3">
+                     <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 italic">
+                        {t.expertiseAndExperience}
+                     </h3>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 text-left">
+                     <div className="space-y-2">
+                        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">{t.trainerSpecialty}</label>
+                        <input name="specialty" type="text" required value={form.specialty} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white font-bold outline-none focus:border-brand transition-all placeholder-slate-800 text-sm" placeholder="Powerlifting, Yoga..." />
+                     </div>
+                     <div className="space-y-2">
                         <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">{t.trainerExperience}</label>
                         <div className="relative group flex items-center">
-                           <button type="button" onClick={() => handleExperienceChange('dec')} className="absolute left-3 w-10 h-10 rounded-xl bg-white/5 text-slate-500 flex items-center justify-center hover:bg-brand hover:text-dark transition-all z-10"><Minus size={16} /></button>
-                           <input type="number" value={form.experience} readOnly className="w-full bg-white/5 border border-white/10 rounded-2xl px-14 py-5 text-white font-black text-xl outline-none text-center" />
-                           <span className="absolute right-16 text-[9px] font-black uppercase tracking-widest text-slate-600 pointer-events-none italic">{t.years}</span>
-                           <button type="button" onClick={() => handleExperienceChange('inc')} className="absolute right-3 w-10 h-10 rounded-xl bg-white/5 text-slate-500 flex items-center justify-center hover:bg-brand hover:text-dark transition-all z-10"><Plus size={16} /></button>
+                           <button type="button" onClick={() => handleExperienceChange('dec')} className="absolute left-2 w-10 h-10 rounded-xl bg-white/5 text-slate-500 flex items-center justify-center hover:bg-brand hover:text-dark transition-all z-10"><Minus size={14} /></button>
+                           <input type="number" value={form.experience} readOnly className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 text-white font-black text-lg outline-none text-center" />
+                           <span className="absolute right-14 text-[8px] font-black uppercase tracking-widest text-slate-600 pointer-events-none italic">{t.years}</span>
+                           <button type="button" onClick={() => handleExperienceChange('inc')} className="absolute right-2 w-10 h-10 rounded-xl bg-white/5 text-slate-500 flex items-center justify-center hover:bg-brand hover:text-dark transition-all z-10"><Plus size={14} /></button>
                         </div>
                      </div>
                   </div>
                   
                   {/* LANGUAGE SELECTION */}
-                  <div className="space-y-4">
+                  <div className="space-y-4 text-left">
                      <label className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">
                         <Languages size={14} className="text-brand" /> {t.trainerLanguagesSpoken}
                      </label>
-                     <div className="flex flex-wrap gap-3">
+                     <div className="flex flex-wrap gap-2 md:gap-3">
                         {languageOptions.map(lang => (
                            <button 
                               key={lang} 
                               type="button" 
                               onClick={() => toggleLanguage(lang)}
-                              className={`px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${
+                              className={`px-4 md:px-5 py-2.5 md:py-3 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all border ${
                                  selectedLangs.includes(lang) 
                                  ? 'bg-brand text-dark border-brand shadow-lg shadow-brand/10' 
                                  : 'bg-white/5 text-slate-400 border-white/5 hover:border-brand/40'
@@ -244,47 +261,51 @@ const TrainerSignUp: React.FC = () => {
                      </div>
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="space-y-2 text-left">
                      <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">{t.trainerCerts}</label>
-                     <textarea name="certs" rows={3} value={form.certs} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-white font-medium italic outline-none focus:border-brand transition-all placeholder-slate-800 resize-none" placeholder="List your professional certifications..." />
+                     <textarea name="certs" rows={3} value={form.certs} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white font-medium italic outline-none focus:border-brand transition-all placeholder-slate-800 resize-none text-sm" placeholder="List your professional certifications..." />
                   </div>
                </div>
 
                {/* SECTION 3: SOCIAL & VISION */}
-               <div className="space-y-8">
+               <div className="space-y-6 md:space-y-8">
                   <div className="flex items-center gap-4 border-b border-white/5 pb-4">
-                     <div className="w-8 h-8 rounded-lg bg-brand/10 text-brand flex items-center justify-center"><Sparkles size={14} /></div>
-                     <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 italic">{t.motivationAndReach}</h3>
+                     <div className="w-8 h-8 rounded-lg bg-brand/10 text-brand flex items-center justify-center shrink-0">
+                        <Sparkles size={14} />
+                     </div>
+                     <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 italic">
+                        {t.motivationAndReach}
+                     </h3>
                   </div>
-                  <div className="space-y-3">
+                  <div className="space-y-2 text-left">
                      <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">{t.trainerSocial}</label>
                      <div className="relative">
-                        <Instagram size={18} className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-700" />
-                        <input name="social" type="text" value={form.social} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl pl-16 pr-6 py-5 text-white font-bold outline-none focus:border-brand transition-all placeholder-slate-800" placeholder="instagram.com/coach_profile" />
+                        <Instagram size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-700" />
+                        <input name="social" type="text" value={form.social} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl pl-14 pr-5 py-4 text-white font-bold outline-none focus:border-brand transition-all placeholder-slate-800 text-sm" placeholder="instagram.com/profile" />
                      </div>
                   </div>
-                  <div className="space-y-3">
+                  <div className="space-y-2 text-left">
                      <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 ml-2">{t.trainerMotivation}</label>
-                     <textarea name="motivation" required rows={5} value={form.motivation} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-white font-medium italic outline-none focus:border-brand transition-all placeholder-slate-800 resize-none" placeholder="Describe your philosophy and what you bring to our club..." />
+                     <textarea name="motivation" required rows={4} value={form.motivation} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white font-medium italic outline-none focus:border-brand transition-all placeholder-slate-800 resize-none text-sm" placeholder="Describe your philosophy..." />
                   </div>
                </div>
 
-               <div className="pt-10 flex flex-col md:flex-row items-center gap-10">
+               <div className="pt-8 flex flex-col items-start gap-8">
                   <button 
                      type="submit"
                      disabled={status === 'loading'}
-                     className="w-full md:w-auto px-24 py-7 bg-brand text-dark rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-white transition-all shadow-2xl shadow-brand/20 flex items-center justify-center gap-3 disabled:opacity-50"
+                     className="w-full md:w-auto px-16 md:px-24 py-5 md:py-6 bg-brand text-dark rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-white transition-all shadow-2xl shadow-brand/10 flex items-center justify-center gap-3 disabled:opacity-50"
                   >
                      {status === 'loading' ? <Loader2 className="animate-spin" size={20} /> : <>{t.trainerSubmit} <ChevronRight size={20} /></>}
                   </button>
-                  <p className="text-[10px] text-slate-600 font-bold uppercase tracking-widest italic text-center md:text-left leading-loose">
-                     {t.trainerReviewHours} <br/>
+                  <p className="text-[10px] text-slate-600 font-bold uppercase tracking-widest italic text-left leading-relaxed">
+                     {t.trainerReviewHours} <br className="hidden sm:block"/>
                      <span className="text-slate-700">All data is kept strictly professional.</span>
                   </p>
                </div>
             </form>
             
-            <div className="mt-24 pt-10 border-t border-white/5 flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-600">
+            <div className="mt-20 pt-10 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-6 text-[10px] font-black uppercase tracking-widest text-slate-600 pb-10">
                <Link to="/login" className="hover:text-white transition-colors">Existing Account Login</Link>
                <Link to="/" className="hover:text-white transition-colors tracking-[0.4em]">ClassFit Base</Link>
             </div>

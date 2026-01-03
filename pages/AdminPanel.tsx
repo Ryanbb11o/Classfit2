@@ -138,7 +138,7 @@ const AdminPanel: React.FC = () => {
     <div className="max-w-7xl mx-auto px-4 py-16 animate-in fade-in duration-500">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
-        <div>
+        <div className="text-left">
           <div className="flex items-center gap-4">
              <h1 className="text-4xl font-black uppercase italic text-white leading-none tracking-tighter">{t.adminPanel}</h1>
              <button onClick={handleManualRefresh} className={`p-2 rounded-full hover:bg-white/10 ${isRefreshing ? 'animate-spin text-brand' : 'text-slate-500'}`}>
@@ -147,7 +147,7 @@ const AdminPanel: React.FC = () => {
           </div>
           <p className="text-slate-400 font-medium italic mt-2">ClassFit Management • Varna Base</p>
         </div>
-        <div className="flex flex-wrap gap-2 bg-surface p-1.5 rounded-2xl border border-white/5">
+        <div className="flex flex-wrap gap-2 bg-surface p-1.5 rounded-2xl border border-white/5 justify-start">
             {[
               { id: 'overview', icon: LayoutDashboard, label: t.tabOverview },
               { id: 'bookings', icon: ListFilter, label: t.tabBookings, badge: awaitingPaymentList.length + bookings.filter(b => b.status === 'pending' || b.status === 'confirmed').length },
@@ -170,23 +170,23 @@ const AdminPanel: React.FC = () => {
            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div className="p-8 bg-brand text-dark rounded-[2.5rem] shadow-xl relative overflow-hidden group">
                  <div className="absolute top-4 right-4 text-dark/20 group-hover:scale-125 transition-transform"><TrendingUp size={48} /></div>
-                 <p className="text-[10px] font-black uppercase mb-4 opacity-60 tracking-widest">{t.totalIncome}</p>
-                 <p className="text-4xl font-black italic">{totalIncome.toFixed(2)} <span className="text-sm font-bold">BGN</span></p>
+                 <p className="text-[10px] font-black uppercase mb-4 opacity-60 tracking-widest text-left">{t.totalIncome}</p>
+                 <p className="text-4xl font-black italic text-left">{totalIncome.toFixed(2)} <span className="text-sm font-bold">BGN</span></p>
               </div>
               <div className="p-8 bg-surface border border-white/5 text-white rounded-[2.5rem] relative overflow-hidden group">
                  <div className="absolute top-4 right-4 text-white/5 group-hover:scale-125 transition-transform"><MessageSquare size={48} /></div>
-                 <p className="text-[10px] font-black uppercase mb-4 text-slate-500 tracking-widest">{t.tabModeration}</p>
-                 <p className="text-4xl font-black italic text-brand">{pendingReviews.length}</p>
+                 <p className="text-[10px] font-black uppercase mb-4 text-slate-500 tracking-widest text-left">{t.tabModeration}</p>
+                 <p className="text-4xl font-black italic text-brand text-left">{pendingReviews.length}</p>
               </div>
               <div className="p-8 bg-surface border border-white/5 text-white rounded-[2.5rem] relative overflow-hidden group">
                  <div className="absolute top-4 right-4 text-white/5 group-hover:scale-125 transition-transform"><Users size={48} /></div>
-                 <p className="text-[10px] font-black uppercase mb-4 text-slate-500 tracking-widest">{t.allUsers}</p>
-                 <p className="text-4xl font-black italic">{users.filter(u => u.role === 'user').length}</p>
+                 <p className="text-[10px] font-black uppercase mb-4 text-slate-500 tracking-widest text-left">{t.allUsers}</p>
+                 <p className="text-4xl font-black italic text-left">{users.filter(u => u.role === 'user').length}</p>
               </div>
               <div className="p-8 bg-surface border border-white/5 text-white rounded-[2.5rem] relative overflow-hidden group">
                  <div className="absolute top-4 right-4 text-white/5 group-hover:scale-125 transition-transform"><UserCheck size={48} /></div>
-                 <p className="text-[10px] font-black uppercase mb-4 text-slate-500 tracking-widest">{t.tabRecruitment}</p>
-                 <p className="text-4xl font-black italic text-yellow-500">{pendingApplications.length}</p>
+                 <p className="text-[10px] font-black uppercase mb-4 text-slate-500 tracking-widest text-left">{t.tabRecruitment}</p>
+                 <p className="text-4xl font-black italic text-yellow-500 text-left">{pendingApplications.length}</p>
               </div>
            </div>
         )}
@@ -194,7 +194,7 @@ const AdminPanel: React.FC = () => {
         {/* APPLICATIONS TAB GRID */}
         {activeTab === 'applications' && (
            <div className="animate-in slide-in-from-bottom-2 duration-500">
-              <div className="flex items-center gap-4 mb-10">
+              <div className="flex items-center gap-4 mb-10 text-left">
                  <div className="w-12 h-12 bg-brand/10 text-brand rounded-2xl flex items-center justify-center">
                     <UserPlus size={24} />
                  </div>
@@ -212,7 +212,7 @@ const AdminPanel: React.FC = () => {
               ) : (
                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {pendingApplications.map(app => (
-                       <div key={app.id} className="bg-surface border border-white/5 rounded-[2rem] p-8 hover:border-brand/40 transition-all duration-300 group">
+                       <div key={app.id} className="bg-surface border border-white/5 rounded-[2rem] p-8 hover:border-brand/40 transition-all duration-300 group text-left">
                           <div className="flex items-center gap-4 mb-8">
                              <div className="w-16 h-16 rounded-2xl bg-dark overflow-hidden border border-white/10 shrink-0">
                                 <img src={app.image || DEFAULT_PROFILE_IMAGE} className="w-full h-full object-cover grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 transition-all" />
@@ -252,7 +252,7 @@ const AdminPanel: React.FC = () => {
         {/* REGISTRY TABLES FOR OTHER TABS */}
         {activeTab !== 'overview' && activeTab !== 'reviews' && activeTab !== 'applications' && (
            <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-hidden shadow-2xl animate-in fade-in">
-              <div className="p-8 border-b border-white/5 bg-white/5 flex justify-between items-center">
+              <div className="p-8 border-b border-white/5 bg-white/5 flex justify-between items-center text-left">
                  <div className="flex items-center gap-4">
                     <div className="w-10 h-10 bg-brand/10 text-brand rounded-xl flex items-center justify-center">
                         {activeTab === 'bookings' && <ListFilter size={20} />}
@@ -297,7 +297,7 @@ const AdminPanel: React.FC = () => {
                            <tr>
                               <th className="px-8 py-5">Professional Profile</th>
                               <th className="px-8 py-5">Linguistic Profile</th>
-                              <th className="px-8 py-5">Commission</th>
+                              <th className="px-8 py-5 text-left">Commission</th>
                               <th className="px-8 py-5 text-right">{t.action}</th>
                            </tr>
                         )}
@@ -347,7 +347,7 @@ const AdminPanel: React.FC = () => {
                                  <div className="w-10 h-10 rounded-xl bg-dark overflow-hidden border border-white/5">
                                     <img src={tr.image || DEFAULT_PROFILE_IMAGE} className="w-full h-full object-cover" />
                                  </div>
-                                 <div>
+                                 <div className="text-left">
                                     <p className="font-black uppercase italic leading-none mb-1">{cleanName(tr.name)}</p>
                                     <p className="text-[9px] text-brand font-black uppercase">{tr.name.match(/\((.*)\)/)?.[1] || 'Club Professional'}</p>
                                  </div>
@@ -359,13 +359,13 @@ const AdminPanel: React.FC = () => {
                                     ))}
                                  </div>
                               </td>
-                              <td className="px-8 py-5"><span className="px-2 py-1 bg-brand text-dark rounded text-[8px] font-black uppercase">{tr.commissionRate}% Share</span></td>
+                              <td className="px-8 py-5 text-left"><span className="px-2 py-1 bg-brand text-dark rounded text-[8px] font-black uppercase">{tr.commissionRate}% Share</span></td>
                               <td className="px-8 py-5 text-right"><button onClick={() => handleEditUserClick(tr)} className="px-4 py-2 bg-white/10 text-white rounded-lg text-[9px] font-black uppercase flex items-center gap-2 hover:bg-brand hover:text-dark transition-all ml-auto"><Eye size={14} /> Profile</button></td>
                            </tr>
                         ))}
                         {activeTab === 'bookings' && bookings.filter(b => b.status !== 'completed').map(b => (
                            <tr key={b.id} className="hover:bg-white/5 transition-colors">
-                              <td className="px-8 py-5">
+                              <td className="px-8 py-5 text-left">
                                  <div className="font-black uppercase italic leading-none text-white mb-1">{b.customerName}</div>
                                  <div className="text-[9px] text-slate-500 uppercase tracking-widest">{t.trainer}: {cleanName(users.find(u => u.id === b.trainerId)?.name)}</div>
                               </td>
@@ -384,7 +384,7 @@ const AdminPanel: React.FC = () => {
         {/* REVIEWS MODERATION */}
         {activeTab === 'reviews' && (
             <div className="space-y-6">
-                <h3 className="text-xl font-black uppercase italic text-white flex items-center gap-3">
+                <h3 className="text-xl font-black uppercase italic text-white flex items-center gap-3 text-left">
                     <MessageSquare className="text-brand" /> {t.tabModeration}
                 </h3>
                 {pendingReviews.length === 0 ? (
@@ -392,7 +392,7 @@ const AdminPanel: React.FC = () => {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {pendingReviews.map(review => (
-                            <div key={review.id} className="bg-surface p-8 rounded-[2rem] border border-white/5 flex flex-col justify-between">
+                            <div key={review.id} className="bg-surface p-8 rounded-[2rem] border border-white/5 flex flex-col justify-between text-left">
                                 <div>
                                     <div className="flex items-center justify-between mb-6">
                                         <div className="flex items-center gap-3">
@@ -417,21 +417,21 @@ const AdminPanel: React.FC = () => {
         )}
       </div>
 
-      {/* EDIT USER MODAL */}
+      {/* EDIT USER MODAL - LEFT ALIGNED FORM */}
       {editingUser && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-dark/95 backdrop-blur-md animate-in fade-in duration-300">
-             <div className="bg-surface border border-white/10 rounded-[2.5rem] p-10 w-full max-w-lg shadow-2xl relative overflow-hidden">
+             <div className="bg-surface border border-white/10 rounded-[2.5rem] p-10 w-full max-w-lg shadow-2xl relative overflow-hidden text-left">
                 <div className="absolute top-0 left-0 w-full h-1 bg-brand"></div>
                 <button onClick={() => setEditingUser(null)} className="absolute top-8 right-8 text-slate-500 hover:text-white transition-colors p-2 bg-white/5 rounded-full"><X size={20} /></button>
                 <h2 className="text-2xl font-black uppercase italic text-white mb-2 leading-none tracking-tighter">Coach Management</h2>
                 <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-8">Update professional profile and financial terms</p>
                 <form onSubmit={handleSaveUser} className="space-y-6">
                     <div className="grid grid-cols-2 gap-4">
-                        <div><label className="text-[10px] font-black uppercase text-slate-600 ml-2">{t.name}</label><input type="text" className="w-full bg-dark/50 border border-white/10 rounded-xl px-4 py-3 text-white font-bold outline-none focus:border-brand" value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})} /></div>
-                        <div><label className="text-[10px] font-black uppercase text-slate-600 ml-2">Specialty</label><input type="text" className="w-full bg-dark/50 border border-white/10 rounded-xl px-4 py-3 text-white font-bold outline-none focus:border-brand" value={editForm.specialty} onChange={e => setEditForm({...editForm, specialty: e.target.value})} /></div>
+                        <div className="text-left"><label className="text-[10px] font-black uppercase text-slate-600 ml-2">{t.name}</label><input type="text" className="w-full bg-dark/50 border border-white/10 rounded-xl px-4 py-3 text-white font-bold outline-none focus:border-brand" value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})} /></div>
+                        <div className="text-left"><label className="text-[10px] font-black uppercase text-slate-600 ml-2">Specialty</label><input type="text" className="w-full bg-dark/50 border border-white/10 rounded-xl px-4 py-3 text-white font-bold outline-none focus:border-brand" value={editForm.specialty} onChange={e => setEditForm({...editForm, specialty: e.target.value})} /></div>
                     </div>
                     
-                    <div className="space-y-4">
+                    <div className="space-y-4 text-left">
                         <label className="flex items-center gap-2 text-[10px] font-black uppercase text-brand tracking-widest ml-2">
                            <Languages size={14} /> Coach Languages
                         </label>
@@ -454,31 +454,31 @@ const AdminPanel: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="p-6 bg-brand/5 border border-brand/20 rounded-2xl">
+                    <div className="p-6 bg-brand/5 border border-brand/20 rounded-2xl text-left">
                         <div className="flex items-center justify-between mb-4"><label className="text-[10px] font-black uppercase text-brand">Club Commission Share</label><span className="text-[10px] font-black text-slate-500">Current: {editingUser.commissionRate || 0}%</span></div>
                         <div className="relative"><input type="number" min="0" max="100" className="w-full bg-dark/50 border border-white/10 rounded-xl px-4 py-4 text-white font-black text-xl outline-none focus:border-brand pr-12" value={editForm.commissionRate} onChange={e => setEditForm({...editForm, commissionRate: parseInt(e.target.value) || 0})} /><Percent size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-brand" /></div>
                     </div>
-                    <div><label className="text-[10px] font-black uppercase text-slate-600 ml-2">Public Image Link</label><input type="text" className="w-full bg-dark/50 border border-white/10 rounded-xl px-4 py-3 text-white font-bold outline-none focus:border-brand" value={editForm.image} onChange={e => setEditForm({...editForm, image: e.target.value})} /></div>
+                    <div className="text-left"><label className="text-[10px] font-black uppercase text-slate-600 ml-2">Public Image Link</label><input type="text" className="w-full bg-dark/50 border border-white/10 rounded-xl px-4 py-3 text-white font-bold outline-none focus:border-brand" value={editForm.image} onChange={e => setEditForm({...editForm, image: e.target.value})} /></div>
                     <button type="submit" disabled={isSavingUser} className="w-full py-5 bg-brand text-dark rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-white transition-all shadow-xl shadow-brand/10">{isSavingUser ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} Commit Changes</button>
                 </form>
              </div>
           </div>
       )}
 
-      {/* FIXED APPLICATION DETAILS MODAL */}
+      {/* FIXED APPLICATION DETAILS MODAL - LEFT ALIGNED DOSSIER */}
       {viewingApplication && (
           <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-dark/98 backdrop-blur-xl animate-in fade-in duration-300">
-             <div className="bg-surface border border-white/10 rounded-[3rem] w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl relative flex flex-col md:flex-row">
+             <div className="bg-surface border border-white/10 rounded-[3rem] w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl relative flex flex-col md:flex-row text-left">
                 <div className="absolute top-0 left-0 w-full h-1 bg-brand"></div>
                 <button onClick={() => setViewingApplication(null)} className="absolute top-6 right-6 text-slate-500 hover:text-white transition-colors p-2 bg-white/5 rounded-full z-10"><X size={20} /></button>
 
-                {/* Left Panel */}
-                <div className="md:w-1/3 bg-dark/50 p-10 border-r border-white/5 flex flex-col items-center text-center shrink-0">
+                {/* Left Panel - Profile Quick Look (Left Aligned) */}
+                <div className="md:w-1/3 bg-dark/50 p-10 border-r border-white/5 flex flex-col items-start shrink-0">
                     <div className="w-32 h-32 rounded-[2.5rem] bg-brand/10 p-1 border-2 border-brand/20 mb-8 overflow-hidden">
                         <img src={viewingApplication.image || DEFAULT_PROFILE_IMAGE} className="w-full h-full object-cover grayscale opacity-50" />
                     </div>
                     <h2 className="text-3xl font-black uppercase italic text-white leading-none mb-2 tracking-tighter">{cleanName(viewingApplication.name)}</h2>
-                    <span className="px-4 py-1.5 bg-brand text-dark rounded-full text-[10px] font-black uppercase tracking-widest mb-10">
+                    <span className="px-4 py-1.5 bg-brand text-dark rounded-full text-[10px] font-black uppercase tracking-widest mb-10 inline-block">
                         {(viewingApplication.name || '').match(/\((.*)\)/)?.[1] || 'Coach Applicant'}
                     </span>
 
@@ -498,15 +498,15 @@ const AdminPanel: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Right Panel */}
+                {/* Right Panel - Detailed Dossier (Left Aligned) */}
                 <div className="flex-1 p-10 md:p-12 overflow-y-auto custom-scrollbar">
-                    <div className="space-y-12">
+                    <div className="space-y-12 text-left">
                         <div className="grid grid-cols-2 gap-8">
-                            <div>
+                            <div className="text-left">
                                 <div className="flex items-center gap-2 mb-4"><History size={14} className="text-brand" /><h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Tenure</h4></div>
                                 <p className="text-3xl font-black italic text-white">{getBioSection(viewingApplication.bio, 'Experience')} <span className="text-xs text-slate-600 not-italic uppercase">{t.years}</span></p>
                             </div>
-                            <div>
+                            <div className="text-left">
                                 <div className="flex items-center gap-2 mb-4"><Languages size={14} className="text-brand" /><h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">{t.trainerLanguagesSpoken}</h4></div>
                                 <div className="flex flex-wrap gap-1.5">
                                     {(viewingApplication.languages || []).map(l => (
@@ -516,12 +516,12 @@ const AdminPanel: React.FC = () => {
                             </div>
                         </div>
 
-                        <div className="space-y-4">
+                        <div className="space-y-4 text-left">
                             <div className="flex items-center gap-2 border-b border-white/5 pb-2"><Award size={14} className="text-brand" /><h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">{t.trainerCerts}</h4></div>
                             <p className="text-sm text-slate-300 font-medium italic leading-relaxed">{getBioSection(viewingApplication.bio, 'Certifications')}</p>
                         </div>
 
-                        <div className="p-8 bg-brand/5 rounded-3xl border border-brand/10 relative overflow-hidden group">
+                        <div className="p-8 bg-brand/5 rounded-3xl border border-brand/10 relative overflow-hidden group text-left">
                             <div className="absolute top-0 right-0 p-4 opacity-10"><Sparkles size={48} className="text-brand" /></div>
                             <div className="flex items-center gap-2 mb-4"><FileText size={14} className="text-brand" /><h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-brand">{t.trainerMotivation}</h4></div>
                             <p className="text-sm text-white font-medium italic leading-relaxed relative z-10">"{getBioSection(viewingApplication.bio, 'Motivation')}"</p>
