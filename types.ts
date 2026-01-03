@@ -57,6 +57,8 @@ export interface Booking {
   hasBeenReviewed?: boolean;
   settledAt?: string; // Timestamp of admin settlement
   settledBy?: string; // Name of the admin who confirmed the payment
+  lastModifiedBy?: string; // Name of admin/manager who edited the booking
+  modifiedAt?: string; // Timestamp of last edit
 }
 
 export interface Membership {

@@ -1,14 +1,14 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { LayoutDashboard, ListFilter, Briefcase, UserCheck, FileSpreadsheet, Users, RefreshCw, Star, Trash2, Eye, X, Loader2, TrendingUp, Wallet, Check, Ban, DollarSign, PieChart, History, CreditCard, Banknote, Calendar, Clock, User, Phone, ShieldCheck, Key, Fingerprint, Settings2, Copy, CheckSquare, MessageSquare, Trash, Zap, ArrowUpRight, Activity, BellRing, ChevronDown, ChevronUp, Info, MapPinned } from 'lucide-react';
+import { LayoutDashboard, ListFilter, Briefcase, UserCheck, FileSpreadsheet, Users, RefreshCw, Star, Trash2, Eye, X, Loader2, TrendingUp, Wallet, Check, Ban, DollarSign, PieChart, History, CreditCard, Banknote, Calendar, Clock, User, Phone, ShieldCheck, Key, Fingerprint, Settings2, Copy, CheckSquare, MessageSquare, Trash, Zap, ArrowUpRight, Activity, BellRing, ChevronDown, ChevronUp, Info, MapPinned, Edit3, Save, AlertTriangle } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, DEFAULT_PROFILE_IMAGE } from '../constants';
 import { User as UserType, Booking, Review } from '../types';
 import RoleManagementModal from '../components/RoleManagementModal';
 
 const AdminPanel: React.FC = () => {
-  const { language, bookings, refreshData, updateBooking, updateUser, deleteUser, isAdmin, isManagement, users, reviews, deleteReview, updateReview, confirmAction } = useAppContext();
+  const { language, bookings, refreshData, updateBooking, updateUser, deleteUser, isAdmin, isManagement, users, reviews, deleteReview, updateReview, confirmAction, deleteBooking } = useAppContext();
   const location = useLocation();
   const t = TRANSLATIONS[language];
   
@@ -19,6 +19,7 @@ const AdminPanel: React.FC = () => {
   const [userForRoles, setUserForRoles] = useState<UserType | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [expandedBookingId, setExpandedBookingId] = useState<string | null>(null);
+  const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
 
   useEffect(() => {
     if (location.state?.activeTab) setActiveTab(location.state.activeTab as any);
@@ -94,9 +95,16 @@ const AdminPanel: React.FC = () => {
     const trainer = users.find(u => u.id === booking.trainerId);
     return (
       <div className="mt-4 p-6 bg-dark/60 rounded-2xl border border-white/10 animate-in slide-in-from-top-2 duration-300">
-         <div className="flex items-center gap-2 mb-6 text-brand">
-            <ShieldCheck size={14} />
-            <h4 className="text-[10px] font-black uppercase tracking-widest italic">Official Settlement Dossier</h4>
+         <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2 text-brand">
+                <ShieldCheck size={14} />
+                <h4 className="text-[10px] font-black uppercase tracking-widest italic">Chain of Custody Dossier</h4>
+            </div>
+            {isManagement && (
+                <button onClick={() => setEditingBooking(booking)} className="flex items-center gap-2 px-3 py-1 bg-white/5 hover:bg-brand hover:text-dark text-slate-500 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all">
+                    <Edit3 size={10} /> Administrative Override
+                </button>
+            )}
          </div>
          
          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -106,7 +114,7 @@ const AdminPanel: React.FC = () => {
                      <Briefcase size={16} className="text-slate-500" />
                   </div>
                   <div>
-                     <p className="text-[8px] font-black uppercase text-slate-600 mb-0.5">Trainer Responsible</p>
+                     <p className="text-[8px] font-black uppercase text-slate-600 mb-0.5">Primary Coach</p>
                      <p className="text-xs font-black text-white italic">{cleanName(trainer?.name)}</p>
                   </div>
                </div>
@@ -115,8 +123,8 @@ const AdminPanel: React.FC = () => {
                      <User size={16} className="text-slate-500" />
                   </div>
                   <div>
-                     <p className="text-[8px] font-black uppercase text-slate-600 mb-0.5">Payment Verified By</p>
-                     <p className="text-xs font-black text-white italic">{booking.settledBy || 'System'}</p>
+                     <p className="text-[8px] font-black uppercase text-slate-600 mb-0.5">Verification Identity</p>
+                     <p className="text-xs font-black text-white italic">{booking.settledBy || 'System/Pending'}</p>
                   </div>
                </div>
                <div className="flex items-center gap-4">
@@ -124,29 +132,40 @@ const AdminPanel: React.FC = () => {
                      {booking.paymentMethod === 'card' ? <CreditCard size={16} className="text-brand" /> : <Banknote size={16} className="text-brand" />}
                   </div>
                   <div>
-                     <p className="text-[8px] font-black uppercase text-slate-600 mb-0.5">Transaction Mode</p>
-                     <p className="text-xs font-black text-brand uppercase italic tracking-widest">{booking.paymentMethod || 'CASH'}</p>
+                     <p className="text-[8px] font-black uppercase text-slate-600 mb-0.5">Methodology</p>
+                     <p className="text-xs font-black text-brand uppercase italic tracking-widest">{booking.paymentMethod || 'PENDING'}</p>
                   </div>
                </div>
             </div>
 
-            <div className="bg-dark/40 p-5 rounded-xl border border-white/5 space-y-3">
-               <div className="flex justify-between items-center text-[10px]">
-                  <span className="text-slate-500 font-bold uppercase">Total Fee Paid</span>
-                  <span className="text-white font-black italic">{booking.price.toFixed(2)} BGN</span>
-               </div>
-               <div className="h-px bg-white/5"></div>
-               <div className="flex justify-between items-center text-[10px]">
-                  <span className="text-brand font-black uppercase">Gym Profit ({trainer?.commissionRate || 25}%)</span>
-                  <span className="text-brand font-black italic">{booking.commissionAmount?.toFixed(2)} BGN</span>
-               </div>
-               <div className="flex justify-between items-center text-[10px]">
-                  <span className="text-slate-500 font-bold uppercase italic">Coach Payout</span>
-                  <span className="text-white font-black italic">{booking.trainerEarnings?.toFixed(2)} BGN</span>
-               </div>
-               <div className="pt-3 flex items-center gap-2 text-[8px] text-slate-600 font-black uppercase tracking-widest">
-                  <Clock size={10} /> Settled: {booking.settledAt ? new Date(booking.settledAt).toLocaleString() : 'N/A'}
-               </div>
+            <div className="space-y-4">
+                <div className="bg-dark/40 p-5 rounded-xl border border-white/5 space-y-3">
+                   <div className="flex justify-between items-center text-[10px]">
+                      <span className="text-slate-500 font-bold uppercase">Transaction Value</span>
+                      <span className="text-white font-black italic">{booking.price.toFixed(2)} BGN</span>
+                   </div>
+                   <div className="h-px bg-white/5"></div>
+                   <div className="flex justify-between items-center text-[10px]">
+                      <span className="text-brand font-black uppercase">Gym P&L ({trainer?.commissionRate || 25}%)</span>
+                      <span className="text-brand font-black italic">{booking.commissionAmount?.toFixed(2)} BGN</span>
+                   </div>
+                   <div className="flex justify-between items-center text-[10px]">
+                      <span className="text-slate-500 font-bold uppercase italic">Coach Yield</span>
+                      <span className="text-white font-black italic">{booking.trainerEarnings?.toFixed(2)} BGN</span>
+                   </div>
+                </div>
+
+                {booking.lastModifiedBy && (
+                    <div className="p-4 bg-yellow-500/5 border border-yellow-500/10 rounded-xl">
+                        <div className="flex items-center gap-2 mb-1">
+                            <AlertTriangle size={10} className="text-yellow-500" />
+                            <p className="text-[8px] font-black uppercase text-yellow-500 tracking-widest">Administrative Log</p>
+                        </div>
+                        <p className="text-[10px] text-slate-400 italic">
+                            Rescheduled or modified by <span className="text-white font-black">{booking.lastModifiedBy}</span> on {new Date(booking.modifiedAt!).toLocaleDateString()}
+                        </p>
+                    </div>
+                )}
             </div>
          </div>
       </div>
@@ -227,7 +246,7 @@ const AdminPanel: React.FC = () => {
                     </div>
                     <div className="space-y-4">
                        {recentActivity.length === 0 ? <p className="text-center py-20 text-slate-500 italic">No activity recorded.</p> : recentActivity.map((act) => {
-                          const isExpandable = act.type === 'booking' && act.status === 'completed';
+                          const isExpandable = act.type === 'booking';
                           const isExpanded = expandedBookingId === act.id;
                           return (
                             <div key={act.id} className="flex flex-col">
@@ -244,7 +263,8 @@ const AdminPanel: React.FC = () => {
                                             <p className="text-[10px] font-black uppercase text-slate-600 tracking-widest italic">{act.time}</p>
                                             <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${
                                                 act.status === 'completed' ? 'bg-green-500/10 text-green-500' : 
-                                                act.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500' : 'bg-white/5 text-slate-500'
+                                                act.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500' : 
+                                                act.status === 'confirmed' ? 'bg-blue-500/10 text-blue-500' : 'bg-white/5 text-slate-500'
                                             }`}>
                                                 {act.status}
                                             </span>
@@ -256,7 +276,7 @@ const AdminPanel: React.FC = () => {
                                         </div>
                                     )}
                                 </div>
-                                {isExpanded && act.fullData && <SettlementDossier booking={act.fullData as Booking} />}
+                                {isExpanded && act.fullData && act.type === 'booking' && <SettlementDossier booking={act.fullData as Booking} />}
                             </div>
                           );
                        })}
@@ -374,12 +394,11 @@ const AdminPanel: React.FC = () => {
           </div>
         )}
 
-        {/* ... Other tabs maintained ... */}
         {activeTab === 'bookings' && (
            <div className="bg-surface rounded-[3rem] border border-white/5 overflow-hidden shadow-2xl">
               <table className="w-full">
                   <thead className="bg-dark/30 text-[9px] font-black uppercase text-slate-500">
-                     <tr><th className="px-8 py-5 text-left">Session</th><th className="px-8 py-5 text-left">Client</th><th className="px-8 py-5 text-left">Coach</th><th className="px-8 py-5 text-right">Status</th></tr>
+                     <tr><th className="px-8 py-5 text-left">Session</th><th className="px-8 py-5 text-left">Client</th><th className="px-8 py-5 text-left">Coach</th><th className="px-8 py-5 text-right">Status / Actions</th></tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
                      {activeBookings.length === 0 ? <tr><td colSpan={4} className="px-8 py-20 text-center text-slate-500 italic">No active operations.</td></tr> : activeBookings.map(b => (
@@ -387,7 +406,17 @@ const AdminPanel: React.FC = () => {
                            <td className="px-8 py-6 italic font-bold">{b.date} <span className="opacity-50 ml-2">@ {b.time}</span></td>
                            <td className="px-8 py-6 font-black italic uppercase tracking-tighter">{b.customerName}</td>
                            <td className="px-8 py-6 text-slate-400 italic">{cleanName(users.find(u => u.id === b.trainerId)?.name)}</td>
-                           <td className="px-8 py-6 text-right"><span className={`px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest ${b.status === 'confirmed' ? 'bg-green-500/10 text-green-500' : 'bg-yellow-500/10 text-yellow-500'}`}>{b.status}</span></td>
+                           <td className="px-8 py-6 text-right">
+                              <div className="flex items-center justify-end gap-3">
+                                 <span className={`px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest ${b.status === 'confirmed' ? 'bg-green-500/10 text-green-500' : 'bg-yellow-500/10 text-yellow-500'}`}>{b.status}</span>
+                                 {isManagement && (
+                                    <div className="flex gap-1.5 ml-4 border-l border-white/10 pl-4">
+                                       <button onClick={() => setEditingBooking(b)} className="p-2 bg-white/5 hover:bg-brand hover:text-dark rounded-lg text-slate-500 transition-all"><Edit3 size={14}/></button>
+                                       <button onClick={() => confirmAction({ title: 'Delete Booking', message: `Remove ${b.customerName}'s session entirely?`, onConfirm: () => deleteBooking(b.id) })} className="p-2 bg-white/5 hover:bg-red-500 hover:text-white rounded-lg text-slate-500 transition-all"><Trash2 size={14}/></button>
+                                    </div>
+                                 )}
+                              </div>
+                           </td>
                         </tr>
                      ))}
                   </tbody>
@@ -429,6 +458,7 @@ const AdminPanel: React.FC = () => {
            </div>
         )}
 
+        {/* Recruitment / Applications */}
         {activeTab === 'applications' && ( pendingApps.length === 0 ? <p className="text-center py-20 text-slate-500 italic">Queue is clear.</p> :
            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {pendingApps.map(app => (
@@ -455,6 +485,7 @@ const AdminPanel: React.FC = () => {
            </div>
         )}
 
+        {/* User Registry */}
         {activeTab === 'users' && (
            <div className="bg-surface rounded-[3rem] border border-white/5 overflow-hidden shadow-2xl">
               <table className="w-full">
@@ -490,6 +521,7 @@ const AdminPanel: React.FC = () => {
            </div>
         )}
 
+        {/* Roles / Authority */}
         {activeTab === 'roles' && (
            <div className="bg-surface rounded-[3rem] border border-white/5 overflow-hidden shadow-2xl">
               <table className="w-full">
@@ -509,6 +541,7 @@ const AdminPanel: React.FC = () => {
            </div>
         )}
 
+        {/* Review Moderation */}
         {activeTab === 'reviews' && ( pendingReviews.length === 0 ? <p className="text-center py-20 text-slate-500 italic">No feedback pending moderation.</p> :
            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">
               {pendingReviews.map(r => (
@@ -536,6 +569,70 @@ const AdminPanel: React.FC = () => {
         )}
 
       </div>
+
+      {/* MODAL: Administrative Booking Edit */}
+      {editingBooking && (
+         <div className="fixed inset-0 z-[220] flex items-center justify-center p-4 bg-dark/95 backdrop-blur-xl animate-in fade-in duration-300 text-left">
+            <div className="bg-surface border border-white/10 rounded-[3rem] p-10 w-full max-w-lg shadow-2xl relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1.5 bg-yellow-500"></div>
+                <button onClick={() => setEditingBooking(null)} className="absolute top-8 right-8 text-slate-500 hover:text-white bg-white/5 p-2 rounded-full"><X size={20} /></button>
+                
+                <div className="mb-10">
+                   <div className="inline-flex items-center gap-2 px-3 py-1 bg-yellow-500/10 text-yellow-500 rounded-lg text-[9px] font-black uppercase tracking-widest mb-4 italic"><Settings2 size={12} /> Management Override</div>
+                   <h2 className="text-2xl font-black uppercase italic text-white tracking-tighter leading-none mb-1">Modify Operation</h2>
+                   <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest">Code: {editingBooking.checkInCode}</p>
+                </div>
+
+                <div className="space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                           <label className="text-[9px] font-black uppercase tracking-widest text-slate-600 ml-2">Session Date</label>
+                           <input 
+                                type="date" 
+                                value={editingBooking.date} 
+                                onChange={(e) => setEditingBooking({...editingBooking, date: e.target.value})}
+                                className="w-full bg-dark/40 border border-white/10 rounded-xl px-4 py-3 text-white font-bold text-xs outline-none focus:border-brand transition-all"
+                           />
+                        </div>
+                        <div className="space-y-2">
+                           <label className="text-[9px] font-black uppercase tracking-widest text-slate-600 ml-2">Session Time</label>
+                           <input 
+                                type="time" 
+                                value={editingBooking.time} 
+                                onChange={(e) => setEditingBooking({...editingBooking, time: e.target.value})}
+                                className="w-full bg-dark/40 border border-white/10 rounded-xl px-4 py-3 text-white font-bold text-xs outline-none focus:border-brand transition-all"
+                           />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-600 ml-2">Force Status Update</label>
+                        <select 
+                            value={editingBooking.status} 
+                            onChange={(e) => setEditingBooking({...editingBooking, status: e.target.value as any})}
+                            className="w-full bg-dark/40 border border-white/10 rounded-xl px-4 py-3 text-white font-bold text-xs outline-none focus:border-brand transition-all appearance-none cursor-pointer"
+                        >
+                            <option value="pending">Pending</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="cancelled">Cancelled</option>
+                            <option value="trainer_completed">Awaiting Payment</option>
+                            <option value="completed">Completed/Settled</option>
+                        </select>
+                    </div>
+
+                    <div className="pt-6 border-t border-white/5 space-y-3">
+                        <button 
+                            onClick={async () => { await updateBooking(editingBooking.id, editingBooking); setEditingBooking(null); }} 
+                            className="w-full py-5 bg-brand text-dark rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl shadow-brand/10 hover:bg-white transition-all flex items-center justify-center gap-2"
+                        >
+                            <Save size={16} /> Save Changes & Log Identity
+                        </button>
+                        <p className="text-center text-[9px] text-slate-600 font-bold uppercase tracking-widest italic">Action will be recorded in the audit trail.</p>
+                    </div>
+                </div>
+            </div>
+         </div>
+      )}
 
       {/* Overlay: Final Settlement */}
       {pendingSettlementId && (

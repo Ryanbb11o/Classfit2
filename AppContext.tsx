@@ -131,7 +131,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           gymAddress: b.gym_address,
           hasBeenReviewed: b.has_been_reviewed || false,
           settledAt: b.settled_at,
-          settledBy: b.settled_by
+          settledBy: b.settled_by,
+          lastModifiedBy: b.last_modified_by,
+          modifiedAt: b.modified_at
       })));
 
       const { data: rData } = await supabase.from('reviews').select('*').order('created_at', { ascending: false });
@@ -198,6 +200,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const updateBooking = async (id: string, updates: Partial<Booking>) => {
     let finalUpdates = { ...updates };
+    const adminName = currentUser?.name.split('(')[0].trim() || 'Admin';
+
     if (updates.status === 'completed') {
       const booking = bookings.find(b => b.id === id);
       const trainer = users.find(u => u.id === booking?.trainerId);
@@ -207,8 +211,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         finalUpdates.commissionAmount = gymCut;
         finalUpdates.trainerEarnings = booking.price - gymCut;
         finalUpdates.settledAt = new Date().toISOString();
-        finalUpdates.settledBy = currentUser?.name.split('(')[0].trim() || 'Admin';
+        finalUpdates.settledBy = adminName;
       }
+    }
+
+    // Always log administrative modifications if we are in admin context
+    if (isAdmin) {
+      finalUpdates.lastModifiedBy = adminName;
+      finalUpdates.modifiedAt = new Date().toISOString();
     }
 
     if (isDemoMode) {
@@ -224,7 +234,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
        commission_amount: finalUpdates.commissionAmount,
        trainer_earnings: finalUpdates.trainerEarnings,
        settled_at: finalUpdates.settledAt,
-       settled_by: finalUpdates.settledBy
+       settled_by: finalUpdates.settledBy,
+       last_modified_by: finalUpdates.lastModifiedBy,
+       modified_at: finalUpdates.modifiedAt,
+       booking_date: finalUpdates.date,
+       booking_time: finalUpdates.time
     }).eq('id', id);
     if (error) throw error;
     await refreshData();
