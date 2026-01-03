@@ -96,7 +96,6 @@ const CustomerDashboard: React.FC = () => {
 
   if (!currentUser) return null;
 
-  // Improved filtering: also include bookings where email matches (in case of guest checkout)
   const myBookings = useMemo(() => {
     return bookings.filter(b => b.userId === currentUser.id || b.customerEmail === currentUser.email);
   }, [bookings, currentUser]);
@@ -186,7 +185,15 @@ const CustomerDashboard: React.FC = () => {
         )}
       </div>
 
-      <RoleManagementModal user={currentUser} onClose={() => setShowEditModal(false)} onUpdate={async (uid, updates) => await updateUser(uid, updates)} language={language} isManagement={isManagement} />
+      {showEditModal && (
+        <RoleManagementModal 
+          user={currentUser} 
+          onClose={() => setShowEditModal(false)} 
+          onUpdate={async (uid, updates) => await updateUser(uid, updates)} 
+          language={language} 
+          isManagement={isManagement} 
+        />
+      )}
       {bookingToReview && <ReviewModal booking={bookingToReview} onClose={() => setBookingToReview(null)} onSubmit={handleReviewSubmit} />}
     </div>
   );
