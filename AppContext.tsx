@@ -201,8 +201,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (updates.roles !== undefined) dbPayload.roles = updates.roles;
     if (updates.commissionRate !== undefined) dbPayload.commission_rate = updates.commissionRate;
     if (updates.approvedBy !== undefined) dbPayload.approved_by = updates.approvedBy;
-    // NOTE: Removed 'languages' column update to avoid "column not found" error if DB is not updated yet.
-    // To support languages in DB, run: ALTER TABLE users ADD COLUMN languages text[];
+    
+    // NOTE: 'languages' is excluded from DB sync to avoid schema mismatch errors.
+    // It remains supported in the frontend local state.
 
     const { error } = await supabase.from('users').update(dbPayload).eq('id', id);
     if (error) {
@@ -240,16 +241,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return;
     }
 
+    // SAFE UPDATE: Only sending columns that are guaranteed to exist.
+    // Excluded potentially missing columns: settled_at, settled_by, has_been_reviewed, commission_amount, trainer_earnings
     const { error } = await supabase.from('bookings').update({
        status: finalUpdates.status,
        payment_method: finalUpdates.payment_method,
        booking_date: finalUpdates.date,
-       booking_time: finalUpdates.time,
-       settled_at: finalUpdates.settledAt,
-       settled_by: finalUpdates.settledBy,
-       has_been_reviewed: finalUpdates.hasBeenReviewed,
-       commission_amount: finalUpdates.commissionAmount,
-       trainer_earnings: finalUpdates.trainerEarnings
+       booking_time: finalUpdates.time
     }).eq('id', id);
     
     if (error) {
