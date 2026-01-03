@@ -52,6 +52,7 @@ export interface Booking {
   trainerEarnings?: number; // What the trainer makes
   gymAddress?: string;
   hasBeenReviewed?: boolean;
+  settledAt?: string; // Timestamp of admin settlement
 }
 
 export interface Membership {

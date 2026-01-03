@@ -141,7 +141,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           commissionAmount: Number(b.commission_amount || 0),
           trainerEarnings: Number(b.trainer_earnings || 0),
           gymAddress: b.gym_address,
-          hasBeenReviewed: b.has_been_reviewed || false
+          hasBeenReviewed: b.has_been_reviewed || false,
+          settledAt: b.settled_at
         })));
       }
 
@@ -219,16 +220,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const updateBooking = async (id: string, updates: Partial<Booking>) => {
     let finalUpdates = { ...updates };
     
-    // Automatic Financial Split Calculation
+    // Automatic Financial Split Calculation & Settlement Timestamp
     if (updates.status === 'completed') {
       const booking = bookings.find(b => b.id === id);
       const trainer = users.find(u => u.id === booking?.trainerId);
       if (booking && trainer) {
-        const rate = trainer.commissionRate || 25; // Default 25% gym commission
+        const rate = trainer.commissionRate || 25; 
         const gymCut = (booking.price * rate) / 100;
         const trainerCut = booking.price - gymCut;
         finalUpdates.commissionAmount = gymCut;
         finalUpdates.trainerEarnings = trainerCut;
+        finalUpdates.settledAt = new Date().toISOString();
       }
     }
 
@@ -245,6 +247,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (finalUpdates.hasBeenReviewed !== undefined) dbUpdates.has_been_reviewed = finalUpdates.hasBeenReviewed;
     if (finalUpdates.commissionAmount !== undefined) dbUpdates.commission_amount = finalUpdates.commissionAmount;
     if (finalUpdates.trainerEarnings !== undefined) dbUpdates.trainer_earnings = finalUpdates.trainerEarnings;
+    if (finalUpdates.settledAt) dbUpdates.settled_at = finalUpdates.settledAt;
     
     const { error } = await supabase.from('bookings').update(dbUpdates).eq('id', id);
     if (error) throw error;
@@ -265,14 +268,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
 
     const dbUpdates: any = { ...updates };
-    // Map to camelCase or direct if matching
     const { error } = await supabase.from('users').update(dbUpdates).eq('id', id);
     if (error) throw error;
     await refreshData();
   };
-
-  // Remaining CRUD operations... (addReview, updateReview, deleteReview, deleteBooking, deleteUser, login, register, registerTrainer, requestTrainerUpgrade)
-  // ... (Same as before but keeping refreshData calls)
 
   const addReview = async (review: Omit<Review, 'id' | 'time'>) => {
     if (isDemoMode) {
