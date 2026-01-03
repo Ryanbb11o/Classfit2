@@ -101,8 +101,19 @@ const CustomerDashboard: React.FC = () => {
   }, [bookings, currentUser]);
 
   const handleReviewSubmit = async (id: string, rating: number, text: string, isAi: boolean, trainerId: string) => {
+    const booking = bookings.find(b => b.id === id);
+    // Submit the review to the system
     await addReview({ trainerId, author: currentUser.name.split('(')[0].trim(), rating, text, isAiEnhanced: isAi, bookingId: id });
-    await updateBooking(id, { status: 'trainer_completed', hasBeenReviewed: true });
+    
+    // Update booking state: set hasBeenReviewed to true
+    // Only set status to trainer_completed if it wasn't already confirmed or higher
+    const newStatus = booking?.status === 'confirmed' ? 'trainer_completed' : booking?.status;
+    
+    await updateBooking(id, { 
+      status: newStatus as any, 
+      hasBeenReviewed: true 
+    });
+    
     setBookingToReview(null);
     await refreshData();
   };
@@ -157,6 +168,9 @@ const CustomerDashboard: React.FC = () => {
         ) : (
             myBookings.map(booking => {
                 const trainer = allTrainers.find(tr => tr.id === booking.trainerId);
+                const isFinished = booking.status === 'trainer_completed' || booking.status === 'completed';
+                const canReview = (booking.status === 'confirmed' || isFinished) && !booking.hasBeenReviewed;
+
                 return (
                     <div key={booking.id} className="bg-surface/50 backdrop-blur-md border border-white/5 rounded-[3rem] p-8 hover:border-brand/40 transition-all group overflow-hidden">
                         <div className="flex flex-col lg:flex-row gap-8 lg:items-center">
@@ -179,10 +193,12 @@ const CustomerDashboard: React.FC = () => {
                         </div>
                         <div className="mt-6 pt-6 border-t border-white/5 flex flex-wrap items-center justify-between gap-4">
                             <div className="flex gap-2">
-                                {(booking.status === 'confirmed') && !booking.hasBeenReviewed && (
-                                  <button onClick={() => setBookingToReview(booking)} className="flex items-center gap-2 px-6 py-3 bg-brand text-dark rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-lg"><Star size={14} /> Finish & Review</button>
+                                {canReview && (
+                                  <button onClick={() => setBookingToReview(booking)} className="flex items-center gap-2 px-6 py-3 bg-brand text-dark rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-lg">
+                                    <Star size={14} /> {booking.status === 'confirmed' ? 'Finish & Review' : 'Review Coach'}
+                                  </button>
                                 )}
-                                {booking.hasBeenReviewed && <span className="flex items-center gap-2 px-4 py-2 bg-white/5 text-slate-500 rounded-xl text-[11px] font-black uppercase border border-white/5"><Star size={12} className="text-brand fill-brand" /> Verified</span>}
+                                {booking.hasBeenReviewed && <span className="flex items-center gap-2 px-4 py-2 bg-white/5 text-slate-500 rounded-xl text-[11px] font-black uppercase border border-white/5"><Star size={12} className="text-brand fill-brand" /> Feedback Sent</span>}
                             </div>
                             <div className="flex gap-2">
                                 {(booking.status === 'confirmed' || booking.status === 'pending') && <button onClick={() => confirmAction({ title: 'Cancel', message: 'Cancel session?', onConfirm: () => updateBooking(booking.id, { status: 'cancelled' }) })} className="flex items-center gap-2 px-4 py-2 bg-red-500/10 text-red-500 rounded-xl text-[11px] font-black uppercase hover:bg-red-500 hover:text-white transition-all border border-red-500/10"><X size={14} /> Cancel</button>}
