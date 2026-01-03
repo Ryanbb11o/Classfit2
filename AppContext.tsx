@@ -176,12 +176,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const updateUser = async (id: string, updates: Partial<User>) => {
-    // Optimistic UI update
     const prevUsers = [...users];
     const updatedUsers = users.map(u => u.id === id ? { ...u, ...updates } : u);
     setUsers(updatedUsers);
     
-    // Sync current user if it's the one being updated
     if (currentUser?.id === id) {
       const newUser = { ...currentUser, ...updates };
       setCurrentUser(newUser);
@@ -203,12 +201,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (updates.roles !== undefined) dbPayload.roles = updates.roles;
     if (updates.commissionRate !== undefined) dbPayload.commission_rate = updates.commissionRate;
     if (updates.approvedBy !== undefined) dbPayload.approved_by = updates.approvedBy;
-    if (updates.languages !== undefined) dbPayload.languages = updates.languages;
+    // NOTE: Removed 'languages' column update to avoid "column not found" error if DB is not updated yet.
+    // To support languages in DB, run: ALTER TABLE users ADD COLUMN languages text[];
 
     const { error } = await supabase.from('users').update(dbPayload).eq('id', id);
     if (error) {
         console.error("Supabase User Update Error:", error);
-        setUsers(prevUsers); // Rollback
+        setUsers(prevUsers);
         alert(`Account update failed: ${error.message}`);
         return;
     }
@@ -222,7 +221,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     let finalUpdates = { ...existing, ...updates };
 
-    // Automatic calculation logic only if settlement is triggered without manual overrides
     if (updates.status === 'completed' && updates.commissionAmount === undefined) {
       const trainer = users.find(u => u.id === existing.trainerId);
       const rate = trainer?.commissionRate || 25; 
@@ -275,7 +273,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const { data } = await supabase.from('users').select('*').eq('email', email).eq('password', pass).maybeSingle();
     if (data) {
         let roles = data.roles || ['user'];
-        // Master Role Injection during login
         if (data.email === MASTER_EMAIL || String(data.id) === MASTER_ID) {
            roles = Array.from(new Set([...roles, 'management', 'admin']));
         }
@@ -309,7 +306,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
        const u: User = { id: Math.random().toString(36).substr(2, 9), name: fullName, email: data.email, password: data.pass, phone: data.phone, bio: bioText, roles: ['user', 'trainer_pending'], joinedDate: new Date().toISOString(), image: DEFAULT_PROFILE_IMAGE, commissionRate: 25, languages: data.languages || [] };
        setUsers([...users, u]); return { success: true };
     }
-    const { error } = await supabase.from('users').insert([{ name: fullName, email: data.email, phone: data.phone, password: data.pass, bio: bioText, roles: ['user', 'trainer_pending'], commission_rate: 25, languages: data.languages || [] }]);
+    const { error } = await supabase.from('users').insert([{ name: fullName, email: data.email, phone: data.phone, password: data.pass, bio: bioText, roles: ['user', 'trainer_pending'], commission_rate: 25 }]);
     if (error) return { success: false, msg: error.message };
     await refreshData(); return { success: true };
   };

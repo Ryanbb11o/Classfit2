@@ -101,7 +101,7 @@ const CustomerDashboard: React.FC = () => {
   }, [bookings, currentUser]);
 
   const handleReviewSubmit = async (id: string, rating: number, text: string, isAi: boolean, trainerId: string) => {
-    await addReview({ trainerId, author: currentUser.name.split('(')[0].trim(), rating, text, isAiEnhanced: i, bookingId: id });
+    await addReview({ trainerId, author: currentUser.name.split('(')[0].trim(), rating, text, isAiEnhanced: isAi, bookingId: id });
     await updateBooking(id, { status: 'trainer_completed', hasBeenReviewed: true });
     setBookingToReview(null);
     await refreshData();
@@ -156,7 +156,6 @@ const CustomerDashboard: React.FC = () => {
             </div>
         ) : (
             myBookings.map(booking => {
-                // Fix: Corrected 'trainers' to 'allTrainers' to resolve reference error
                 const trainer = allTrainers.find(tr => tr.id === booking.trainerId);
                 return (
                     <div key={booking.id} className="bg-surface/50 backdrop-blur-md border border-white/5 rounded-[3rem] p-8 hover:border-brand/40 transition-all group overflow-hidden">
