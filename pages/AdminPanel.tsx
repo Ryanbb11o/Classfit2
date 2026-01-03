@@ -1,115 +1,27 @@
 
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { LayoutDashboard, ListFilter, MessageSquare, Briefcase, UserCheck, FileSpreadsheet, Users, RefreshCw, Star, Trash2, Eye, X, Save, Loader2, TrendingUp, Wallet, Check, Ban, DollarSign, PieChart, History, CreditCard, Banknote, Calendar, Clock, User, Phone, Mail, ShieldCheck, AlertCircle, UserPlus, ShieldAlert, ChevronDown, Plus, Minus, Key, Fingerprint, Settings2, Copy, CheckSquare, Edit3 } from 'lucide-react';
+import { LayoutDashboard, ListFilter, Briefcase, UserCheck, FileSpreadsheet, Users, RefreshCw, Star, Trash2, Eye, X, Loader2, TrendingUp, Wallet, Check, Ban, DollarSign, PieChart, History, CreditCard, Banknote, Calendar, Clock, User, Phone, ShieldCheck, Key, Fingerprint, Settings2, Copy, CheckSquare, MessageSquare, Trash } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, DEFAULT_PROFILE_IMAGE } from '../constants';
-import { User as UserType, Booking, UserRole } from '../types';
+import { User as UserType, Booking, Review } from '../types';
 import RoleManagementModal from '../components/RoleManagementModal';
 
-const TransactionDossier: React.FC<{ booking: Booking | null; onClose: () => void; users: UserType[] }> = ({ booking, onClose, users }) => {
-  if (!booking) return null;
-  const trainer = users.find(u => u.id === booking.trainerId);
-
-  return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-dark/95 backdrop-blur-xl animate-in fade-in duration-300 text-left">
-       <div className="bg-surface border border-white/10 rounded-[3rem] p-10 w-full max-w-2xl shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1.5 bg-brand"></div>
-          <button onClick={onClose} className="absolute top-8 right-8 text-slate-500 hover:text-white bg-white/5 p-2 rounded-full"><X size={20} /></button>
-          
-          <div className="mb-10">
-             <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand/10 text-brand rounded-lg text-[9px] font-black uppercase tracking-widest mb-4">
-                <ShieldCheck size={12} /> Verified Settlement
-             </div>
-             <h2 className="text-3xl font-black uppercase italic text-white tracking-tighter leading-none mb-2">Transaction Dossier</h2>
-             <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 italic">Reference: {booking.id}</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-             <div className="space-y-6">
-                <div>
-                   <h4 className="text-[9px] font-black uppercase text-slate-500 tracking-widest mb-3 italic">Session Info</h4>
-                   <div className="space-y-3">
-                      <div className="flex items-center gap-3 text-white font-bold"><Calendar size={14} className="text-brand"/> {booking.date}</div>
-                      <div className="flex items-center gap-3 text-white font-bold"><Clock size={14} className="text-brand"/> {booking.time}</div>
-                      <div className="flex items-center gap-3 text-white font-bold uppercase italic"><User size={14} className="text-brand"/> {booking.customerName}</div>
-                   </div>
-                </div>
-
-                <div className="pt-6 border-t border-white/5">
-                   <h4 className="text-[9px] font-black uppercase text-slate-500 tracking-widest mb-3 italic">Assigned Coach</h4>
-                   <div className="flex items-center gap-4">
-                      <img src={trainer?.image || DEFAULT_PROFILE_IMAGE} className="w-12 h-12 rounded-xl object-cover grayscale" />
-                      <div>
-                         <p className="text-white font-black uppercase italic text-sm leading-none mb-1">{trainer?.name.split('(')[0].trim()}</p>
-                         <p className="text-[9px] text-brand font-black uppercase tracking-widest">{trainer?.name.match(/\((.*)\)/)?.[1] || 'Professional'}</p>
-                      </div>
-                   </div>
-                </div>
-             </div>
-
-             <div className="p-8 bg-dark/40 border border-white/5 rounded-[2rem] space-y-6">
-                <div>
-                   <h4 className="text-[9px] font-black uppercase text-slate-500 tracking-widest mb-4 italic">Settlement Analysis</h4>
-                   <div className="space-y-4">
-                      <div className="flex justify-between items-center text-xs">
-                         <span className="text-slate-400 font-medium">Payment Mode</span>
-                         <span className="text-white font-black uppercase tracking-widest flex items-center gap-2">
-                            {booking.paymentMethod === 'card' ? <><CreditCard size={12}/> Card</> : <><Banknote size={12}/> Cash</>}
-                         </span>
-                      </div>
-                      <div className="flex justify-between items-center text-xs">
-                         <span className="text-slate-400 font-medium">Total Fee</span>
-                         <span className="text-white font-black italic text-lg">{booking.price.toFixed(2)} BGN</span>
-                      </div>
-                      <div className="h-px bg-white/5"></div>
-                      <div className="flex justify-between items-center text-xs">
-                         <span className="text-brand font-black uppercase tracking-widest">Gym Revenue</span>
-                         <span className="text-brand font-black italic">{booking.commissionAmount?.toFixed(2)} BGN</span>
-                      </div>
-                      <div className="flex justify-between items-center text-xs">
-                         <span className="text-slate-400 font-medium italic">Coach Payout</span>
-                         <span className="text-white font-bold italic">{booking.trainerEarnings?.toFixed(2)} BGN</span>
-                      </div>
-                   </div>
-                </div>
-
-                <div className="pt-4 border-t border-white/5 text-center">
-                   <p className="text-[8px] font-black uppercase tracking-widest text-slate-600 mb-1 italic">Settled At</p>
-                   <p className="text-[10px] text-white font-bold">{booking.settledAt ? new Date(booking.settledAt).toLocaleString() : 'N/A'}</p>
-                </div>
-             </div>
-          </div>
-       </div>
-    </div>
-  );
-};
-
 const AdminPanel: React.FC = () => {
-  const { language, bookings, refreshData, updateBooking, updateUser, deleteUser, isAdmin, isManagement, users, confirmAction } = useAppContext();
+  const { language, bookings, refreshData, updateBooking, updateUser, deleteUser, isAdmin, isManagement, users, reviews, deleteReview, updateReview, confirmAction } = useAppContext();
   const location = useLocation();
   const t = TRANSLATIONS[language];
   
-  const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'trainers' | 'finance' | 'users' | 'roles' | 'applications' | 'reviews'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'finance' | 'bookings' | 'trainers' | 'applications' | 'users' | 'roles' | 'reviews'>('overview');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pendingSettlementId, setPendingSettlementId] = useState<string | null>(null);
   const [isSettling, setIsSettling] = useState(false);
-  const [viewingDossier, setViewingDossier] = useState<Booking | null>(null);
   const [userForRoles, setUserForRoles] = useState<UserType | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (location.state?.activeTab) setActiveTab(location.state.activeTab);
+    if (location.state?.activeTab) setActiveTab(location.state.activeTab as any);
   }, [location.state]);
-
-  const awaitingPaymentList = bookings.filter(b => b.status === 'trainer_completed');
-  const completedBookings = bookings.filter(b => b.status === 'completed');
-  const activeBookings = bookings.filter(b => b.status === 'confirmed' || b.status === 'pending');
-  const pendingApps = users.filter(u => u.roles?.includes('trainer_pending'));
-
-  const totalRevenue = useMemo(() => completedBookings.reduce((sum, b) => sum + (Number(b.price) || 0), 0), [completedBookings]);
-  const coachPayouts = useMemo(() => completedBookings.reduce((sum, b) => sum + (Number(b.trainerEarnings) || 0), 0), [completedBookings]);
-  const gymProfit = useMemo(() => completedBookings.reduce((sum, b) => sum + (Number(b.commissionAmount) || 0), 0), [completedBookings]);
 
   const handleManualRefresh = () => {
     setIsRefreshing(true);
@@ -122,33 +34,16 @@ const AdminPanel: React.FC = () => {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const handleExecuteSettlement = async (method: 'cash' | 'card') => {
-    if (!pendingSettlementId) return;
-    setIsSettling(true);
-    try {
-      await updateBooking(pendingSettlementId, { status: 'completed', paymentMethod: method });
-      setPendingSettlementId(null);
-    } catch (err) {
-      alert("Settlement failed. Please try again.");
-    } finally {
-      setIsSettling(false);
-    }
-  };
+  // Data Selectors
+  const awaitingPaymentList = bookings.filter(b => b.status === 'trainer_completed');
+  const completedBookings = bookings.filter(b => b.status === 'completed');
+  const activeBookings = bookings.filter(b => b.status === 'confirmed' || b.status === 'pending');
+  const pendingApps = users.filter(u => u.roles?.includes('trainer_pending'));
+  const activeTrainers = users.filter(u => u.roles?.includes('trainer'));
+  const pendingReviews = reviews.filter(r => !r.isPublished);
 
-  const handleDeleteUserAccount = (userId: string) => {
-    if (!isManagement) return;
-    const user = users.find(u => u.id === userId);
-    if (user?.roles.includes('management')) {
-      alert(language === 'bg' ? 'Акаунти с роля "Management" не могат да бъдат изтривани.' : 'Accounts with the "Management" role cannot be deleted.');
-      return;
-    }
-
-    confirmAction({
-      title: 'Permanently Delete User',
-      message: 'This action will remove the user profile and all associated data. This cannot be undone.',
-      onConfirm: async () => await deleteUser(userId)
-    });
-  };
+  const totalRevenue = useMemo(() => completedBookings.reduce((sum, b) => sum + (Number(b.price) || 0), 0), [completedBookings]);
+  const gymProfit = useMemo(() => completedBookings.reduce((sum, b) => sum + (Number(b.commissionAmount) || 0), 0), [completedBookings]);
 
   const cleanName = (name: string | undefined) => (name || 'Member').split('(')[0].trim();
 
@@ -156,23 +51,25 @@ const AdminPanel: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-16 animate-in fade-in duration-500 text-left">
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
         <div>
           <div className="flex items-center gap-4">
-             <h1 className="text-4xl font-black uppercase italic text-white tracking-tighter leading-none">Management Console</h1>
+             <h1 className="text-4xl font-black uppercase italic text-white tracking-tighter leading-none">Console</h1>
              <button onClick={handleManualRefresh} className={`p-2 rounded-xl bg-white/5 ${isRefreshing ? 'animate-spin text-brand' : 'text-slate-500'}`}><RefreshCw size={18} /></button>
           </div>
-          <p className="text-slate-500 font-black uppercase tracking-[0.3em] text-[10px] mt-2 italic">ClassFit Varna • Mir Stop</p>
+          <p className="text-slate-500 font-black uppercase tracking-[0.3em] text-[10px] mt-2 italic">ClassFit Varna Admin</p>
         </div>
         <div className="flex flex-wrap gap-2 bg-surface p-1.5 rounded-2xl border border-white/5">
             {[
-              { id: 'overview', icon: LayoutDashboard, label: t.tabOverview },
-              { id: 'finance', icon: FileSpreadsheet, label: t.tabAnalysis, badge: awaitingPaymentList.length },
-              { id: 'bookings', icon: ListFilter, label: t.tabBookings },
-              { id: 'trainers', icon: Briefcase, label: t.trainer },
-              { id: 'applications', icon: UserCheck, label: t.tabRecruitment, badge: pendingApps.length },
-              { id: 'users', icon: Users, label: t.tabUsers },
-              { id: 'roles', icon: Key, label: 'Authority' }
+              { id: 'overview', icon: LayoutDashboard, label: 'Overview' },
+              { id: 'finance', icon: FileSpreadsheet, label: 'Finance', badge: awaitingPaymentList.length },
+              { id: 'bookings', icon: ListFilter, label: 'Bookings' },
+              { id: 'trainers', icon: Briefcase, label: 'Trainers' },
+              { id: 'applications', icon: UserCheck, label: 'Recruitment', badge: pendingApps.length },
+              { id: 'users', icon: Users, label: 'Registry' },
+              { id: 'roles', icon: Key, label: 'Authority' },
+              { id: 'reviews', icon: MessageSquare, label: 'Moderation', badge: pendingReviews.length }
             ].map(tab => (
                 <button key={tab.id} onClick={() => setActiveTab(tab.id as any)} className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all ${activeTab === tab.id ? 'bg-brand text-dark' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
                     <tab.icon size={14} /> {tab.label}
@@ -182,127 +79,250 @@ const AdminPanel: React.FC = () => {
         </div>
       </div>
 
-      {activeTab === 'overview' && (
-         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 animate-in slide-in-from-bottom-2 duration-500">
-            <div className="p-8 bg-brand text-dark rounded-[2.5rem] shadow-xl relative overflow-hidden group">
-               <div className="absolute top-4 right-4 opacity-10"><PieChart size={48} /></div>
-               <p className="text-[10px] font-black uppercase mb-4 tracking-widest italic opacity-60">Gross Revenue</p>
-               <p className="text-4xl font-black italic">{totalRevenue.toFixed(2)} <span className="text-xs">BGN</span></p>
-            </div>
-            <div className="p-8 bg-surface border border-white/5 rounded-[2.5rem] relative overflow-hidden group">
-               <div className="absolute top-4 right-4 opacity-5"><DollarSign size={48} /></div>
-               <p className="text-[10px] font-black uppercase mb-4 tracking-widest italic text-slate-500">Coach Payouts</p>
-               <p className="text-4xl font-black italic text-white">{coachPayouts.toFixed(2)} <span className="text-xs">BGN</span></p>
-            </div>
-            <div className="p-8 bg-surface border border-white/5 rounded-[2.5rem] relative overflow-hidden group">
-               <div className="absolute top-4 right-4 opacity-10"><TrendingUp size={48} className="text-brand" /></div>
-               <p className="text-[10px] font-black uppercase mb-4 tracking-widest italic text-slate-500">Net Profit</p>
-               <p className="text-4xl font-black italic text-brand">{gymProfit.toFixed(2)} <span className="text-xs">BGN</span></p>
-            </div>
-            <div className="p-8 bg-surface border border-white/5 rounded-[2.5rem] relative overflow-hidden group">
-               <div className="absolute top-4 right-4 opacity-10"><Wallet size={48} className="text-yellow-500" /></div>
-               <p className="text-[10px] font-black uppercase mb-4 tracking-widest italic text-slate-500">Awaiting Settlement</p>
-               <p className="text-4xl font-black italic text-yellow-500">{awaitingPaymentList.length}</p>
-            </div>
-         </div>
-      )}
+      {/* Tabs Content */}
+      <div className="space-y-8 animate-in slide-in-from-bottom-2 duration-500">
+        
+        {activeTab === 'overview' && (
+           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="p-8 bg-brand text-dark rounded-[2.5rem] shadow-xl relative overflow-hidden group">
+                 <div className="absolute top-4 right-4 opacity-10"><PieChart size={48} /></div>
+                 <p className="text-[10px] font-black uppercase mb-4 tracking-widest italic opacity-60">Gross Revenue</p>
+                 <p className="text-4xl font-black italic">{totalRevenue.toFixed(2)} <span className="text-xs">BGN</span></p>
+              </div>
+              <div className="p-8 bg-surface border border-white/5 rounded-[2.5rem] relative overflow-hidden">
+                 <div className="absolute top-4 right-4 opacity-10"><TrendingUp size={48} className="text-brand" /></div>
+                 <p className="text-[10px] font-black uppercase mb-4 tracking-widest italic text-slate-500">Net Profit</p>
+                 <p className="text-4xl font-black italic text-brand">{gymProfit.toFixed(2)} <span className="text-xs">BGN</span></p>
+              </div>
+              <div className="p-8 bg-surface border border-white/5 rounded-[2.5rem] relative overflow-hidden">
+                 <div className="absolute top-4 right-4 opacity-5"><Wallet size={48} className="text-yellow-500" /></div>
+                 <p className="text-[10px] font-black uppercase mb-4 tracking-widest italic text-slate-500">Unsettled Sessions</p>
+                 <p className="text-4xl font-black italic text-yellow-500">{awaitingPaymentList.length}</p>
+              </div>
+              <div className="p-8 bg-surface border border-white/5 rounded-[2.5rem] relative overflow-hidden">
+                 <div className="absolute top-4 right-4 opacity-5"><Users size={48} className="text-blue-500" /></div>
+                 <p className="text-[10px] font-black uppercase mb-4 tracking-widest italic text-slate-500">Registered Members</p>
+                 <p className="text-4xl font-black italic text-white">{users.length}</p>
+              </div>
+           </div>
+        )}
 
-      {activeTab === 'finance' && (
-         <div className="space-y-8 animate-in slide-in-from-bottom-2 duration-500">
-            <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 bg-yellow-500/10 text-yellow-500 rounded-2xl flex items-center justify-center"><Wallet size={24} /></div>
-                <div><h3 className="text-2xl font-black uppercase italic text-white tracking-tighter leading-none">Awaiting Settlement</h3><p className="text-[9px] font-black uppercase tracking-widest text-slate-500 italic mt-1">Confirmed Coach Sessions Pending Payment</p></div>
-            </div>
+        {activeTab === 'finance' && (
+          <div className="space-y-12">
             <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-hidden">
+               <div className="px-8 py-6 bg-dark/30 border-b border-white/5 flex items-center justify-between">
+                  <h3 className="text-lg font-black uppercase italic text-white flex items-center gap-3"><Wallet className="text-brand" /> Awaiting Settlement</h3>
+               </div>
                <table className="w-full">
-                  <thead className="bg-dark/30 text-[9px] font-black uppercase text-slate-500">
-                     <tr><th className="px-8 py-5">Date & Time</th><th className="px-8 py-5">Coach Professional</th><th className="px-8 py-5">Member</th><th className="px-8 py-5 text-right">Fee</th><th className="px-8 py-5 text-right">Settlement</th></tr>
+                  <thead className="bg-dark/10 text-[9px] font-black uppercase text-slate-500">
+                     <tr><th className="px-8 py-5 text-left">Session</th><th className="px-8 py-5 text-left">Coach</th><th className="px-8 py-5 text-left">Member</th><th className="px-8 py-5 text-right">Fee</th><th className="px-8 py-5 text-right">Action</th></tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
-                     {awaitingPaymentList.length === 0 ? <tr><td colSpan={5} className="px-8 py-20 text-center text-slate-500 font-bold italic">No pending settlements in the queue.</td></tr> : awaitingPaymentList.map(b => (
-                        <tr key={b.id} className="hover:bg-white/5 transition-colors">
-                           <td className="px-8 py-6 text-white font-bold">{b.date} <span className="text-[10px] text-slate-500 ml-2">{b.time}</span></td>
-                           <td className="px-8 py-6 font-black uppercase italic text-white">{cleanName(users.find(u => u.id === b.trainerId)?.name)}</td>
+                     {awaitingPaymentList.length === 0 ? <tr><td colSpan={5} className="px-8 py-20 text-center text-slate-500 font-bold italic">No pending payments.</td></tr> : awaitingPaymentList.map(b => (
+                        <tr key={b.id} className="hover:bg-white/5 transition-colors text-xs">
+                           <td className="px-8 py-6 font-bold text-white">{b.date} <span className="text-[10px] text-slate-500 ml-2">{b.time}</span></td>
+                           <td className="px-8 py-6 uppercase italic text-slate-300">{cleanName(users.find(u => u.id === b.trainerId)?.name)}</td>
                            <td className="px-8 py-6 text-slate-400">{b.customerName}</td>
                            <td className="px-8 py-6 text-right font-black text-brand">{b.price.toFixed(2)}</td>
-                           <td className="px-8 py-6 text-right"><button onClick={() => setPendingSettlementId(b.id)} className="px-4 py-2 bg-brand text-dark rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-lg shadow-brand/10 flex items-center gap-2"><Check size={14} /> Confirm Payment</button></td>
+                           <td className="px-8 py-6 text-right">
+                              <button onClick={() => setPendingSettlementId(b.id)} className="px-4 py-2 bg-brand text-dark rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-white transition-all">Confirm Payment</button>
+                           </td>
                         </tr>
                      ))}
                   </tbody>
                </table>
             </div>
-         </div>
-      )}
-
-      {activeTab === 'users' && (
-         <div className="animate-in slide-in-from-bottom-2 duration-500 pb-32">
-            <div className="flex items-center gap-4 mb-8">
-                <div className="w-12 h-12 bg-brand/10 text-brand rounded-2xl flex items-center justify-center"><Users size={24} /></div>
-                <div><h3 className="text-2xl font-black uppercase italic text-white tracking-tighter leading-none">User Directory</h3><p className="text-[9px] font-black uppercase tracking-widest text-slate-500 italic mt-1">Registry Access & Core Identities</p></div>
+            <div className="bg-surface/50 rounded-[2.5rem] border border-white/5 overflow-hidden opacity-80">
+               <div className="px-8 py-4 bg-dark/20 border-b border-white/5"><h3 className="text-sm font-black uppercase italic text-slate-400">Transaction History</h3></div>
+               <table className="w-full text-[10px]">
+                  <tbody className="divide-y divide-white/5">
+                     {completedBookings.slice(0, 10).map(b => (
+                        <tr key={b.id} className="text-slate-400">
+                           <td className="px-8 py-4">{b.date}</td>
+                           <td className="px-8 py-4 font-bold text-white uppercase italic">{cleanName(users.find(u => u.id === b.trainerId)?.name)}</td>
+                           <td className="px-8 py-4 text-right font-black">{b.price.toFixed(2)} BGN</td>
+                           <td className="px-8 py-4 text-right uppercase italic text-[8px]">{b.paymentMethod || 'cash'}</td>
+                        </tr>
+                     ))}
+                  </tbody>
+               </table>
             </div>
-            <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-visible">
-               <table className="w-full">
+          </div>
+        )}
+
+        {activeTab === 'bookings' && (
+           <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-hidden">
+              <table className="w-full">
                   <thead className="bg-dark/30 text-[9px] font-black uppercase text-slate-500">
-                     <tr><th className="px-8 py-5 text-left">Ref ID</th><th className="px-8 py-5 text-left">Identity</th><th className="px-8 py-5 text-left">Joined</th><th className="px-8 py-5 text-right">Action</th></tr>
+                     <tr><th className="px-8 py-5 text-left">Session</th><th className="px-8 py-5 text-left">Client</th><th className="px-8 py-5 text-left">Coach</th><th className="px-8 py-5 text-right">Status</th></tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
-                     {users.map(user => (
-                        <tr key={user.id} className="hover:bg-white/5 transition-colors">
+                     {activeBookings.length === 0 ? <tr><td colSpan={4} className="px-8 py-20 text-center text-slate-500 italic">No active operations.</td></tr> : activeBookings.map(b => (
+                        <tr key={b.id} className="hover:bg-white/5 transition-colors text-xs text-white">
+                           <td className="px-8 py-6"><b>{b.date}</b> @ {b.time}</td>
+                           <td className="px-8 py-6 font-bold italic uppercase">{b.customerName}</td>
+                           <td className="px-8 py-6 text-slate-400 italic">{cleanName(users.find(u => u.id === b.trainerId)?.name)}</td>
+                           <td className="px-8 py-6 text-right"><span className={`px-2 py-1 rounded text-[8px] font-black uppercase ${b.status === 'confirmed' ? 'bg-green-500/10 text-green-500' : 'bg-yellow-500/10 text-yellow-500'}`}>{b.status}</span></td>
+                        </tr>
+                     ))}
+                  </tbody>
+              </table>
+           </div>
+        )}
+
+        {activeTab === 'trainers' && ( activeTrainers.length === 0 ? <p className="text-center py-20 text-slate-500">No active coaches.</p> :
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {activeTrainers.map(t => (
+                 <div key={t.id} className="p-8 bg-surface rounded-[3rem] border border-white/5 relative group">
+                    <div className="flex items-center gap-4 mb-6">
+                       <img src={t.image || DEFAULT_PROFILE_IMAGE} className="w-16 h-16 rounded-2xl object-cover grayscale" />
+                       <div>
+                          <h4 className="text-xl font-black uppercase italic text-white leading-none mb-1">{cleanName(t.name)}</h4>
+                          <p className="text-[9px] font-black uppercase tracking-widest text-brand">{t.name.match(/\((.*)\)/)?.[1] || 'Coach'}</p>
+                       </div>
+                    </div>
+                    <div className="space-y-4 pt-6 border-t border-white/5">
+                       <div className="flex justify-between items-center text-[10px] font-bold">
+                          <span className="text-slate-500 uppercase">Commision Rate</span>
+                          <span className="text-white bg-white/5 px-3 py-1 rounded-lg">{t.commissionRate || 25}%</span>
+                       </div>
+                       <div className="flex justify-between items-center text-[10px] font-bold">
+                          <span className="text-slate-500 uppercase">Registered ID</span>
+                          <div className="flex items-center gap-2">
+                             <span className="text-slate-600 font-mono">{t.id.substring(0,8)}...</span>
+                             <button onClick={() => handleCopy(t.id)} className="p-1.5 bg-white/5 rounded-lg text-slate-500 hover:text-white transition-colors">
+                                {copiedId === t.id ? <Check size={12} /> : <Copy size={12} />}
+                             </button>
+                          </div>
+                       </div>
+                    </div>
+                    <button onClick={() => setUserForRoles(t)} className="mt-8 w-full py-4 bg-white/5 hover:bg-brand hover:text-dark text-slate-500 text-[10px] font-black uppercase rounded-2xl border border-white/10 transition-all flex items-center justify-center gap-2">
+                       <Settings2 size={14} /> Identity Settings
+                    </button>
+                 </div>
+              ))}
+           </div>
+        )}
+
+        {activeTab === 'applications' && ( pendingApps.length === 0 ? <p className="text-center py-20 text-slate-500 italic">Queue is clear.</p> :
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {pendingApps.map(app => (
+                 <div key={app.id} className="p-10 bg-surface rounded-[3rem] border border-white/5 relative overflow-hidden">
+                    <div className="flex items-center gap-6 mb-8">
+                       <div className="w-16 h-16 rounded-[2rem] bg-dark flex items-center justify-center text-2xl font-black text-brand">{app.name.charAt(0)}</div>
+                       <div>
+                          <h4 className="text-2xl font-black uppercase italic text-white leading-none mb-2">{cleanName(app.name)}</h4>
+                          <p className="text-[10px] font-black tracking-widest text-brand">{app.name.match(/\((.*)\)/)?.[1] || 'Coach'}</p>
+                       </div>
+                    </div>
+                    <div className="space-y-4 mb-10">
+                       <p className="text-xs text-slate-400 italic">"{app.bio}"</p>
+                       <div className="flex gap-4 text-[9px] font-black uppercase tracking-widest text-slate-600">
+                          <span>{app.email}</span> • <span>{app.phone}</span>
+                       </div>
+                    </div>
+                    <div className="flex gap-4">
+                       <button onClick={() => setUserForRoles(app)} className="flex-1 py-4 bg-brand text-dark rounded-2xl font-black uppercase text-xs hover:bg-white transition-all shadow-xl">Process Hiring</button>
+                       <button onClick={() => confirmAction({ title: 'Reject', message: 'Reject this application?', onConfirm: () => updateUser(app.id, { roles: ['user'] }) })} className="px-6 py-4 bg-white/5 text-slate-500 rounded-2xl font-black uppercase text-xs hover:bg-red-500 hover:text-white transition-all"><Ban size={18} /></button>
+                    </div>
+                 </div>
+              ))}
+           </div>
+        )}
+
+        {activeTab === 'users' && (
+           <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-hidden">
+              <table className="w-full">
+                  <thead className="bg-dark/30 text-[9px] font-black uppercase text-slate-500">
+                     <tr><th className="px-8 py-5 text-left">Identity</th><th className="px-8 py-5 text-left">User ID</th><th className="px-8 py-5 text-left">Joined</th><th className="px-8 py-5 text-right">Management</th></tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                     {users.map(u => (
+                        <tr key={u.id} className="hover:bg-white/5 transition-colors text-xs">
                            <td className="px-8 py-6">
-                              <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-mono text-slate-600 bg-dark/50 px-2 py-1 rounded border border-white/5" title={user.id}>{user.id.substring(0, 8)}...</span>
-                                <button onClick={() => handleCopy(user.id)} className="p-1.5 bg-white/5 hover:bg-brand hover:text-dark rounded-lg text-slate-500 transition-all border border-white/5">{copiedId === user.id ? <CheckSquare size={12} /> : <Copy size={12} />}</button>
+                              <div className="flex items-center gap-4">
+                                 <img src={u.image || DEFAULT_PROFILE_IMAGE} className="w-10 h-10 rounded-xl grayscale" />
+                                 <div>
+                                    <p className="font-black text-white uppercase italic leading-none mb-1">{cleanName(u.name)}</p>
+                                    <p className="text-[10px] text-slate-500">{u.email}</p>
+                                 </div>
                               </div>
                            </td>
-                           <td className="px-8 py-6"><div className="flex items-center gap-4"><div className="w-10 h-10 rounded-xl bg-dark border border-white/10 flex items-center justify-center text-brand font-black overflow-hidden shrink-0"><img src={user.image || DEFAULT_PROFILE_IMAGE} className="w-full h-full object-cover" /></div><div><p className="text-white font-black uppercase italic text-sm leading-none mb-1">{cleanName(user.name)}</p><p className="text-[10px] text-slate-500 font-medium">{user.email}</p></div></div></td>
-                           <td className="px-8 py-6 text-slate-400 text-xs font-bold uppercase tracking-widest">{new Date(user.joinedDate).toLocaleDateString()}</td>
-                           <td className="px-8 py-6 text-right">{!user.roles.includes('management') && isManagement && <button onClick={() => handleDeleteUserAccount(user.id)} className="p-2 text-slate-600 hover:text-red-500 transition-colors"><Trash2 size={16} /></button>}</td>
+                           <td className="px-8 py-6">
+                              <div className="flex items-center gap-2">
+                                 <span className="text-[10px] font-mono text-slate-600 bg-dark/50 px-2 py-1 rounded border border-white/5">{u.id.substring(0,12)}...</span>
+                                 <button onClick={() => handleCopy(u.id)} className="p-1.5 bg-white/5 rounded-lg text-slate-500 hover:text-white transition-colors">{copiedId === u.id ? <Check size={12} /> : <Copy size={12} />}</button>
+                              </div>
+                           </td>
+                           <td className="px-8 py-6 text-slate-400">{new Date(u.joinedDate).toLocaleDateString()}</td>
+                           <td className="px-8 py-6 text-right">
+                              {!u.roles.includes('management') && isManagement && <button onClick={() => confirmAction({ title: 'Delete Account', message: `Remove ${u.name}?`, onConfirm: () => deleteUser(u.id) })} className="p-2 text-slate-700 hover:text-red-500 transition-colors"><Trash2 size={16}/></button>}
+                           </td>
                         </tr>
                      ))}
                   </tbody>
-               </table>
-            </div>
-         </div>
-      )}
+              </table>
+           </div>
+        )}
 
-      {activeTab === 'roles' && (
-         <div className="animate-in slide-in-from-bottom-2 duration-500 pb-32">
-            <div className="flex items-center gap-4 mb-8">
-                <div className="w-12 h-12 bg-purple-500/10 text-purple-400 rounded-2xl flex items-center justify-center"><Key size={24} /></div>
-                <div><h3 className="text-2xl font-black uppercase italic text-white tracking-tighter leading-none">Authority Management</h3><p className="text-[9px] font-black uppercase tracking-widest text-slate-500 italic mt-1">Safe Role Assignment & Access Delegation</p></div>
-            </div>
-            <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-visible">
-               <table className="w-full">
+        {activeTab === 'roles' && (
+           <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-hidden">
+              <table className="w-full">
                   <thead className="bg-dark/30 text-[9px] font-black uppercase text-slate-500">
-                     <tr><th className="px-8 py-5 text-left">USER ID</th><th className="px-8 py-5 text-left">Username</th><th className="px-8 py-5 text-left">Active Authority</th><th className="px-8 py-5 text-right">Action</th></tr>
+                     <tr><th className="px-8 py-5 text-left">Username</th><th className="px-8 py-5 text-left">Current Authority</th><th className="px-8 py-5 text-right">Action</th></tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
-                     {users.map(user => (
-                        <tr key={user.id} className="hover:bg-white/5 transition-colors">
-                           <td className="px-8 py-6"><div className="flex items-center gap-2"><span className="text-[10px] font-mono text-slate-400 bg-dark/50 px-2 py-1 rounded border border-white/5">{user.id.substring(0, 12)}...</span><button onClick={() => handleCopy(user.id)} className="p-1.5 bg-white/5 hover:bg-brand hover:text-dark rounded-lg text-slate-500 transition-all border border-white/5">{copiedId === user.id ? <CheckSquare size={12} /> : <Copy size={12} />}</button></div></td>
-                           <td className="px-8 py-6"><p className="text-white font-black uppercase italic text-xs leading-none">{cleanName(user.name)}</p><p className="text-[8px] text-slate-600 font-bold uppercase tracking-widest mt-1">{user.email}</p></td>
-                           <td className="px-8 py-6"><div className="flex flex-wrap gap-1">{user.roles.map(role => (<span key={role} className="px-2 py-0.5 bg-white/5 rounded text-[8px] font-black uppercase italic tracking-tighter text-slate-400">{role}</span>))}</div></td>
-                           <td className="px-8 py-6 text-right"><button onClick={() => setUserForRoles(user)} className="px-4 py-2 bg-white/5 hover:bg-brand hover:text-dark text-slate-400 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all border border-white/5 flex items-center gap-2 ml-auto"><Settings2 size={14} strokeWidth={3} /> Change Roles</button></td>
+                     {users.map(u => (
+                        <tr key={u.id} className="hover:bg-white/5 transition-colors">
+                           <td className="px-8 py-6"><p className="text-white font-black uppercase italic text-xs leading-none">{cleanName(u.name)}</p><p className="text-[8px] text-slate-600 font-bold uppercase tracking-widest mt-1">{u.email}</p></td>
+                           <td className="px-8 py-6"><div className="flex flex-wrap gap-1">{u.roles.map(r => (<span key={r} className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[8px] font-black uppercase italic tracking-tighter text-slate-400">{r}</span>))}</div></td>
+                           <td className="px-8 py-6 text-right"><button onClick={() => setUserForRoles(u)} className="px-4 py-2 bg-white/5 hover:bg-brand hover:text-dark text-slate-400 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all border border-white/5 flex items-center gap-2 ml-auto"><Settings2 size={14} /> Change Roles</button></td>
                         </tr>
                      ))}
                   </tbody>
-               </table>
-            </div>
-         </div>
-      )}
+              </table>
+           </div>
+        )}
 
+        {activeTab === 'reviews' && ( pendingReviews.length === 0 ? <p className="text-center py-20 text-slate-500">No reviews pending moderation.</p> :
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {pendingReviews.map(r => (
+                 <div key={r.id} className="p-8 bg-surface rounded-[3rem] border border-white/5">
+                    <div className="flex items-center justify-between mb-6">
+                       <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-brand text-dark rounded-xl flex items-center justify-center font-black">{r.avatar}</div>
+                          <div>
+                             <h4 className="text-xs font-black uppercase text-white italic">{r.author}</h4>
+                             <p className="text-[9px] text-slate-500">Coach: {cleanName(users.find(u => u.id === r.trainerId)?.name)}</p>
+                          </div>
+                       </div>
+                       <div className="flex text-brand gap-0.5">{[...Array(r.rating)].map((_, i) => <Star key={i} size={10} fill="currentColor" />)}</div>
+                    </div>
+                    <p className="text-xs text-slate-400 italic mb-10 leading-relaxed">"{r.text}"</p>
+                    <div className="flex gap-4">
+                       <button onClick={() => updateReview(r.id, { isPublished: true })} className="flex-1 py-4 bg-brand text-dark rounded-2xl font-black uppercase text-[10px] shadow-lg">Approve & Publish</button>
+                       <button onClick={() => deleteReview(r.id)} className="px-6 py-4 bg-white/5 text-slate-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all"><Trash size={18} /></button>
+                    </div>
+                 </div>
+              ))}
+           </div>
+        )}
+
+      </div>
+
+      {/* Overlays */}
       {pendingSettlementId && (
          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-dark/95 backdrop-blur-xl animate-in fade-in duration-300">
             <div className="bg-surface border border-white/10 rounded-[3rem] p-12 w-full max-w-md shadow-2xl relative text-center">
                <div className="absolute top-0 left-0 w-full h-1 bg-brand"></div>
-               <div className="w-20 h-20 bg-brand/10 text-brand rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-xl shadow-brand/5">{isSettling ? <Loader2 size={32} className="animate-spin" /> : <DollarSign size={32} />}</div>
-               <h2 className="text-2xl font-black uppercase italic text-white tracking-tighter mb-2">Finalize Settlement</h2>
-               <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest italic mb-10">Select customer's payment method</p>
+               <div className="w-20 h-20 bg-brand/10 text-brand rounded-[2rem] flex items-center justify-center mx-auto mb-8">{isSettling ? <Loader2 size={32} className="animate-spin" /> : <DollarSign size={32} />}</div>
+               <h2 className="text-2xl font-black uppercase italic text-white mb-2">Finalize Settlement</h2>
+               <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest italic mb-10">Select Payment Method</p>
                <div className="grid grid-cols-2 gap-4">
-                  <button disabled={isSettling} onClick={() => handleExecuteSettlement('cash')} className="flex flex-col items-center gap-4 p-8 bg-white/5 border border-white/5 rounded-3xl hover:border-brand hover:bg-brand/5 transition-all group disabled:opacity-50"><div className="w-12 h-12 rounded-2xl bg-brand/10 text-brand flex items-center justify-center group-hover:bg-brand group-hover:text-dark transition-all"><Banknote size={24} /></div><span className="text-[11px] font-black uppercase tracking-widest text-slate-300 group-hover:text-white">Cash</span></button>
-                  <button disabled={isSettling} onClick={() => handleExecuteSettlement('card')} className="flex flex-col items-center gap-4 p-8 bg-white/5 border border-white/5 rounded-3xl hover:border-brand hover:bg-brand/5 transition-all group disabled:opacity-50"><div className="w-12 h-12 rounded-2xl bg-brand/10 text-brand flex items-center justify-center group-hover:bg-brand group-hover:text-dark transition-all"><CreditCard size={24} /></div><span className="text-[11px] font-black uppercase tracking-widest text-slate-300 group-hover:text-white">Card</span></button>
+                  <button onClick={async () => { setIsSettling(true); await updateBooking(pendingSettlementId, { status: 'completed', paymentMethod: 'cash' }); setPendingSettlementId(null); setIsSettling(false); }} className="p-8 bg-white/5 rounded-3xl hover:bg-brand/5 border border-white/5 flex flex-col items-center gap-4"><Banknote className="text-brand" size={24} /><span className="text-[11px] font-black uppercase text-white">Cash</span></button>
+                  <button onClick={async () => { setIsSettling(true); await updateBooking(pendingSettlementId, { status: 'completed', paymentMethod: 'card' }); setPendingSettlementId(null); setIsSettling(false); }} className="p-8 bg-white/5 rounded-3xl hover:bg-brand/5 border border-white/5 flex flex-col items-center gap-4"><CreditCard className="text-brand" size={24} /><span className="text-[11px] font-black uppercase text-white">Card</span></button>
                </div>
-               <button disabled={isSettling} onClick={() => setPendingSettlementId(null)} className="mt-10 text-[9px] font-black uppercase tracking-widest text-slate-600 hover:text-white transition-all disabled:opacity-0">Cancel Process</button>
+               <button onClick={() => setPendingSettlementId(null)} className="mt-10 text-[9px] font-black uppercase tracking-widest text-slate-600 hover:text-white transition-all">Cancel</button>
             </div>
          </div>
       )}
@@ -314,7 +334,6 @@ const AdminPanel: React.FC = () => {
         language={language}
         isManagement={isManagement}
       />
-      <TransactionDossier booking={viewingDossier} onClose={() => setViewingDossier(null)} users={users} />
     </div>
   );
 };
