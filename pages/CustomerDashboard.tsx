@@ -192,6 +192,7 @@ const CustomerDashboard: React.FC = () => {
           onUpdate={async (uid, updates) => await updateUser(uid, updates)} 
           language={language} 
           isManagement={isManagement} 
+          isSelf={true}
         />
       )}
       {bookingToReview && <ReviewModal booking={bookingToReview} onClose={() => setBookingToReview(null)} onSubmit={handleReviewSubmit} />}
