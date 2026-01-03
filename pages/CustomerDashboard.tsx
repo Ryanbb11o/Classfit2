@@ -1,11 +1,12 @@
 
 import React, { useState, useMemo } from 'react';
-import { Calendar, Clock, CheckCircle, Timer, XCircle, Trash2, CheckCircle2, User as UserIcon, Mail, CalendarPlus, Phone, MapPin, ChevronRight, LogOut, Dumbbell, Activity, AlertCircle, Briefcase, Loader2, X, MapPinned, CreditCard, Banknote, Timer as ClockIcon, Star, CheckSquare, Sparkles, Lightbulb, Info } from 'lucide-react';
+import { Calendar, Clock, CheckCircle, Timer, XCircle, Trash2, CheckCircle2, User as UserIcon, Mail, CalendarPlus, Phone, MapPin, ChevronRight, LogOut, Dumbbell, Activity, AlertCircle, Briefcase, Loader2, X, MapPinned, CreditCard, Banknote, Timer as ClockIcon, Star, CheckSquare, Sparkles, Lightbulb, Info, Settings2 } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, getTrainers, DEFAULT_PROFILE_IMAGE, getTrainerReviews } from '../constants';
 import { useNavigate } from 'react-router-dom';
 import { Trainer, Booking } from '../types';
 import { GoogleGenAI, Type } from "@google/genai";
+import RoleManagementModal from '../components/RoleManagementModal';
 
 const ReviewModal: React.FC<{ 
   booking: Booking | null; 
@@ -28,7 +29,6 @@ const ReviewModal: React.FC<{
     const apiKey = process.env.API_KEY;
     if (!apiKey) {
       console.error("AI Error: API_KEY is missing.");
-      alert("AI Enhancement requires an API Key. Please check the Vercel environment variables.");
       return;
     }
 
@@ -66,7 +66,6 @@ const ReviewModal: React.FC<{
       }
     } catch (error: any) {
       console.error("AI Enhancement failed:", error);
-      alert("AI Enhancement currently unavailable.");
     } finally {
       setIsEnhancing(false);
     }
@@ -79,7 +78,6 @@ const ReviewModal: React.FC<{
       await onSubmit(booking.id, rating, comment, isAiEnhanced, booking.trainerId);
     } catch (err) {
       console.error("Review Submit Error:", err);
-      alert("Failed to save review.");
     } finally {
       setIsSubmitting(false);
     }
@@ -89,40 +87,21 @@ const ReviewModal: React.FC<{
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-dark/95 backdrop-blur-md animate-in fade-in duration-300">
        <div className={`bg-surface rounded-[2.5rem] border border-white/10 w-full shadow-2xl relative animate-in zoom-in-95 duration-300 overflow-hidden flex flex-col md:flex-row transition-all duration-500 ${aiInsights ? 'max-w-4xl' : 'max-w-md'}`}>
           <div className="absolute top-0 left-0 w-full h-1 bg-brand"></div>
-          
           <div className="flex-1 p-10 text-center">
-            <button 
-              onClick={onClose}
-              className="absolute top-6 right-6 p-2 bg-white/5 rounded-full text-slate-400 hover:text-white transition-colors md:hidden"
-            >
-              <X size={20} />
-            </button>
-
+            <button onClick={onClose} className="absolute top-6 right-6 p-2 bg-white/5 rounded-full text-slate-400 hover:text-white transition-colors md:hidden"><X size={20} /></button>
             <div className="mb-8">
-               <div className="w-16 h-16 bg-brand text-dark rounded-[1.5rem] flex items-center justify-center mx-auto mb-4 shadow-xl shadow-brand/20">
-                  <Star size={28} className="fill-dark" />
-               </div>
+               <div className="w-16 h-16 bg-brand text-dark rounded-[1.5rem] flex items-center justify-center mx-auto mb-4 shadow-xl shadow-brand/20"><Star size={28} className="fill-dark" /></div>
                <h2 className="text-2xl font-black uppercase italic text-white mb-1 leading-none tracking-tighter">Review Your Coach</h2>
                <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest italic">Session: {booking.date}</p>
             </div>
-
             <form onSubmit={handleSubmit} className="space-y-6 text-left">
                <div className="flex justify-center gap-2">
                   {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      type="button"
-                      onClick={() => setRating(star)}
-                      className="p-1 transition-transform hover:scale-125 focus:outline-none"
-                    >
-                      <Star 
-                        size={32} 
-                        className={`${star <= rating ? 'text-brand fill-brand' : 'text-slate-700'}`} 
-                      />
+                    <button key={star} type="button" onClick={() => setRating(star)} className="p-1 transition-transform hover:scale-125 focus:outline-none">
+                      <Star size={32} className={`${star <= rating ? 'text-brand fill-brand' : 'text-slate-700'}`} />
                     </button>
                   ))}
                </div>
-
                <div className="space-y-2 relative">
                   <div className="flex items-center justify-between mb-1 px-2">
                      <label className="text-[9px] font-black uppercase tracking-widest text-slate-500">Your Feedback</label>
@@ -131,69 +110,40 @@ const ReviewModal: React.FC<{
                         onClick={handleAiEnhance}
                         disabled={isEnhancing || !comment.trim()}
                         className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest transition-all ${
-                          isAiEnhanced 
-                            ? 'bg-brand/20 text-brand border border-brand/30' 
-                            : 'bg-brand/10 text-brand border border-brand/20 hover:bg-brand hover:text-dark disabled:opacity-50'
+                          isAiEnhanced ? 'bg-brand/20 text-brand border border-brand/30' : 'bg-brand/10 text-brand border border-brand/20 hover:bg-brand hover:text-dark disabled:opacity-50'
                         }`}
                      >
                         {isEnhancing ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />}
                         {isAiEnhanced ? 'Re-Enhance' : 'AI Enhance'}
                      </button>
                   </div>
-                  <textarea 
-                    rows={4}
-                    value={comment}
-                    onChange={(e) => {
-                      setComment(e.target.value);
-                      if (isAiEnhanced) setIsAiEnhanced(false);
-                    }}
-                    placeholder="Tell us how it went..."
-                    className="w-full bg-dark/50 border border-white/5 rounded-2xl px-5 py-4 text-white font-medium italic outline-none focus:border-brand resize-none placeholder-slate-600 transition-all text-sm"
-                  />
-                  
-                  {/* MODERATION WARNING */}
+                  <textarea rows={4} value={comment} onChange={(e) => { setComment(e.target.value); if (isAiEnhanced) setIsAiEnhanced(false); }} placeholder="Tell us how it went..." className="w-full bg-dark/50 border border-white/5 rounded-2xl px-5 py-4 text-white font-medium italic outline-none focus:border-brand resize-none placeholder-slate-600 transition-all text-sm" />
                   <div className="flex items-start gap-2 px-3 py-3 bg-red-500/10 rounded-xl border border-red-500/20 mt-4">
                      <AlertCircle size={14} className="text-red-500 shrink-0 mt-0.5" />
-                     <p className="text-[10px] font-bold text-red-500 uppercase tracking-tight leading-normal italic">
-                        {language === 'bg' 
-                          ? 'Вашият отзив ще бъде прегледан от администратор преди публикуване.' 
-                          : 'Your review will be checked by an administrator before appearing on the public page.'}
-                     </p>
+                     <p className="text-[10px] font-bold text-red-500 uppercase tracking-tight leading-normal italic">{language === 'bg' ? 'Вашият отзив ще бъде прегледан от администратор преди публикуване.' : 'Your review will be checked by an administrator before appearing on the public page.'}</p>
                   </div>
                </div>
-               
-               <button 
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full py-5 bg-brand text-dark rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-white transition-all flex items-center justify-center gap-2 shadow-xl shadow-brand/10"
-               >
-                  {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : 'Submit for Moderation'}
-               </button>
+               <button type="submit" disabled={isSubmitting} className="w-full py-5 bg-brand text-dark rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-white transition-all flex items-center justify-center gap-2 shadow-xl shadow-brand/10">{isSubmitting ? <Loader2 className="animate-spin" size={16} /> : 'Submit for Moderation'}</button>
             </form>
           </div>
-
-          <button 
-            onClick={onClose}
-            className="hidden md:block absolute top-6 right-6 p-2 bg-white/5 rounded-full text-slate-400 hover:text-white transition-colors"
-          >
-             <X size={20} />
-          </button>
+          <button onClick={onClose} className="hidden md:block absolute top-6 right-6 p-2 bg-white/5 rounded-full text-slate-400 hover:text-white transition-colors"><X size={20} /></button>
        </div>
     </div>
   );
 };
 
 const CustomerDashboard: React.FC = () => {
-  const { language, bookings, updateBooking, deleteBooking, currentUser, logout, users, addReview, refreshData, confirmAction } = useAppContext();
+  const { language, bookings, updateBooking, deleteBooking, currentUser, logout, users, addReview, refreshData, confirmAction, isManagement, updateUser } = useAppContext();
   const t = TRANSLATIONS[language];
   const navigate = useNavigate();
 
   const [bookingToReview, setBookingToReview] = useState<Booking | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const allTrainers = useMemo(() => {
     const staticTrainers = getTrainers(language);
     const dynamicTrainers: Trainer[] = users
-      .filter(u => u.role === 'trainer')
+      .filter(u => u.roles.includes('trainer'))
       .map(u => {
         const match = u.name.match(/^(.*)\s\((.*)\)$/);
         const displayName = match ? match[1] : u.name;
@@ -242,26 +192,12 @@ const CustomerDashboard: React.FC = () => {
 
   const handleReviewSubmit = async (id: string, rating: number, text: string, isAi: boolean, trainerId: string) => {
     try {
-        await addReview({
-          trainerId,
-          author: currentUser.name.split('(')[0].trim(),
-          rating,
-          text,
-          isAiEnhanced: isAi,
-          bookingId: id
-        });
-
-        await updateBooking(id, { 
-          status: 'trainer_completed',
-          hasBeenReviewed: true
-        });
-
+        await addReview({ trainerId, author: currentUser.name.split('(')[0].trim(), rating, text, isAiEnhanced: isAi, bookingId: id });
+        await updateBooking(id, { status: 'trainer_completed', hasBeenReviewed: true });
         setBookingToReview(null);
-        alert(language === 'bg' ? 'Благодарим! Отзивът ви е изпратен за одобрение.' : 'Thank you! Your review has been sent for approval.');
         await refreshData();
     } catch (err) {
         console.error("Review failed:", err);
-        alert("Could not submit review.");
     }
   };
 
@@ -278,8 +214,16 @@ const CustomerDashboard: React.FC = () => {
                 <h1 className="text-3xl font-black uppercase italic text-white leading-none mb-2 tracking-tighter">{currentUser.name.split('(')[0].trim()}</h1>
                 <div className="flex flex-wrap gap-2 justify-center md:justify-start">
                    <span className="text-brand bg-brand/10 text-[9px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-full border border-brand/20">
-                      {currentUser.role.replace('_', ' ').toUpperCase()}
+                      {currentUser.roles[0]?.replace('_', ' ').toUpperCase()}
                    </span>
+                   {isManagement && (
+                      <button 
+                        onClick={() => setShowEditModal(true)}
+                        className="bg-white/5 hover:bg-brand hover:text-dark text-white text-[9px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-full border border-white/10 transition-all flex items-center gap-1.5"
+                      >
+                         <Settings2 size={10} /> Edit Identity
+                      </button>
+                   )}
                 </div>
             </div>
          </div>
@@ -303,7 +247,6 @@ const CustomerDashboard: React.FC = () => {
                 const isConfirmed = booking.status === 'confirmed';
                 const isCompleted = booking.status === 'completed';
                 const isAwaitingPay = booking.status === 'trainer_completed';
-                
                 return (
                     <div key={booking.id} className="bg-surface/50 backdrop-blur-md border border-white/5 rounded-[3rem] p-8 hover:border-brand/40 transition-all group overflow-hidden">
                         <div className="flex flex-col lg:flex-row gap-8 lg:items-center">
@@ -316,68 +259,25 @@ const CustomerDashboard: React.FC = () => {
                                     <p className="text-[9px] text-brand font-black uppercase tracking-widest">{trainer?.specialty}</p>
                                 </div>
                             </div>
-
                             <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-6 py-6 lg:py-0 border-y lg:border-y-0 lg:border-x border-white/5 lg:px-8">
-                                <div className="space-y-4">
-                                   <div className="flex items-center gap-3">
-                                      <Calendar className="text-brand" size={16} />
-                                      <span className="text-[10px] font-black uppercase text-white tracking-widest">{booking.date} @ {booking.time}</span>
-                                   </div>
-                                </div>
-                                <div className="space-y-4">
-                                   <div className="flex items-center gap-3">
-                                      <MapPinned className="text-slate-500" size={16} />
-                                      <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">CLASSFIT VARNA</span>
-                                   </div>
-                                </div>
+                                <div className="space-y-4"><div className="flex items-center gap-3"><Calendar className="text-brand" size={16} /><span className="text-[10px] font-black uppercase text-white tracking-widest">{booking.date} @ {booking.time}</span></div></div>
+                                <div className="space-y-4"><div className="flex items-center gap-3"><MapPinned className="text-slate-500" size={16} /><span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">CLASSFIT VARNA</span></div></div>
                             </div>
-
                             <div className="shrink-0 flex flex-col items-center justify-center p-6 bg-dark/40 rounded-[2rem] border border-white/10 min-w-[160px]">
                                 <div className="text-3xl font-black italic text-brand tracking-widest mb-1">{booking.checkInCode}</div>
                                 <div className={`mt-2 px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${
-                                   booking.status === 'confirmed' ? 'bg-green-500/10 text-green-500' : 
-                                   booking.status === 'completed' ? 'bg-blue-500/10 text-blue-500' : 
-                                   'bg-brand/10 text-brand'
-                                }`}>
-                                   {booking.status.replace('_', ' ')}
-                                </div>
+                                   booking.status === 'confirmed' ? 'bg-green-500/10 text-green-500' : booking.status === 'completed' ? 'bg-blue-500/10 text-blue-500' : 'bg-brand/10 text-brand'
+                                }`}>{booking.status.replace('_', ' ')}</div>
                             </div>
                         </div>
-
                         <div className="mt-6 pt-6 border-t border-white/5 flex flex-wrap items-center justify-between gap-4">
                             <div className="flex gap-2">
-                                {isConfirmed && (
-                                   <button 
-                                      onClick={() => setBookingToReview(booking)}
-                                      className="flex items-center gap-2 px-6 py-3 bg-brand text-dark rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-lg"
-                                   >
-                                      <Star size={14} /> Finish & Review
-                                   </button>
-                                )}
-                                {(isCompleted || isAwaitingPay) && booking.hasBeenReviewed && (
-                                   <span className="flex items-center gap-2 px-4 py-2 bg-white/5 text-slate-500 rounded-xl text-[9px] font-black uppercase border border-white/5">
-                                      <Star size={12} className="text-brand fill-brand" /> Feedback Pending Moderation
-                                   </span>
-                                )}
+                                {isConfirmed && <button onClick={() => setBookingToReview(booking)} className="flex items-center gap-2 px-6 py-3 bg-brand text-dark rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-lg"><Star size={14} /> Finish & Review</button>}
+                                {(isCompleted || isAwaitingPay) && booking.hasBeenReviewed && <span className="flex items-center gap-2 px-4 py-2 bg-white/5 text-slate-500 rounded-xl text-[9px] font-black uppercase border border-white/5"><Star size={12} className="text-brand fill-brand" /> Feedback Pending Moderation</span>}
                             </div>
-                            
                             <div className="flex gap-2">
-                                {(isConfirmed || booking.status === 'pending') && (
-                                    <button 
-                                       onClick={() => handleCancelRequest(booking.id)} 
-                                       className="flex items-center gap-2 px-4 py-2 bg-red-500/10 text-red-500 rounded-xl text-[9px] font-black uppercase hover:bg-red-500 hover:text-white transition-all border border-red-500/10"
-                                    >
-                                       <X size={14} /> Cancel
-                                    </button>
-                                )}
-                                {!isConfirmed && !isAwaitingPay && booking.status !== 'pending' && (
-                                    <button 
-                                       onClick={() => handleDelete(booking.id)} 
-                                       className="flex items-center gap-2 px-4 py-2 bg-white/5 text-slate-500 rounded-xl text-[9px] font-black uppercase hover:text-red-500 transition-all"
-                                    >
-                                       <Trash2 size={14} /> Remove
-                                    </button>
-                                )}
+                                {(isConfirmed || booking.status === 'pending') && <button onClick={() => handleCancelRequest(booking.id)} className="flex items-center gap-2 px-4 py-2 bg-red-500/10 text-red-500 rounded-xl text-[9px] font-black uppercase hover:bg-red-500 hover:text-white transition-all border border-red-500/10"><X size={14} /> Cancel</button>}
+                                {!isConfirmed && !isAwaitingPay && booking.status !== 'pending' && <button onClick={() => handleDelete(booking.id)} className="flex items-center gap-2 px-4 py-2 bg-white/5 text-slate-500 rounded-xl text-[9px] font-black uppercase hover:text-red-500 transition-all"><Trash2 size={14} /> Remove</button>}
                             </div>
                         </div>
                     </div>
@@ -386,13 +286,15 @@ const CustomerDashboard: React.FC = () => {
         )}
       </div>
 
-      {bookingToReview && (
-         <ReviewModal 
-            booking={bookingToReview}
-            onClose={() => setBookingToReview(null)}
-            onSubmit={handleReviewSubmit}
-         />
-      )}
+      <RoleManagementModal 
+        user={currentUser}
+        onClose={() => setShowEditModal(false)}
+        onUpdate={async (uid, updates) => await updateUser(uid, updates)}
+        language={language}
+        isManagement={isManagement}
+      />
+
+      {bookingToReview && <ReviewModal booking={bookingToReview} onClose={() => setBookingToReview(null)} onSubmit={handleReviewSubmit} />}
     </div>
   );
 };
