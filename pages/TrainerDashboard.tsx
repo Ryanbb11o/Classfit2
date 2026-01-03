@@ -46,8 +46,8 @@ const TrainerDashboard: React.FC = () => {
     const endDate = `${year}${month}${day}T${endHour}${minute}00`;
     
     const text = encodeURIComponent(`ClassFit Training: ${booking.customerName}`);
-    const details = encodeURIComponent(`Client: ${booking.customerName}\nStatus: Confirmed\nLocation: ClassFit Varna, ЛевскиПриморски, ул. „Студентска“ 1 а`);
-    const location = encodeURIComponent(`ЛевскиПриморски, ул. „Студентска“ 1 а, Варна`);
+    const details = encodeURIComponent(`Client: ${booking.customerName}\nStatus: Confirmed\nLocation: ClassFit Varna, сп. Мир`);
+    const location = encodeURIComponent(`ClassFit Varna, сп. Мир`);
     
     return `https://www.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${startDate}/${endDate}&details=${details}&location=${location}`;
   };

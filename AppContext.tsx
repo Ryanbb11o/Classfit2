@@ -167,7 +167,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setUsers(uData.map((u: any) => {
           const langString = parseBioField(u.bio, 'Languages');
           const langs = langString ? langString.split(',').map(s => s.trim()) : [];
-          // Support for migration: Use 'roles' if it exists, otherwise fallback to 'role'
           let roles: UserRole[] = u.roles || (u.role ? [u.role as UserRole] : ['user']);
           if (roles.length === 0) roles = ['user'];
 

@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Menu, X, ShieldCheck, User as UserIcon, Home, Info, Calendar, Dumbbell, ShoppingBag, LogIn, LogOut, Phone, Briefcase, Bell, Mail, Star, MessageSquare, Check, Loader2, AlertTriangle, Wallet } from 'lucide-react';
+import { Menu, X, ShieldCheck, User as UserIcon, Home, Info, Calendar, Dumbbell, ShoppingBag, LogIn, LogOut, Phone, Briefcase, Bell, Mail, Star, MessageSquare, Check, Loader2, AlertTriangle, Wallet, Facebook, Instagram } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS } from '../constants';
 import LanguageSwitcher from './LanguageSwitcher';
@@ -97,9 +97,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             <div className="hidden md:flex items-center gap-6">
                {currentUser ? (
                  <div className="flex items-center gap-4">
-                   {isAdmin && <NavLink to="/admin" className="text-xs font-black uppercase tracking-widest text-red-500 flex items-center gap-2"><ShieldCheck size={14} /> {t.admin}</NavLink>}
-                   {isTrainer && <NavLink to="/trainer" className="text-xs font-black uppercase tracking-widest text-white flex items-center gap-2"><Briefcase size={14} /> Trainer</NavLink>}
-                   <NavLink to="/profile" className="text-xs font-black uppercase tracking-widest text-white flex items-center gap-2"><UserIcon size={14} /> {getDisplayName(currentUser.name)}</NavLink>
+                   {isAdmin && <NavLink to="/admin" className="text-xs font-black uppercase tracking-widest text-red-500 flex items-center gap-2 transition-all hover:brightness-125"><ShieldCheck size={14} /> Web Admin</NavLink>}
+                   {isTrainer && <NavLink to="/trainer" className="text-xs font-black uppercase tracking-widest text-brand flex items-center gap-2 transition-all hover:brightness-125"><Briefcase size={14} /> Trainer</NavLink>}
+                   <NavLink to="/profile" className="text-xs font-black uppercase tracking-widest text-white flex items-center gap-2 hover:text-brand transition-colors"><UserIcon size={14} /> {getDisplayName(currentUser.name)}</NavLink>
                  </div>
                ) : (
                  <div className="flex items-center gap-6">
@@ -189,7 +189,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             <NavLink onClick={closeMenu} to="/contact" className="text-2xl font-black italic uppercase tracking-tighter text-white">Contact</NavLink>
             <div className="h-px bg-white/10 my-4"></div>
             {currentUser ? (
-              <button onClick={handleLogout} className="text-xl font-bold uppercase tracking-widest text-slate-500 text-left">Logout</button>
+              <button onClick={handleLogout} className="text-xl font-bold uppercase tracking-widest text-slate-500 text-left flex items-center gap-3">
+                Logout <span className="text-xl">🚪</span>
+              </button>
             ) : (
               <NavLink onClick={closeMenu} to="/login" className="text-xl font-bold uppercase tracking-widest text-white">Login</NavLink>
             )}
@@ -206,7 +208,15 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             <p className="text-sm text-slate-400 leading-relaxed font-medium max-w-sm italic">{t.gymDesc}</p>
           </div>
           <div>
-            <h3 className="text-[10px] font-black uppercase tracking-[0.4em] mb-6 text-white/30">Career</h3>
+            <h3 className="text-[10px] font-black uppercase tracking-[0.4em] mb-6 text-white/30 italic">Socials</h3>
+            <div className="flex gap-4 mb-8">
+               <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-slate-400 hover:text-brand hover:bg-brand/10 transition-all border border-white/5">
+                  <Facebook size={20} />
+               </a>
+               <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-slate-400 hover:text-brand hover:bg-brand/10 transition-all border border-white/5">
+                  <Instagram size={20} />
+               </a>
+            </div>
             <NavLink to="/trainer-signup" className="text-brand font-black uppercase tracking-widest text-xs italic">Join Professional Team</NavLink>
           </div>
           <div className="flex flex-col items-end justify-start text-[9px] font-black uppercase tracking-widest text-slate-700">© 2024 ClassFit Varna</div>
