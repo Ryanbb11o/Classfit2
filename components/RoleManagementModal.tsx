@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
-import { X, ShieldCheck, Fingerprint, Edit3, CheckSquare, Plus, Loader2, Save, Languages, Percent, Image as ImageIcon, Briefcase, Target, User as UserIcon } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, CheckSquare, Loader2, Save, Languages, Percent, Image as ImageIcon, Briefcase, Target, User as UserIcon, Upload, Camera } from 'lucide-react';
 import { User, UserRole } from '../types';
 
 interface RoleManagementModalProps {
@@ -21,6 +21,7 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
   const [editLangs, setEditLangs] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (user) {
@@ -66,9 +67,25 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
     }
   };
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        alert("Image too large (Max 2MB)");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEditImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
+      // If trainer, keep the (Specialty) format, else just the name
       const finalName = isTrainerMode && editSpecialty ? `${editName} (${editSpecialty})` : editName;
       
       const updates: Partial<User> = {
@@ -87,7 +104,7 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
       setShowSuccess(true);
       setTimeout(() => onClose(), 1500);
     } catch (err) {
-      alert("Update failed.");
+      console.error(err);
     } finally {
       setIsSaving(false);
     }
@@ -117,7 +134,25 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
           </div>
 
           <div className="overflow-y-auto pr-2 custom-scrollbar space-y-10 pb-4">
-            {/* Core Profile Fields */}
+            
+            {/* Avatar Upload Section */}
+            <div className="flex flex-col items-center gap-4 py-4 bg-dark/20 rounded-[2rem] border border-white/5">
+                <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                   <div className="w-24 h-24 rounded-full border-2 border-brand/50 overflow-hidden bg-dark">
+                      <img src={editImage || "https://upload.wikimedia.org/wikipedia/commons/2/2c/Default_pfp.svg"} className="w-full h-full object-cover" alt="Profile" />
+                   </div>
+                   <div className="absolute inset-0 bg-dark/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Camera size={24} className="text-brand" />
+                   </div>
+                   <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
+                </div>
+                <div className="text-center">
+                   <p className="text-[9px] font-black uppercase text-white tracking-widest mb-1">Profile Photo</p>
+                   <p className="text-[8px] text-slate-500 font-bold italic uppercase">PNG/JPG up to 2MB</p>
+                </div>
+            </div>
+
+            {/* Core Identity Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                    <label className="text-[9px] font-black uppercase text-slate-500 ml-2">Име / Name</label>
@@ -140,10 +175,10 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
                 </div>
             </div>
 
-            {/* Languages Section */}
+            {/* Languages Section - Styled after the screenshot */}
             <div className="space-y-4">
                <label className="flex items-center gap-2 text-[9px] font-black uppercase text-brand ml-2">
-                  <Languages size={14} /> {isTrainerMode ? 'Communication Skills' : 'Speaking Languages'}
+                  <Languages size={14} /> {isTrainerMode ? 'Coach Languages' : 'Communication Preferences'}
                </label>
                <div className="flex flex-wrap gap-2">
                   {languageOptions.map(lang => (
@@ -162,13 +197,14 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
                </div>
             </div>
 
-            {/* Club Specifics - ONLY for Managers viewing someone or themselves */}
+            {/* Management Exclusive Tools */}
             {isManagement && (
                <div className="space-y-8 animate-in slide-in-from-top-2">
-                  <div className="p-8 bg-brand/5 rounded-[2.5rem] border border-brand/20 relative group">
+                  {/* Commission - Specifically Styled like the screenshot box */}
+                  <div className="p-8 bg-[#1e293b]/50 rounded-[2.5rem] border border-white/10 relative group">
                     <div className="flex justify-between items-center mb-6">
                        <label className="text-[9px] font-black uppercase text-brand tracking-widest">Club Commission Share</label>
-                       <span className="text-[8px] font-black text-slate-500 uppercase">Current Ledger Rate: {user.commissionRate}%</span>
+                       <span className="text-[8px] font-black text-slate-500 uppercase">Current Ledger: {user.commissionRate}%</span>
                     </div>
                     <div className="relative">
                        <input 
@@ -181,6 +217,7 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
                     </div>
                   </div>
 
+                  {/* Authority - Management Only */}
                   <div className="pt-6 border-t border-white/5">
                     <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-6 italic">Authority Delegation</h3>
                     <div className="grid grid-cols-2 gap-2">
@@ -203,19 +240,20 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
                   </div>
                </div>
             )}
-
-            {/* General Profile Asset */}
+            
+            {/* Manual Image Link (Optional) */}
             <div className="space-y-2">
-               <label className="text-[9px] font-black uppercase text-slate-500 ml-2">Profile Avatar Asset (Link)</label>
-               <div className="relative">
-                  <input 
-                     value={editImage} 
-                     onChange={(e) => setEditImage(e.target.value)} 
-                     className="w-full bg-[#131b27] border border-white/5 focus:border-brand rounded-2xl px-6 py-4 text-xs font-medium text-white outline-none transition-all truncate" 
-                     placeholder="https://..."
-                  />
-               </div>
-               <p className="text-[8px] text-slate-600 font-bold italic ml-2">Publicly visible on class booking and ranking.</p>
+               <label className="text-[9px] font-black uppercase text-slate-500 ml-2">Public Image Link (Optional)</label>
+               <input 
+                  value={editImage.startsWith('data:') ? 'Local Image Base64 Uploaded' : editImage} 
+                  onChange={(e) => setEditImage(e.target.value)} 
+                  disabled={editImage.startsWith('data:')}
+                  placeholder="https://..."
+                  className="w-full bg-[#131b27] border border-white/5 focus:border-brand rounded-2xl px-6 py-4 text-[10px] font-medium text-slate-400 outline-none transition-all truncate" 
+               />
+               {editImage.startsWith('data:') && (
+                 <button onClick={() => setEditImage('')} className="text-[8px] text-red-500 uppercase font-black ml-2 hover:underline">Clear Uploaded Image</button>
+               )}
             </div>
           </div>
 
@@ -227,7 +265,7 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
                    showSuccess ? 'bg-green-500 text-white' : 'bg-brand text-dark hover:brightness-110 active:scale-95'
                 }`}
              >
-                {isSaving ? <Loader2 className="animate-spin" /> : showSuccess ? 'Profile Updated' : <><Save size={18}/> Commit Changes</>}
+                {isSaving ? <Loader2 className="animate-spin" /> : showSuccess ? 'Identity Updated' : <><Save size={18}/> Commit Changes</>}
              </button>
           </div>
        </div>
