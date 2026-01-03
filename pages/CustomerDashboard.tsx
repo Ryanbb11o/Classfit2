@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { Calendar, Star, LogOut, Dumbbell, Loader2, X, MapPinned, Settings2, Trash2, AlertCircle, Sparkles, ShieldCheck, ChevronRight, Languages, MessageSquarePlus, Clock, Phone, MapPin, CheckCircle2, User, Heart } from 'lucide-react';
+import { Calendar, Star, LogOut, Dumbbell, Loader2, X, MapPinned, Settings2, Trash2, AlertCircle, Sparkles, ShieldCheck, ChevronRight, Languages, MessageSquarePlus, Clock, Phone, MapPin, CheckCircle2, User, Heart, MessageSquareHeart } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, getTrainers, DEFAULT_PROFILE_IMAGE } from '../constants';
 import { useNavigate } from 'react-router-dom';
@@ -40,7 +40,7 @@ const ReviewModal: React.FC<{
             properties: { polishedReview: { type: Type.STRING }, insights: { type: Type.STRING } },
             required: ["polishedReview", "insights"]
           },
-          systemInstruction: "Rewrite customer reviews to be more engaging and energetic. Return JSON."
+          systemInstruction: "Rewrite the customer review to be clear, honest, and concise. Keep it short (1-2 sentences) and make it sound like it was written by a real person, not an advertisement. Avoid over-the-top energy. Return JSON."
         }
       });
       const result = JSON.parse(response.text || '{}');
@@ -61,7 +61,7 @@ const ReviewModal: React.FC<{
             Classfit would love to know about your experience training with <span className="text-brand">{trainerName}</span>
           </h2>
           
-          <p className="text-slate-500 text-[11px] font-black uppercase tracking-widest italic mb-8">Your feedback helps us grow!</p>
+          <p className="text-slate-500 text-[11px] font-black uppercase tracking-widest italic mb-8">Your honest feedback helps our community!</p>
           
           <form onSubmit={(e) => { e.preventDefault(); setIsSubmitting(true); onSubmit(booking.id, rating, comment, isAiEnhanced, booking.trainerId).finally(() => setIsSubmitting(false)); }} className="space-y-6 text-left">
              <div className="flex justify-center gap-2 mb-6">
@@ -70,12 +70,12 @@ const ReviewModal: React.FC<{
              
              <div className="space-y-2 relative">
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-2">Share your thoughts</label>
+                  <label className="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-2">Your Experience</label>
                   <button type="button" onClick={handleAiEnhance} disabled={isEnhancing || !comment.trim()} className="flex items-center gap-1.5 px-3 py-1 bg-brand/10 text-brand rounded-full text-[10px] font-black uppercase transition-all hover:bg-brand hover:text-dark">
-                    {isEnhancing ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />} AI Enhance
+                    {isEnhancing ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />} Polish with AI
                   </button>
                 </div>
-                <textarea rows={4} value={comment} onChange={(e) => setComment(e.target.value)} placeholder="How was the workout?" className="w-full bg-dark/50 border border-white/5 rounded-2xl px-6 py-5 text-white font-medium italic outline-none focus:border-brand resize-none text-sm shadow-inner" />
+                <textarea rows={4} value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Write a short, honest review..." className="w-full bg-dark/50 border border-white/5 rounded-2xl px-6 py-5 text-white font-medium italic outline-none focus:border-brand resize-none text-sm shadow-inner" />
              </div>
              
              <button type="submit" disabled={isSubmitting} className="w-full py-6 bg-brand text-dark rounded-2xl font-black uppercase tracking-widest text-[12px] hover:bg-white transition-all shadow-2xl shadow-brand/20 active:scale-[0.98]">
@@ -108,7 +108,7 @@ const SessionDetailModal: React.FC<{
                             <img src={trainer?.image || DEFAULT_PROFILE_IMAGE} className="w-full h-full object-cover" alt="Trainer" />
                         </div>
                         <div>
-                            <p className="text-[11px] font-black uppercase text-brand tracking-widest mb-1 italic">Identity Verified</p>
+                            <p className="text-[11px] font-black uppercase text-brand tracking-widest mb-1 italic">Verified Training</p>
                             <h2 className="text-3xl font-black uppercase italic text-white leading-none tracking-tighter">{trainer?.name || 'Coach'}</h2>
                             <p className="text-slate-500 text-[11px] font-black uppercase tracking-widest mt-2 italic">{trainer?.specialty || 'Instructor'}</p>
                         </div>
@@ -121,7 +121,7 @@ const SessionDetailModal: React.FC<{
                                 <p className="text-2xl font-black text-brand tracking-widest italic leading-none">{booking.checkInCode}</p>
                             </div>
                             <div className="p-6 bg-dark/40 rounded-2xl border border-white/5">
-                                <p className="text-[10px] font-black uppercase text-slate-600 mb-2">Operation Status</p>
+                                <p className="text-[10px] font-black uppercase text-slate-600 mb-2">Status</p>
                                 <span className={`px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-widest ${
                                   booking.status === 'confirmed' ? 'bg-green-500/10 text-green-500' : 
                                   booking.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500' : 
@@ -141,7 +141,7 @@ const SessionDetailModal: React.FC<{
                             </div>
                             <div className="flex items-center gap-4 text-slate-300">
                                 <MapPin size={18} className="text-slate-500" />
-                                <span className="text-[12px] font-black uppercase tracking-widest italic">Studentska 1A, Varna</span>
+                                <span className="text-[12px] font-black uppercase tracking-widest italic">Classfit, Varna</span>
                             </div>
                         </div>
 
@@ -151,12 +151,12 @@ const SessionDetailModal: React.FC<{
                                     onClick={(e) => { e.stopPropagation(); onReview(); }}
                                     className="w-full py-6 bg-brand text-dark rounded-2xl font-black uppercase tracking-[0.2em] text-[13px] flex items-center justify-center gap-3 shadow-2xl shadow-brand/20 hover:bg-white hover:scale-[1.02] active:scale-95 transition-all group"
                                 >
-                                    <Star size={18} className="fill-dark group-hover:animate-bounce" /> 
+                                    <Star size={18} className="fill-dark group-hover:scale-110 transition-transform" /> 
                                     Leave a Review
                                 </button>
                             ) : booking.hasBeenReviewed ? (
                                 <div className="w-full py-5 bg-white/5 border border-white/10 text-slate-500 rounded-2xl flex items-center justify-center gap-3 text-[11px] font-black uppercase italic">
-                                    <CheckCircle2 size={16} className="text-brand" /> Verified Feedback Sent
+                                    <CheckCircle2 size={16} className="text-brand" /> Feedback Provided
                                 </div>
                             ) : null}
                         </div>
@@ -237,10 +237,10 @@ const CustomerDashboard: React.FC = () => {
                 </div>
 
                 <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-                   <button onClick={() => setShowEditModal(true)} className="bg-white/5 hover:bg-brand hover:text-dark text-white text-[11px] font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border border-white/10 transition-all flex items-center gap-1.5"><Settings2 size={12} /> Edit Identity</button>
+                   <button onClick={() => setShowEditModal(true)} className="bg-white/5 hover:bg-brand hover:text-dark text-white text-[11px] font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border border-white/10 transition-all flex items-center gap-1.5"><Settings2 size={12} /> Profile Settings</button>
                    {isAdmin && (
                       <button onClick={() => navigate('/admin')} className="bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white text-[11px] font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border border-red-500/20 transition-all flex items-center gap-1.5 shadow-lg">
-                        <ShieldCheck size={12} /> Admin Console <ChevronRight size={12} />
+                        <ShieldCheck size={12} /> Console <ChevronRight size={12} />
                       </button>
                    )}
                 </div>
@@ -253,8 +253,8 @@ const CustomerDashboard: React.FC = () => {
 
       <div className="grid grid-cols-1 gap-8">
         <div className="flex items-center justify-between mb-2">
-            <h2 className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-500 italic">Official Session Registry</h2>
-            <div className="flex items-center gap-2 text-[10px] font-bold text-slate-700 uppercase tracking-widest"><AlertCircle size={10}/> Interaction required for unreviewed sessions</div>
+            <h2 className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-500 italic">My Workouts</h2>
+            <div className="flex items-center gap-2 text-[10px] font-bold text-slate-700 uppercase tracking-widest"><AlertCircle size={10}/> Reviews are greatly appreciated!</div>
         </div>
         
         {myBookings.length === 0 ? (
@@ -273,7 +273,7 @@ const CustomerDashboard: React.FC = () => {
                     <div 
                         key={booking.id} 
                         onClick={() => setViewingBooking(booking)}
-                        className="bg-surface/50 backdrop-blur-md border border-white/10 rounded-[3.5rem] p-10 hover:border-brand transition-all group overflow-hidden cursor-pointer active:scale-[0.98] shadow-xl hover:shadow-2xl"
+                        className="bg-surface/50 backdrop-blur-md border border-white/10 rounded-[3.5rem] p-10 hover:border-brand transition-all group overflow-hidden cursor-pointer active:scale-[0.98] shadow-xl hover:shadow-2xl relative"
                     >
                         <div className="flex flex-col lg:flex-row gap-10 lg:items-center">
                             <div className="flex items-center gap-8 shrink-0">
@@ -281,7 +281,7 @@ const CustomerDashboard: React.FC = () => {
                                   <img src={getTrainerImage(booking.trainerId)} className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" />
                                 </div>
                                 <div>
-                                  <p className="text-[10px] font-black text-brand uppercase tracking-widest mb-1 italic">ClassFit Coach</p>
+                                  <p className="text-[10px] font-black text-brand uppercase tracking-widest mb-1 italic">Coach</p>
                                   <h3 className="font-black uppercase italic text-2xl text-white mb-1 tracking-tighter leading-none">{trainer?.name || 'Coach'}</h3>
                                   <p className="text-[11px] text-slate-500 font-black uppercase tracking-widest">{trainer?.specialty || 'Instructor'}</p>
                                 </div>
@@ -296,7 +296,7 @@ const CustomerDashboard: React.FC = () => {
                             </div>
                             
                             <div className="shrink-0 flex flex-col items-center justify-center p-8 bg-dark/40 rounded-[2.5rem] border border-white/10 min-w-[180px] shadow-inner">
-                                <div className="text-[10px] font-black uppercase text-slate-600 mb-3 tracking-[0.2em]">CHECK-IN</div>
+                                <div className="text-[10px] font-black uppercase text-slate-600 mb-3 tracking-[0.2em]">PIN CODE</div>
                                 <div className="text-4xl font-black italic text-brand tracking-widest leading-none mb-4">{booking.checkInCode}</div>
                                 <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${
                                   booking.status === 'confirmed' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 
@@ -311,16 +311,18 @@ const CustomerDashboard: React.FC = () => {
                                 {canReview && (
                                   <button 
                                     onClick={(e) => { e.stopPropagation(); setBookingToReview(booking); }} 
-                                    className="flex items-center gap-3 px-8 py-4 bg-brand text-dark rounded-2xl text-[12px] font-black uppercase tracking-[0.1em] hover:bg-white transition-all shadow-xl hover:scale-[1.05] active:scale-95 group"
+                                    className="flex items-center gap-3 px-8 py-4 bg-brand text-dark rounded-2xl text-[12px] font-black uppercase tracking-[0.1em] hover:bg-white transition-all shadow-xl hover:scale-[1.05] active:scale-95 group relative overflow-hidden"
                                   >
-                                    <Star size={16} className="fill-dark group-hover:scale-125 transition-transform" /> Leave a Review
+                                    <span className="absolute inset-0 bg-white/10 animate-pulse pointer-events-none"></span>
+                                    <Star size={16} className="fill-dark group-hover:scale-125 transition-transform relative z-10" /> 
+                                    <span className="relative z-10">Leave a Review</span>
                                   </button>
                                 )}
-                                {booking.hasBeenReviewed && <span className="flex items-center gap-3 px-6 py-4 bg-white/5 text-slate-500 rounded-2xl text-[11px] font-black uppercase border border-white/5 italic"><CheckCircle2 size={16} className="text-brand" /> Verified Feedback Provided</span>}
+                                {booking.hasBeenReviewed && <span className="flex items-center gap-3 px-6 py-4 bg-white/5 text-slate-500 rounded-2xl text-[11px] font-black uppercase border border-white/5 italic"><CheckCircle2 size={16} className="text-brand" /> Feedback Sent</span>}
                             </div>
                             <div className="flex gap-3">
-                                {(booking.status === 'confirmed' || booking.status === 'pending') && <button onClick={(e) => { e.stopPropagation(); confirmAction({ title: 'Cancel Session', message: 'Indicate reason if possible. Proceed with cancellation?', onConfirm: () => updateBooking(booking.id, { status: 'cancelled' }) }); }} className="flex items-center gap-2 px-6 py-4 bg-red-500/10 text-red-500 rounded-2xl text-[11px] font-black uppercase hover:bg-red-500 hover:text-white transition-all border border-red-500/10"><X size={16} /> Cancel Session</button>}
-                                {booking.status !== 'confirmed' && booking.status !== 'pending' && <button onClick={(e) => { e.stopPropagation(); confirmAction({ title: 'Remove Record', message: 'This will purge the session from your history registry. Proceed?', onConfirm: () => deleteBooking(booking.id) }); }} className="flex items-center gap-2 px-6 py-4 bg-white/5 text-slate-500 rounded-2xl text-[11px] font-black uppercase hover:text-red-500 transition-all"><Trash2 size={16} /> Purge Record</button>}
+                                {(booking.status === 'confirmed' || booking.status === 'pending') && <button onClick={(e) => { e.stopPropagation(); confirmAction({ title: 'Cancel Session', message: 'Proceed with cancellation?', onConfirm: () => updateBooking(booking.id, { status: 'cancelled' }) }); }} className="flex items-center gap-2 px-6 py-4 bg-red-500/10 text-red-500 rounded-2xl text-[11px] font-black uppercase hover:bg-red-500 hover:text-white transition-all border border-red-500/10"><X size={16} /> Cancel</button>}
+                                {booking.status !== 'confirmed' && booking.status !== 'pending' && <button onClick={(e) => { e.stopPropagation(); confirmAction({ title: 'Remove Session', message: 'Remove from history?', onConfirm: () => deleteBooking(booking.id) }); }} className="flex items-center gap-2 px-6 py-4 bg-white/5 text-slate-500 rounded-2xl text-[11px] font-black uppercase hover:text-red-500 transition-all"><Trash2 size={16} /> Remove</button>}
                             </div>
                         </div>
                     </div>
