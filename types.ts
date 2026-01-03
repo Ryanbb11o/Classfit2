@@ -1,6 +1,8 @@
 
 export type Language = 'bg' | 'en';
 
+export type UserRole = 'user' | 'admin' | 'trainer_pending' | 'trainer' | 'management';
+
 export interface User {
   id: string;
   name: string;
@@ -10,7 +12,7 @@ export interface User {
   image?: string; 
   bio?: string;   
   joinedDate: string;
-  role: 'user' | 'admin' | 'trainer_pending' | 'trainer';
+  roles: UserRole[]; 
   approvedBy?: string; 
   commissionRate?: number; // % that the gym takes
   languages?: string[];

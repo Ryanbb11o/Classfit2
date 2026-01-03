@@ -1,10 +1,10 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { LayoutDashboard, ListFilter, MessageSquare, Briefcase, UserCheck, FileSpreadsheet, Users, RefreshCw, Star, Trash2, Eye, X, Save, Loader2, TrendingUp, Wallet, Check, Ban, DollarSign, PieChart, History, CreditCard, Banknote, Calendar, Clock, User, Phone, Mail, ShieldCheck, AlertCircle, UserPlus, ShieldAlert, ChevronDown, Plus } from 'lucide-react';
+import { LayoutDashboard, ListFilter, MessageSquare, Briefcase, UserCheck, FileSpreadsheet, Users, RefreshCw, Star, Trash2, Eye, X, Save, Loader2, TrendingUp, Wallet, Check, Ban, DollarSign, PieChart, History, CreditCard, Banknote, Calendar, Clock, User, Phone, Mail, ShieldCheck, AlertCircle, UserPlus, ShieldAlert, ChevronDown, Plus, Minus } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, DEFAULT_PROFILE_IMAGE } from '../constants';
-import { User as UserType, Booking } from '../types';
+import { User as UserType, Booking, UserRole } from '../types';
 
 const TransactionDossier: React.FC<{ booking: Booking | null; onClose: () => void; users: UserType[] }> = ({ booking, onClose, users }) => {
   if (!booking) return null;
@@ -114,8 +114,7 @@ const AdminPanel: React.FC = () => {
   const awaitingPaymentList = bookings.filter(b => b.status === 'trainer_completed');
   const completedBookings = bookings.filter(b => b.status === 'completed');
   const activeBookings = bookings.filter(b => b.status === 'confirmed' || b.status === 'pending');
-  const pendingApps = users.filter(u => u.role === 'trainer_pending');
-  const coaches = users.filter(u => u.role === 'trainer');
+  const pendingApps = users.filter(u => u.roles?.includes('trainer_pending'));
 
   const totalRevenue = useMemo(() => completedBookings.reduce((sum, b) => sum + (Number(b.price) || 0), 0), [completedBookings]);
   const coachPayouts = useMemo(() => completedBookings.reduce((sum, b) => sum + (Number(b.trainerEarnings) || 0), 0), [completedBookings]);
@@ -139,12 +138,24 @@ const AdminPanel: React.FC = () => {
     }
   };
 
-  const handleRoleUpdate = (userId: string, newRole: UserType['role']) => {
-    setActiveRoleMenu(null);
+  const handleToggleRole = (userId: string, targetRole: UserRole) => {
+    const user = users.find(u => u.id === userId);
+    if (!user) return;
+
+    let newRoles: UserRole[];
+    const hasRole = user.roles.includes(targetRole);
+
+    if (hasRole) {
+      newRoles = user.roles.filter(r => r !== targetRole);
+      if (newRoles.length === 0) newRoles = ['user'];
+    } else {
+      newRoles = Array.from(new Set([...user.roles, targetRole]));
+    }
+
     confirmAction({
-      title: 'Update Authority',
-      message: `Are you sure you want to change this user's role to ${newRole.toUpperCase()}?`,
-      onConfirm: async () => await updateUser(userId, { role: newRole })
+      title: hasRole ? 'Revoke Authority' : 'Grant Authority',
+      message: `Update roles for ${user.name}?`,
+      onConfirm: async () => await updateUser(userId, { roles: newRoles })
     });
   };
 
@@ -158,11 +169,13 @@ const AdminPanel: React.FC = () => {
 
   const cleanName = (name: string | undefined) => (name || 'Member').split('(')[0].trim();
 
-  const roleOptions: { id: UserType['role'], label: string, color: string }[] = [
-    { id: 'admin', label: 'Administrator', color: 'text-red-500 bg-red-500/10 border-red-500/20' },
+  // Role Display Configuration as requested
+  const roleOptions: { id: UserRole, label: string, color: string }[] = [
+    { id: 'management', label: 'Management', color: 'text-purple-400 bg-purple-500/10 border-purple-500/20' },
+    { id: 'admin', label: 'Web Admin', color: 'text-red-500 bg-red-500/10 border-red-500/20' },
     { id: 'trainer', label: 'Gym Coach', color: 'text-brand bg-brand/10 border-brand/20' },
-    { id: 'user', label: 'Club Member', color: 'text-slate-400 bg-white/5 border-white/10' },
-    { id: 'trainer_pending', label: 'Pending Review', color: 'text-yellow-500 bg-yellow-500/10 border-yellow-500/20' }
+    { id: 'user', label: 'Member', color: 'text-slate-400 bg-white/5 border-white/10' },
+    { id: 'trainer_pending', label: 'Pending Coach', color: 'text-yellow-500 bg-yellow-500/10 border-yellow-500/20' }
   ];
 
   if (!isAdmin) return <div className="p-20 text-center text-white">{t.accessDenied}</div>;
@@ -176,7 +189,7 @@ const AdminPanel: React.FC = () => {
              <h1 className="text-4xl font-black uppercase italic text-white tracking-tighter leading-none">Management Console</h1>
              <button onClick={handleManualRefresh} className={`p-2 rounded-xl bg-white/5 ${isRefreshing ? 'animate-spin text-brand' : 'text-slate-500'}`}><RefreshCw size={18} /></button>
           </div>
-          <p className="text-slate-500 font-black uppercase tracking-[0.3em] text-[10px] mt-2 italic">ClassFit Varna • ЛевскиПриморски</p>
+          <p className="text-slate-500 font-black uppercase tracking-[0.3em] text-[10px] mt-2 italic">ClassFit Varna • Mir Stop</p>
         </div>
         <div className="flex flex-wrap gap-2 bg-surface p-1.5 rounded-2xl border border-white/5">
             {[
@@ -290,17 +303,17 @@ const AdminPanel: React.FC = () => {
          <div className="animate-in slide-in-from-bottom-2 duration-500 pb-32">
             <div className="flex items-center gap-4 mb-8">
                 <div className="w-12 h-12 bg-brand/10 text-brand rounded-2xl flex items-center justify-center"><Users size={24} /></div>
-                <div><h3 className="text-2xl font-black uppercase italic text-white tracking-tighter leading-none">User Directory</h3><p className="text-[9px] font-black uppercase tracking-widest text-slate-500 italic mt-1">Member Accounts & Authority Control</p></div>
+                <div><h3 className="text-2xl font-black uppercase italic text-white tracking-tighter leading-none">User Directory</h3><p className="text-[9px] font-black uppercase tracking-widest text-slate-500 italic mt-1">Authority Management & Permissions</p></div>
             </div>
             
             <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-visible">
                <table className="w-full">
                   <thead className="bg-dark/30 text-[9px] font-black uppercase text-slate-500">
                      <tr>
-                        <th className="px-8 py-5 text-left">Member</th>
-                        <th className="px-8 py-5 text-left">Join Date</th>
-                        <th className="px-8 py-5 text-left">Authority / Role</th>
-                        <th className="px-8 py-5 text-right">Management</th>
+                        <th className="px-8 py-5 text-left">Identity</th>
+                        <th className="px-8 py-5 text-left">Joined</th>
+                        <th className="px-8 py-5 text-left">Assigned Authority</th>
+                        <th className="px-8 py-5 text-right">Security</th>
                      </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
@@ -319,36 +332,50 @@ const AdminPanel: React.FC = () => {
                            </td>
                            <td className="px-8 py-6 text-slate-400 text-xs font-bold uppercase tracking-widest">{new Date(user.joinedDate).toLocaleDateString()}</td>
                            <td className="px-8 py-6 relative overflow-visible">
-                              <div className="relative inline-block">
-                                 <button 
-                                    onClick={() => setActiveRoleMenu(activeRoleMenu === user.id ? null : user.id)}
-                                    className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest italic border flex items-center gap-2 transition-all hover:brightness-125 ${
-                                       roleOptions.find(o => o.id === user.role)?.color || 'bg-white/5 text-slate-400 border-white/10'
-                                    }`}
-                                 >
-                                    {user.role.replace('_', ' ')}
-                                    <ChevronDown size={10} className={`transition-transform duration-300 ${activeRoleMenu === user.id ? 'rotate-180' : ''}`} />
-                                 </button>
+                              <div className="flex flex-wrap gap-2 items-center">
+                                 {user.roles.map(role => {
+                                    const option = roleOptions.find(o => o.id === role);
+                                    return (
+                                       <span key={role} className={`px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-widest italic border ${option?.color || 'bg-white/5 text-slate-400 border-white/10'}`}>
+                                          {option?.label || role}
+                                       </span>
+                                    );
+                                 })}
+                                 
+                                 <div className="relative inline-block ml-1">
+                                    <button 
+                                       onClick={() => setActiveRoleMenu(activeRoleMenu === user.id ? null : user.id)}
+                                       className="p-1.5 rounded-lg bg-brand/10 text-brand border border-brand/20 hover:bg-brand hover:text-dark transition-all"
+                                    >
+                                       <Plus size={12} strokeWidth={3} />
+                                    </button>
 
-                                 {activeRoleMenu === user.id && (
-                                    <div ref={menuRef} className="absolute top-full left-0 mt-2 w-48 bg-dark/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl z-[100] overflow-hidden animate-in fade-in slide-in-from-top-2">
-                                       <div className="p-3 border-b border-white/5 bg-white/5">
-                                          <p className="text-[8px] font-black uppercase tracking-widest text-slate-500 italic">Select Authority</p>
+                                    {activeRoleMenu === user.id && (
+                                       <div ref={menuRef} className="absolute top-full left-0 mt-2 w-52 bg-dark/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl z-[100] overflow-hidden animate-in fade-in slide-in-from-top-2">
+                                          <div className="p-3 border-b border-white/5 bg-white/5">
+                                             <p className="text-[8px] font-black uppercase tracking-widest text-slate-500 italic">Toggle Roles</p>
+                                          </div>
+                                          {roleOptions.map(option => {
+                                             const isActive = user.roles.includes(option.id);
+                                             return (
+                                                <button 
+                                                   key={option.id}
+                                                   onClick={() => handleToggleRole(user.id, option.id)}
+                                                   className={`w-full px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest flex items-center justify-between transition-all hover:bg-white/5 ${
+                                                      isActive ? 'text-brand' : 'text-slate-400 hover:text-white'
+                                                   }`}
+                                                >
+                                                   <span className="flex items-center gap-2">
+                                                      <div className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-brand shadow-[0_0_8px_rgba(197,217,45,0.7)]' : 'bg-slate-700'}`}></div>
+                                                      {option.label}
+                                                   </span>
+                                                   {isActive ? <X size={10} className="text-red-500" /> : <Plus size={10} className="opacity-40" />}
+                                                </button>
+                                             );
+                                          })}
                                        </div>
-                                       {roleOptions.map(option => (
-                                          <button 
-                                             key={option.id}
-                                             onClick={() => handleRoleUpdate(user.id, option.id)}
-                                             className={`w-full px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest flex items-center justify-between transition-all hover:bg-white/5 ${
-                                                user.role === option.id ? 'text-brand' : 'text-slate-400 hover:text-white'
-                                             }`}
-                                          >
-                                             {option.label}
-                                             {user.role === option.id ? <Check size={12} /> : <Plus size={12} className="opacity-30 group-hover:opacity-100" />}
-                                          </button>
-                                       ))}
-                                    </div>
-                                 )}
+                                    )}
+                                 </div>
                               </div>
                            </td>
                            <td className="px-8 py-6 text-right">
@@ -401,13 +428,13 @@ const AdminPanel: React.FC = () => {
                      </div>
                      <div className="flex gap-4">
                         <button 
-                           onClick={() => handleRoleUpdate(app.id, 'trainer')}
+                           onClick={() => handleToggleRole(app.id, 'trainer')}
                            className="flex-1 py-4 bg-brand text-dark rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-white transition-all shadow-xl shadow-brand/10 flex items-center justify-center gap-2"
                         >
-                           <Check size={16} /> Hire Professional
+                           <Check size={16} /> Hire Coach
                         </button>
                         <button 
-                           onClick={() => handleRoleUpdate(app.id, 'user')}
+                           onClick={() => handleToggleRole(app.id, 'trainer_pending')}
                            className="px-6 py-4 bg-white/5 text-slate-500 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-red-500 hover:text-white transition-all"
                         >
                            <Ban size={16} />

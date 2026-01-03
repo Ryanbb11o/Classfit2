@@ -18,7 +18,9 @@ const TrainerDashboard: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
-    if (!isLoading && (!currentUser || currentUser.role !== 'trainer')) navigate('/login');
+    if (!isLoading && (!currentUser || !currentUser.roles.includes('trainer'))) {
+      navigate('/login');
+    }
   }, [currentUser, isLoading]);
 
   const handleRefresh = async () => {

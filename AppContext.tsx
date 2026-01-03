@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Language, Booking, User, Review } from './types';
+import { Language, Booking, User, Review, UserRole } from './types';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 import { DEFAULT_PROFILE_IMAGE } from './constants';
 
@@ -70,7 +70,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [isLoading, setIsLoading] = useState(true);
   const [confirmState, setConfirmState] = useState<ConfirmConfig | null>(null);
 
-  const isAdmin = currentUser?.role === 'admin';
+  const isAdmin = currentUser?.roles?.some(r => r === 'admin' || r === 'management') || false;
   const isDemoMode = !isSupabaseConfigured;
 
   const confirmAction = (config: ConfirmConfig) => setConfirmState(config);
@@ -167,12 +167,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setUsers(uData.map((u: any) => {
           const langString = parseBioField(u.bio, 'Languages');
           const langs = langString ? langString.split(',').map(s => s.trim()) : [];
+          // Support for migration: Use 'roles' if it exists, otherwise fallback to 'role'
+          let roles: UserRole[] = u.roles || (u.role ? [u.role as UserRole] : ['user']);
+          if (roles.length === 0) roles = ['user'];
+
           return {
             id: String(u.id),
             name: u.name || 'User',
             email: u.email || '',
             password: u.password || '',
-            role: u.role || 'user',
+            roles: roles,
             phone: u.phone,
             image: u.image || DEFAULT_PROFILE_IMAGE, 
             bio: u.bio,     
@@ -220,7 +224,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const updateBooking = async (id: string, updates: Partial<Booking>) => {
     let finalUpdates = { ...updates };
     
-    // Automatic Financial Split Calculation & Settlement Timestamp
     if (updates.status === 'completed') {
       const booking = bookings.find(b => b.id === id);
       const trainer = users.find(u => u.id === booking?.trainerId);
@@ -260,7 +263,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setUsers(newUsers);
         localStorage.setItem('classfit_users', JSON.stringify(newUsers));
         if (currentUser?.id === id) {
-           const updated = { ...currentUser, ...updates };
+           const updated = { ...currentUser, ...updates } as User;
            setCurrentUser(updated);
            localStorage.setItem('classfit_user', JSON.stringify(updated));
         }
@@ -316,7 +319,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
     const { data } = await supabase.from('users').select('*').eq('email', email).eq('password', pass).maybeSingle();
     if (data) {
-        const u: User = { id: String(data.id), name: data.name, email: data.email, password: data.password, role: data.role, phone: data.phone, image: data.image || DEFAULT_PROFILE_IMAGE, bio: data.bio, joinedDate: data.joined_date, approvedBy: data.approved_by, commissionRate: data.commission_rate || 0, languages: [], blockedDates: data.blocked_dates || [] };
+        const roles: UserRole[] = data.roles || (data.role ? [data.role as UserRole] : ['user']);
+        const u: User = { 
+          id: String(data.id), 
+          name: data.name, 
+          email: data.email, 
+          password: data.password, 
+          roles: roles, 
+          phone: data.phone, 
+          image: data.image || DEFAULT_PROFILE_IMAGE, 
+          bio: data.bio, 
+          joinedDate: data.joined_date, 
+          approvedBy: data.approved_by, 
+          commissionRate: data.commission_rate || 0, 
+          languages: [], 
+          blockedDates: data.blocked_dates || [] 
+        };
         setCurrentUser(u); localStorage.setItem('classfit_user', JSON.stringify(u)); return true;
     }
     return false;
@@ -324,10 +342,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const register = async (name: string, email: string, pass: string): Promise<boolean> => {
     if (isDemoMode) {
-       const mock: User = { id: Math.random().toString(36).substr(2, 9), name, email, password: pass, role: 'user', joinedDate: new Date().toISOString(), image: DEFAULT_PROFILE_IMAGE, languages: [] };
+       const mock: User = { id: Math.random().toString(36).substr(2, 9), name, email, password: pass, roles: ['user'], joinedDate: new Date().toISOString(), image: DEFAULT_PROFILE_IMAGE, languages: [] };
        setUsers([...users, mock]); setCurrentUser(mock); localStorage.setItem('classfit_user', JSON.stringify(mock)); return true;
     }
-    const { error } = await supabase.from('users').insert([{ name, email, password: pass, role: 'user' }]);
+    const { error } = await supabase.from('users').insert([{ name, email, password: pass, roles: ['user'] }]);
     if (error) throw error;
     return login(email, pass);
   };
@@ -336,18 +354,26 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const fullName = `${data.name} (${data.specialty})`;
     const bioText = `Experience: ${data.experience || 'N/A'}\nCertifications: ${data.certs || 'N/A'}\nSocial: ${data.social || 'N/A'}\nMotivation: ${data.motivation || 'N/A'}\nLanguages: ${data.languages?.join(', ') || 'Bulgarian'}`;
     if (isDemoMode) {
-       const u: User = { id: Math.random().toString(36).substr(2, 9), name: fullName, email: data.email, password: data.pass, phone: data.phone, bio: bioText, role: 'trainer_pending', joinedDate: new Date().toISOString(), image: DEFAULT_PROFILE_IMAGE, languages: data.languages || [] };
+       const u: User = { id: Math.random().toString(36).substr(2, 9), name: fullName, email: data.email, password: data.pass, phone: data.phone, bio: bioText, roles: ['user', 'trainer_pending'], joinedDate: new Date().toISOString(), image: DEFAULT_PROFILE_IMAGE, languages: data.languages || [] };
        setUsers([...users, u]); return { success: true };
     }
-    const { error } = await supabase.from('users').insert([{ name: fullName, email: data.email, phone: data.phone, password: data.pass, bio: bioText, role: 'trainer_pending' }]);
+    const { error } = await supabase.from('users').insert([{ name: fullName, email: data.email, phone: data.phone, password: data.pass, bio: bioText, roles: ['user', 'trainer_pending'] }]);
     if (error) return { success: false, msg: error.message };
     await refreshData(); return { success: true };
   };
 
   const requestTrainerUpgrade = async (userId: string, currentName: string, phone: string, specialty: string) => {
     const formattedName = `${currentName} (${specialty})`;
-    if (isDemoMode) { setUsers(users.map(u => u.id === userId ? { ...u, role: 'trainer_pending' as const, phone, name: formattedName } : u)); return { success: true }; }
-    const { error } = await supabase.from('users').update({ role: 'trainer_pending', name: formattedName, phone }).eq('id', userId);
+    const user = users.find(u => u.id === userId);
+    if (!user) return { success: false, msg: 'User not found' };
+    
+    const newRoles: UserRole[] = Array.from(new Set([...user.roles, 'trainer_pending' as UserRole]));
+
+    if (isDemoMode) { 
+      setUsers(users.map(u => u.id === userId ? { ...u, roles: newRoles, phone, name: formattedName } : u)); 
+      return { success: true }; 
+    }
+    const { error } = await supabase.from('users').update({ roles: newRoles, name: formattedName, phone }).eq('id', userId);
     if (error) return { success: false, msg: error.message };
     await refreshData(); return { success: true };
   };

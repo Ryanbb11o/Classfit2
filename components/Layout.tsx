@@ -62,10 +62,10 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const isTrainer = currentUser?.role === 'trainer';
+  const isTrainer = currentUser?.roles?.includes('trainer') || false;
   
   // High-Priority Notification logic
-  const pendingApplications = isAdmin ? users.filter(u => u.role === 'trainer_pending') : [];
+  const pendingApplications = isAdmin ? users.filter(u => u.roles?.includes('trainer_pending')) : [];
   const awaitingPayment = isAdmin ? bookings.filter(b => b.status === 'trainer_completed') : [];
   const pendingBookings = isTrainer ? bookings.filter(b => b.trainerId === currentUser?.id && b.status === 'pending') : [];
 
