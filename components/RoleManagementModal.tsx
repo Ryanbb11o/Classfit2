@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { X, CheckSquare, Loader2, Save, Languages, Percent, Image as ImageIcon, Briefcase, Target, User as UserIcon, Upload, Camera } from 'lucide-react';
+import { X, CheckSquare, Loader2, Save, Languages, Percent, Image as ImageIcon, Briefcase, Target, User as UserIcon, Upload, Camera, RotateCcw } from 'lucide-react';
 import { User, UserRole } from '../types';
+import { DEFAULT_PROFILE_IMAGE } from '../constants';
 
 interface RoleManagementModalProps {
   user: User | null;
@@ -82,10 +83,13 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
     }
   };
 
+  const handleResetImage = () => {
+    setEditImage(DEFAULT_PROFILE_IMAGE);
+  };
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      // If trainer, keep the (Specialty) format, else just the name
       const finalName = isTrainerMode && editSpecialty ? `${editName} (${editSpecialty})` : editName;
       
       const updates: Partial<User> = {
@@ -136,10 +140,10 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
           <div className="overflow-y-auto pr-2 custom-scrollbar space-y-10 pb-4">
             
             {/* Avatar Upload Section */}
-            <div className="flex flex-col items-center gap-4 py-4 bg-dark/20 rounded-[2rem] border border-white/5">
+            <div className="flex flex-col items-center gap-4 py-6 bg-dark/20 rounded-[2rem] border border-white/5">
                 <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                    <div className="w-24 h-24 rounded-full border-2 border-brand/50 overflow-hidden bg-dark">
-                      <img src={editImage || "https://upload.wikimedia.org/wikipedia/commons/2/2c/Default_pfp.svg"} className="w-full h-full object-cover" alt="Profile" />
+                      <img src={editImage || DEFAULT_PROFILE_IMAGE} className="w-full h-full object-cover" alt="Profile" />
                    </div>
                    <div className="absolute inset-0 bg-dark/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                       <Camera size={24} className="text-brand" />
@@ -148,7 +152,13 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
                 </div>
                 <div className="text-center">
                    <p className="text-[11px] font-black uppercase text-white tracking-widest mb-1">Profile Photo</p>
-                   <p className="text-[11px] text-slate-500 font-bold italic uppercase">PNG/JPG up to 2MB</p>
+                   <p className="text-[11px] text-slate-500 font-bold italic uppercase mb-3">PNG/JPG up to 2MB</p>
+                   <button 
+                    onClick={(e) => { e.stopPropagation(); handleResetImage(); }}
+                    className="flex items-center gap-2 px-4 py-1.5 bg-white/5 hover:bg-white/10 text-white rounded-full text-[11px] font-black uppercase tracking-widest transition-all border border-white/10"
+                   >
+                     <RotateCcw size={12} className="text-brand" /> Reset to Default
+                   </button>
                 </div>
             </div>
 
@@ -175,10 +185,10 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
                 </div>
             </div>
 
-            {/* Languages Section - Styled after the screenshot */}
+            {/* Languages Section */}
             <div className="space-y-4">
                <label className="flex items-center gap-2 text-[11px] font-black uppercase text-brand ml-2">
-                  <Languages size={14} /> {isTrainerMode ? 'Coach Languages' : 'Communication Preferences'}
+                  <Languages size={14} /> {isTrainerMode ? 'Coach Languages' : 'Spoken Languages'}
                </label>
                <div className="flex flex-wrap gap-2">
                   {languageOptions.map(lang => (
@@ -200,7 +210,6 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
             {/* Management Exclusive Tools */}
             {isManagement && (
                <div className="space-y-8 animate-in slide-in-from-top-2">
-                  {/* Commission - Specifically Styled like the screenshot box */}
                   <div className="p-8 bg-[#1e293b]/50 rounded-[2.5rem] border border-white/10 relative group">
                     <div className="flex justify-between items-center mb-6">
                        <label className="text-[11px] font-black uppercase text-brand tracking-widest">Club Commission Share</label>
@@ -217,7 +226,6 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
                     </div>
                   </div>
 
-                  {/* Authority - Management Only */}
                   <div className="pt-6 border-t border-white/5">
                     <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-500 mb-6 italic">Authority Delegation</h3>
                     <div className="grid grid-cols-2 gap-2">

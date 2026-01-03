@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { LayoutDashboard, ListFilter, Briefcase, UserCheck, FileSpreadsheet, Users, RefreshCw, Star, Trash2, Eye, X, Loader2, TrendingUp, Wallet, Check, Ban, DollarSign, PieChart, History, CreditCard, Banknote, Calendar, Clock, User, Phone, ShieldCheck, Key, Fingerprint, Settings2, Copy, CheckSquare, MessageSquare, Trash, Zap, ArrowUpRight, Activity, BellRing, ChevronDown, ChevronUp, Info, MapPinned, Edit3, Save, AlertTriangle, Percent } from 'lucide-react';
+import { LayoutDashboard, ListFilter, Briefcase, UserCheck, FileSpreadsheet, Users, RefreshCw, Star, Trash2, Eye, X, Loader2, TrendingUp, Wallet, Check, Ban, DollarSign, PieChart, History, CreditCard, Banknote, Calendar, Clock, User, Phone, ShieldCheck, Key, Fingerprint, Settings2, Copy, CheckSquare, MessageSquare, Trash, Zap, ArrowUpRight, Activity, BellRing, ChevronDown, ChevronUp, Info, MapPinned, Edit3, Save, AlertTriangle, Percent, Languages } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, DEFAULT_PROFILE_IMAGE } from '../constants';
 import { User as UserType, Booking, Review } from '../types';
@@ -410,71 +410,11 @@ const AdminPanel: React.FC = () => {
            </div>
         )}
 
-        {activeTab === 'trainers' && ( activeTrainers.length === 0 ? <p className="text-center py-20 text-slate-500">No active coaches.</p> :
-           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {activeTrainers.map(t => (
-                 <div key={t.id} className="p-8 bg-surface rounded-[3rem] border border-white/5 relative group shadow-xl">
-                    <div className="flex items-center gap-4 mb-6">
-                       <img src={t.image || DEFAULT_PROFILE_IMAGE} className="w-16 h-16 rounded-2xl object-cover grayscale" />
-                       <div>
-                          <h4 className="text-xl font-black uppercase italic text-white leading-none mb-1">{cleanName(t.name)}</h4>
-                          <p className="text-[11px] font-black uppercase tracking-widest text-brand">{t.name.match(/\((.*)\)/)?.[1] || 'Coach'}</p>
-                       </div>
-                    </div>
-                    <div className="space-y-4 pt-6 border-t border-white/5">
-                       <div className="flex justify-between items-center text-[11px] font-bold">
-                          <span className="text-slate-500 uppercase flex items-center gap-1.5"><Percent size={12} /> Commission Rate</span>
-                          {isManagement ? (
-                              <div className="flex items-center gap-2">
-                                <input 
-                                    type="number" 
-                                    value={t.commissionRate} 
-                                    onChange={(e) => updateUser(t.id, { commissionRate: Number(e.target.value) })}
-                                    className="w-16 bg-dark/40 border border-white/10 rounded-lg px-2 py-1 text-white font-black text-center outline-none focus:border-brand"
-                                />
-                                <span className="text-slate-500">%</span>
-                              </div>
-                          ) : (
-                              <span className="text-white bg-white/5 px-3 py-1 rounded-lg">{t.commissionRate || 25}%</span>
-                          )}
-                       </div>
-                    </div>
-                    <button onClick={() => setUserForRoles(t)} className="mt-8 w-full py-4 bg-white/5 hover:bg-brand hover:text-dark text-slate-500 text-[11px] font-black uppercase rounded-2xl border border-white/10 transition-all flex items-center justify-center gap-2 italic">
-                       <Settings2 size={14} /> Identity Controls
-                    </button>
-                 </div>
-              ))}
-           </div>
-        )}
-
-        {activeTab === 'applications' && ( pendingApps.length === 0 ? <p className="text-center py-20 text-slate-500 italic">Queue is clear.</p> :
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {pendingApps.map(app => (
-                 <div key={app.id} className="p-10 bg-surface rounded-[3rem] border border-white/5 relative overflow-hidden shadow-2xl">
-                    <div className="flex items-center gap-6 mb-8">
-                       <div className="w-16 h-16 rounded-[2rem] bg-dark flex items-center justify-center text-2xl font-black text-brand italic">{app.name.charAt(0)}</div>
-                       <div>
-                          <h4 className="text-2xl font-black uppercase italic text-white leading-none mb-2">{cleanName(app.name)}</h4>
-                          <p className="text-[11px] font-black tracking-widest text-brand">{app.name.match(/\((.*)\)/)?.[1] || 'Coach'}</p>
-                       </div>
-                    </div>
-                    <div className="space-y-4 mb-10">
-                       <p className="text-xs text-slate-400 italic leading-relaxed">"{app.bio}"</p>
-                    </div>
-                    <div className="flex gap-4">
-                       <button onClick={() => setUserForRoles(app)} className="flex-1 py-5 bg-brand text-dark rounded-2xl font-black uppercase text-[11px] hover:bg-white transition-all shadow-xl">Review & Hire</button>
-                       <button onClick={() => confirmAction({ title: 'Reject Account', message: 'Dismiss this coach application?', onConfirm: () => updateUser(app.id, { roles: ['user'] }) })} className="px-6 py-4 bg-white/5 text-slate-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all"><Ban size={18} /></button>
-                    </div>
-                 </div>
-              ))}
-           </div>
-        )}
-
         {activeTab === 'users' && (
            <div className="bg-surface rounded-[3rem] border border-white/5 overflow-hidden shadow-2xl">
               <table className="w-full">
                   <thead className="bg-dark/30 text-[11px] font-black uppercase text-slate-500">
-                     <tr><th className="px-8 py-5 text-left">Member Profile</th><th className="px-8 py-5 text-left">Registration</th><th className="px-8 py-5 text-right">Delete</th></tr>
+                     <tr><th className="px-8 py-5 text-left">Member Profile</th><th className="px-8 py-5 text-left">Info</th><th className="px-8 py-5 text-left">Registration</th><th className="px-8 py-5 text-right">Delete</th></tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
                      {users.map(u => (
@@ -486,6 +426,16 @@ const AdminPanel: React.FC = () => {
                                     <p className="font-black text-white uppercase italic leading-none mb-1">{cleanName(u.name)}</p>
                                     <p className="text-[11px] text-slate-500 italic">{u.email}</p>
                                  </div>
+                              </div>
+                           </td>
+                           <td className="px-8 py-6">
+                              <div className="flex flex-col gap-1">
+                                 {u.languages && u.languages.length > 0 && (
+                                   <div className="flex items-center gap-1.5 text-slate-400 font-black uppercase tracking-widest text-[9px] italic">
+                                     <Languages size={10} /> {u.languages.join(', ')}
+                                   </div>
+                                 )}
+                                 <div className="text-[9px] font-black uppercase text-slate-600 tracking-[0.2em]">{u.roles.join(' • ')}</div>
                               </div>
                            </td>
                            <td className="px-8 py-6 text-slate-400 font-bold italic">{new Date(u.joinedDate).toLocaleDateString()}</td>
@@ -545,7 +495,7 @@ const AdminPanel: React.FC = () => {
         )}
 
       </div>
-      {/* (Remaining modal code kept same but with updated classes) */}
+      
       {editingBooking && (
          <div className="fixed inset-0 z-[220] flex items-center justify-center p-4 bg-dark/95 backdrop-blur-xl animate-in fade-in duration-300 text-left">
             <div className="bg-surface border border-white/10 rounded-[3rem] p-10 w-full max-w-lg shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh]">

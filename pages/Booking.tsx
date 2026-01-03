@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, Calendar as CalendarIcon, Clock, User, Phone, X, Mail, Loader2, ChevronLeft, ChevronRight, ArrowLeft, Star, Award, Zap, Quote, ThumbsUp, MapPin, Target, ShieldCheck, CalendarPlus, MessageSquare, Sparkles } from 'lucide-react';
+import { Check, Calendar as CalendarIcon, Clock, User, Phone, X, Mail, Loader2, ChevronLeft, ChevronRight, ArrowLeft, Star, Award, Zap, Quote, ThumbsUp, MapPin, Target, ShieldCheck, CalendarPlus, MessageSquare, Sparkles, Languages } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { getTrainers, TRANSLATIONS, DEFAULT_PROFILE_IMAGE, getTrainerReviews } from '../constants';
 import { Trainer, Booking } from '../types';
@@ -28,7 +28,8 @@ const BookingPage: React.FC = () => {
           image: u.image || DEFAULT_PROFILE_IMAGE, 
           phone: u.phone || '',
           bio: u.bio || (language === 'bg' ? 'Професионален инструктор с богат опит.' : 'Professional instructor with extensive experience.'),
-          availability: ['08:00', '09:00', '10:00', '14:00', '15:00', '16:00', '17:00']
+          availability: ['08:00', '09:00', '10:00', '14:00', '15:00', '16:00', '17:00'],
+          languages: u.languages || ['Bulgarian', 'English']
         };
       });
 
@@ -271,7 +272,14 @@ const BookingPage: React.FC = () => {
                    <div className="absolute inset-0 bg-gradient-to-t from-dark/90 via-transparent to-transparent"></div>
                    <div className="absolute bottom-0 left-0 p-6 w-full">
                       <p className="text-[11px] font-black uppercase tracking-widest text-brand mb-1">{trainer.specialty}</p>
-                      <h3 className="text-xl font-black uppercase italic text-white leading-tight">{trainer.name}</h3>
+                      <h3 className="text-xl font-black uppercase italic text-white leading-tight mb-2">{trainer.name}</h3>
+                      {trainer.languages && (
+                        <div className="flex gap-1.5 flex-wrap">
+                          {trainer.languages.slice(0, 3).map(l => (
+                            <span key={l} className="text-[9px] font-black uppercase tracking-widest text-white/40 bg-white/5 px-1.5 py-0.5 rounded italic">{l.charAt(0)}</span>
+                          ))}
+                        </div>
+                      )}
                    </div>
                 </div>
               </div>
@@ -291,6 +299,18 @@ const BookingPage: React.FC = () => {
                   <div className="p-10">
                      <h2 className="text-4xl font-black uppercase italic text-white mb-2 leading-tight">{selectedTrainer.name}</h2>
                      <div className="inline-block px-4 py-1 bg-brand text-dark rounded-full text-[11px] font-black uppercase tracking-widest mb-6">{selectedTrainer.specialty}</div>
+                     
+                     {/* Spoken Languages Detail */}
+                     <div className="flex items-center gap-3 mb-6 p-4 bg-dark/20 rounded-2xl border border-white/5">
+                        <Languages size={18} className="text-brand" />
+                        <div>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-0.5">Spoken Languages</p>
+                          <p className="text-xs font-black text-white italic uppercase tracking-tighter">
+                            {selectedTrainer.languages?.join(', ') || 'Bulgarian, English'}
+                          </p>
+                        </div>
+                     </div>
+
                      <p className="text-xs text-slate-400 font-medium italic leading-relaxed border-t border-white/5 pt-6">{selectedTrainer.bio}</p>
                   </div>
                </div>

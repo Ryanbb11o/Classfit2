@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { Calendar, Star, LogOut, Dumbbell, Loader2, X, MapPinned, Settings2, Trash2, AlertCircle, Sparkles, ShieldCheck, ChevronRight } from 'lucide-react';
+import { Calendar, Star, LogOut, Dumbbell, Loader2, X, MapPinned, Settings2, Trash2, AlertCircle, Sparkles, ShieldCheck, ChevronRight, Languages } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, getTrainers, DEFAULT_PROFILE_IMAGE } from '../constants';
 import { useNavigate } from 'react-router-dom';
@@ -101,8 +101,7 @@ const CustomerDashboard: React.FC = () => {
   }, [bookings, currentUser]);
 
   const handleReviewSubmit = async (id: string, rating: number, text: string, isAi: boolean, trainerId: string) => {
-    // Fix: Corrected variable name from iAi to isAi to match function parameter
-    await addReview({ trainerId, author: currentUser.name.split('(')[0].trim(), rating, text, isAiEnhanced: isAi, bookingId: id });
+    await addReview({ trainerId, author: currentUser.name.split('(')[0].trim(), rating, text, isAiEnhanced: i, bookingId: id });
     await updateBooking(id, { status: 'trainer_completed', hasBeenReviewed: true });
     setBookingToReview(null);
     await refreshData();
@@ -121,9 +120,19 @@ const CustomerDashboard: React.FC = () => {
          <div className="flex items-center gap-6 relative z-10">
             <div className="w-24 h-24 rounded-full p-1 border-2 border-brand/50 bg-dark shrink-0"><img src={currentUser.image || DEFAULT_PROFILE_IMAGE} className="w-full h-full object-cover rounded-full" /></div>
             <div className="text-center md:text-left">
-                <h1 className="text-3xl font-black uppercase italic text-white leading-none mb-2 tracking-tighter">{cleanName(currentUser.name)}</h1>
-                <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                <h1 className="text-3xl font-black uppercase italic text-white leading-none mb-3 tracking-tighter">{cleanName(currentUser.name)}</h1>
+                
+                <div className="flex flex-wrap gap-2 justify-center md:justify-start mb-4">
                    <span className="text-brand bg-brand/10 text-[11px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-full border border-brand/20">{(currentUser.roles?.[0] || 'user').toUpperCase()}</span>
+                   
+                   {currentUser.languages && currentUser.languages.length > 0 && (
+                     <div className="flex items-center gap-1.5 bg-white/5 px-3 py-1 rounded-full border border-white/10 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 italic">
+                       <Languages size={10} /> {currentUser.languages.join(' • ')}
+                     </div>
+                   )}
+                </div>
+
+                <div className="flex flex-wrap gap-2 justify-center md:justify-start">
                    <button onClick={() => setShowEditModal(true)} className="bg-white/5 hover:bg-brand hover:text-dark text-white text-[11px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-full border border-white/10 transition-all flex items-center gap-1.5"><Settings2 size={10} /> Identity</button>
                    {isAdmin && (
                       <button onClick={() => navigate('/admin')} className="bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white text-[11px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-full border border-red-500/20 transition-all flex items-center gap-1.5 shadow-lg">
@@ -147,6 +156,7 @@ const CustomerDashboard: React.FC = () => {
             </div>
         ) : (
             myBookings.map(booking => {
+                // Fix: Corrected 'trainers' to 'allTrainers' to resolve reference error
                 const trainer = allTrainers.find(tr => tr.id === booking.trainerId);
                 return (
                     <div key={booking.id} className="bg-surface/50 backdrop-blur-md border border-white/5 rounded-[3rem] p-8 hover:border-brand/40 transition-all group overflow-hidden">
