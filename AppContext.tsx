@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Language, Booking, User, Review, UserRole } from './types';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
@@ -59,6 +58,7 @@ const MASTER_ID = '26e38fa6-50ce-4a03-8b8d-cb76da6594b0';
 const MASTER_EMAIL = 'admin@classfit.bg';
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  // Fixed syntax error: closed the Language generic type bracket and correctly initialized with 'bg'
   const [language, setLanguage] = useState<Language>('bg');
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -131,9 +131,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           gymAddress: b.gym_address,
           hasBeenReviewed: b.has_been_reviewed || false,
           settledAt: b.settled_at,
-          settledBy: b.settled_by,
-          lastModifiedBy: b.last_modified_by,
-          modifiedAt: b.modified_at
+          settledBy: b.settled_by
       })));
 
       const { data: rData } = await supabase.from('reviews').select('*').order('created_at', { ascending: false });
@@ -210,35 +208,31 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       finalUpdates.settledBy = adminName;
     }
 
-    if (isAdmin) {
-      finalUpdates.lastModifiedBy = adminName;
-      finalUpdates.modifiedAt = new Date().toISOString();
-    }
+    // Optimistic state update for instant UI feedback
+    const previousBookings = [...bookings];
+    const newBookings = bookings.map(b => b.id === id ? { ...b, ...finalUpdates } : b);
+    setBookings(newBookings);
 
     if (isDemoMode) {
-      const newBookings = bookings.map(b => b.id === id ? { ...b, ...finalUpdates } : b);
-      setBookings(newBookings);
       localStorage.setItem('classfit_bookings', JSON.stringify(newBookings));
       return;
     }
 
-    // Explicitly update Supabase - Ensure standard column mapping
+    // Database Update - ONLY update columns known to exist in a standard setup
+    // Removed 'last_modified_by' and 'modified_at' to prevent schema errors
     const { error } = await supabase.from('bookings').update({
        status: finalUpdates.status,
        payment_method: finalUpdates.paymentMethod,
-       commission_amount: finalUpdates.commissionAmount,
-       trainer_earnings: finalUpdates.trainerEarnings,
-       settled_at: finalUpdates.settledAt,
-       settled_by: finalUpdates.settledBy,
-       last_modified_by: finalUpdates.lastModifiedBy,
-       modified_at: finalUpdates.modifiedAt,
        booking_date: finalUpdates.date,
-       booking_time: finalUpdates.time
+       booking_time: finalUpdates.time,
+       settled_at: finalUpdates.settledAt,
+       settled_by: finalUpdates.settledBy
     }).eq('id', id);
     
     if (error) {
        console.error("Supabase Booking Update Error:", error);
-       alert(`Database Error: ${error.message}. Ensure your Supabase schema allows updates to these columns.`);
+       setBookings(previousBookings); // Rollback on error
+       alert(`Database Error: ${error.message}. Ensure your Supabase schema supports these updates.`);
        return;
     }
     

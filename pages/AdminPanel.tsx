@@ -31,12 +31,6 @@ const AdminPanel: React.FC = () => {
     refreshData().then(() => setTimeout(() => setIsRefreshing(false), 500));
   };
 
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedId(text);
-    setTimeout(() => setCopiedId(null), 2000);
-  };
-
   const calculateTimeRange = (startTime: string, durationMins: number = 60) => {
     if (!startTime) return '';
     const [hours, minutes] = startTime.split(':').map(Number);
@@ -164,18 +158,6 @@ const AdminPanel: React.FC = () => {
                       <span className="text-white font-black italic">{booking.trainerEarnings?.toFixed(2)} BGN</span>
                    </div>
                 </div>
-
-                {booking.lastModifiedBy && (
-                    <div className="p-4 bg-yellow-500/5 border border-yellow-500/10 rounded-xl">
-                        <div className="flex items-center gap-2 mb-1">
-                            <AlertTriangle size={10} className="text-yellow-500" />
-                            <p className="text-[8px] font-black uppercase text-yellow-500 tracking-widest">Administrative Log</p>
-                        </div>
-                        <p className="text-[10px] text-slate-400 italic">
-                            Rescheduled or modified by <span className="text-white font-black">{booking.lastModifiedBy}</span> on {new Date(booking.modifiedAt!).toLocaleDateString()}
-                        </p>
-                    </div>
-                )}
             </div>
          </div>
       </div>
@@ -603,7 +585,7 @@ const AdminPanel: React.FC = () => {
                         >
                             {isSavingBooking ? <Loader2 className="animate-spin" size={16} /> : <><Save size={16} /> Commit Overrides & Update Ledger</>}
                         </button>
-                        <p className="text-center text-[9px] text-slate-600 font-bold uppercase tracking-widest italic">Management action will be logged to the secure audit trail.</p>
+                        <p className="text-center text-[9px] text-slate-600 font-bold uppercase tracking-widest italic">Management actions are synchronized with the secure live ledger.</p>
                     </div>
                 </div>
             </div>
