@@ -200,31 +200,50 @@ const AdminPanel: React.FC = () => {
         {activeTab === 'overview' && (
            <div className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                 <div className="p-8 bg-brand text-dark rounded-[2.5rem] shadow-xl relative overflow-hidden group">
+                 {/* Total Revenue -> Finance Tab */}
+                 <div 
+                    onClick={() => setActiveTab('finance')}
+                    className="p-8 bg-brand text-dark rounded-[2.5rem] shadow-xl relative overflow-hidden group cursor-pointer hover:scale-[1.02] active:scale-95 transition-all"
+                 >
                     <div className="absolute top-4 right-4 opacity-10"><PieChart size={48} /></div>
                     <p className="text-[10px] font-black uppercase mb-4 tracking-widest italic opacity-60">Total Revenue</p>
                     <p className="text-4xl font-black italic tracking-tighter">{totalRevenue.toFixed(2)} <span className="text-xs">BGN</span></p>
                     <div className="mt-4 inline-flex items-center gap-1.5 px-2.5 py-1 bg-dark/10 rounded-lg text-[9px] font-black uppercase italic">
-                       <ArrowUpRight size={12} /> Real-time
+                       <ArrowUpRight size={12} /> View Details
                     </div>
                  </div>
-                 <div className="p-8 bg-surface border border-white/5 rounded-[2.5rem] relative overflow-hidden">
+
+                 {/* Gym Profit -> Finance Tab */}
+                 <div 
+                    onClick={() => setActiveTab('finance')}
+                    className="p-8 bg-surface border border-white/5 rounded-[2.5rem] relative overflow-hidden group cursor-pointer hover:border-brand/40 hover:scale-[1.02] active:scale-95 transition-all"
+                 >
                     <div className="absolute top-4 right-4 opacity-10"><TrendingUp size={48} className="text-brand" /></div>
                     <p className="text-[10px] font-black uppercase mb-4 tracking-widest italic text-slate-500">Gym Profit</p>
                     <p className="text-4xl font-black italic text-brand tracking-tighter">{gymProfit.toFixed(2)} <span className="text-xs">BGN</span></p>
-                    <p className="text-[9px] text-slate-600 font-bold uppercase mt-4 italic tracking-widest">Net Earnings</p>
+                    <p className="text-[9px] text-slate-600 font-bold uppercase mt-4 italic tracking-widest group-hover:text-brand transition-colors">Net Earnings →</p>
                  </div>
-                 <div className="p-8 bg-surface border border-white/5 rounded-[2.5rem] relative overflow-hidden">
+
+                 {/* Pending Pay -> Finance Tab */}
+                 <div 
+                    onClick={() => setActiveTab('finance')}
+                    className="p-8 bg-surface border border-white/5 rounded-[2.5rem] relative overflow-hidden group cursor-pointer hover:border-yellow-500/40 hover:scale-[1.02] active:scale-95 transition-all"
+                 >
                     <div className="absolute top-4 right-4 opacity-5"><Wallet size={48} className="text-yellow-500" /></div>
                     <p className="text-[10px] font-black uppercase mb-4 tracking-widest italic text-slate-500">Pending Pay</p>
                     <p className="text-4xl font-black italic text-yellow-500 tracking-tighter">{awaitingPaymentList.length}</p>
-                    <button onClick={() => setActiveTab('finance')} className="mt-4 text-[9px] font-black uppercase text-slate-400 hover:text-white transition-colors">Action Required →</button>
+                    <div className="mt-4 text-[9px] font-black uppercase text-slate-400 group-hover:text-white transition-colors">Action Required →</div>
                  </div>
-                 <div className="p-8 bg-surface border border-white/5 rounded-[2.5rem] relative overflow-hidden">
+
+                 {/* Community -> Users Tab */}
+                 <div 
+                    onClick={() => setActiveTab('users')}
+                    className="p-8 bg-surface border border-white/5 rounded-[2.5rem] relative overflow-hidden group cursor-pointer hover:border-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all"
+                 >
                     <div className="absolute top-4 right-4 opacity-5"><Users size={48} className="text-blue-500" /></div>
                     <p className="text-[10px] font-black uppercase mb-4 tracking-widest italic text-slate-500">Community</p>
                     <p className="text-4xl font-black italic text-white tracking-tighter">{users.length}</p>
-                    <p className="text-[9px] text-slate-600 font-bold uppercase mt-4 italic tracking-widest">Active Members</p>
+                    <p className="text-[9px] text-slate-600 font-bold uppercase mt-4 italic tracking-widest group-hover:text-blue-400 transition-colors">Active Members →</p>
                  </div>
               </div>
 
