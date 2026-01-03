@@ -15,6 +15,7 @@ const ReviewModal: React.FC<{
   onSubmit: (id: string, rating: number, text: string, isAi: boolean, trainerId: string) => Promise<void>;
 }> = ({ booking, trainerName, onClose, onSubmit }) => {
   const { language } = useAppContext();
+  const t = TRANSLATIONS[language];
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -40,7 +41,7 @@ const ReviewModal: React.FC<{
             properties: { polishedReview: { type: Type.STRING }, insights: { type: Type.STRING } },
             required: ["polishedReview", "insights"]
           },
-          systemInstruction: "Rewrite the customer review to be clear, honest, and concise. Keep it short (1-2 sentences) and make it sound like it was written by a real person, not an advertisement. Avoid over-the-top energy. Return JSON."
+          systemInstruction: "Rewrite the customer review in Bulgarian (or English if written in English) to be clear, honest, and concise. Keep it short (1-2 sentences) and make it sound like it was written by a real person, not an advertisement. Avoid over-the-top energy and excessive exclamation marks. Return JSON."
         }
       });
       const result = JSON.parse(response.text || '{}');
@@ -58,10 +59,10 @@ const ReviewModal: React.FC<{
           </div>
           
           <h2 className="text-2xl font-black uppercase italic text-white mb-4 leading-tight tracking-tight px-4">
-            Classfit would love to know about your experience training with <span className="text-brand">{trainerName}</span>
+            {t.reviewModalTitle} <span className="text-brand">{trainerName}</span>
           </h2>
           
-          <p className="text-slate-500 text-[11px] font-black uppercase tracking-widest italic mb-8">Your honest feedback helps our community!</p>
+          <p className="text-slate-500 text-[11px] font-black uppercase tracking-widest italic mb-8">{t.reviewModalSubtitle}</p>
           
           <form onSubmit={(e) => { e.preventDefault(); setIsSubmitting(true); onSubmit(booking.id, rating, comment, isAiEnhanced, booking.trainerId).finally(() => setIsSubmitting(false)); }} className="space-y-6 text-left">
              <div className="flex justify-center gap-2 mb-6">
@@ -70,16 +71,16 @@ const ReviewModal: React.FC<{
              
              <div className="space-y-2 relative">
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-2">Your Experience</label>
+                  <label className="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-2">{t.yourExperience}</label>
                   <button type="button" onClick={handleAiEnhance} disabled={isEnhancing || !comment.trim()} className="flex items-center gap-1.5 px-3 py-1 bg-brand/10 text-brand rounded-full text-[10px] font-black uppercase transition-all hover:bg-brand hover:text-dark">
-                    {isEnhancing ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />} Polish with AI
+                    {isEnhancing ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />} {t.polishWithAi}
                   </button>
                 </div>
-                <textarea rows={4} value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Write a short, honest review..." className="w-full bg-dark/50 border border-white/5 rounded-2xl px-6 py-5 text-white font-medium italic outline-none focus:border-brand resize-none text-sm shadow-inner" />
+                <textarea rows={4} value={comment} onChange={(e) => setComment(e.target.value)} placeholder="..." className="w-full bg-dark/50 border border-white/5 rounded-2xl px-6 py-5 text-white font-medium italic outline-none focus:border-brand resize-none text-sm shadow-inner" />
              </div>
              
              <button type="submit" disabled={isSubmitting} className="w-full py-6 bg-brand text-dark rounded-2xl font-black uppercase tracking-widest text-[12px] hover:bg-white transition-all shadow-2xl shadow-brand/20 active:scale-[0.98]">
-               {isSubmitting ? <Loader2 className="animate-spin mx-auto" size={18} /> : 'Submit Feedback'}
+               {isSubmitting ? <Loader2 className="animate-spin mx-auto" size={18} /> : t.submitFeedback}
              </button>
           </form>
        </div>
@@ -92,7 +93,9 @@ const SessionDetailModal: React.FC<{
     onClose: () => void; 
     onReview: () => void;
     trainer: Trainer | undefined;
-}> = ({ booking, onClose, onReview, trainer }) => {
+    language: 'bg' | 'en';
+}> = ({ booking, onClose, onReview, trainer, language }) => {
+    const t = TRANSLATIONS[language];
     const isFinished = booking.status === 'trainer_completed' || booking.status === 'completed';
     const canReview = (booking.status === 'confirmed' || isFinished) && !booking.hasBeenReviewed;
 
@@ -108,25 +111,25 @@ const SessionDetailModal: React.FC<{
                             <img src={trainer?.image || DEFAULT_PROFILE_IMAGE} className="w-full h-full object-cover" alt="Trainer" />
                         </div>
                         <div>
-                            <p className="text-[11px] font-black uppercase text-brand tracking-widest mb-1 italic">Verified Training</p>
+                            <p className="text-[11px] font-black uppercase text-brand tracking-widest mb-1 italic">{t.transform}</p>
                             <h2 className="text-3xl font-black uppercase italic text-white leading-none tracking-tighter">{trainer?.name || 'Coach'}</h2>
-                            <p className="text-slate-500 text-[11px] font-black uppercase tracking-widest mt-2 italic">{trainer?.specialty || 'Instructor'}</p>
+                            <p className="text-slate-500 text-[11px] font-black uppercase tracking-widest mt-2 italic">{trainer?.specialty || t.trainer}</p>
                         </div>
                     </div>
 
                     <div className="space-y-6">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="p-6 bg-dark/40 rounded-2xl border border-white/5">
-                                <p className="text-[10px] font-black uppercase text-slate-600 mb-2">Check-in Code</p>
+                                <p className="text-[10px] font-black uppercase text-slate-600 mb-2">PIN</p>
                                 <p className="text-2xl font-black text-brand tracking-widest italic leading-none">{booking.checkInCode}</p>
                             </div>
                             <div className="p-6 bg-dark/40 rounded-2xl border border-white/5">
-                                <p className="text-[10px] font-black uppercase text-slate-600 mb-2">Status</p>
+                                <p className="text-[10px] font-black uppercase text-slate-600 mb-2">{t.status}</p>
                                 <span className={`px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-widest ${
                                   booking.status === 'confirmed' ? 'bg-green-500/10 text-green-500' : 
                                   booking.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500' : 
                                   'bg-brand/10 text-brand'
-                                }`}>{booking.status.replace('_', ' ')}</span>
+                                }`}>{t[`status${booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}` as keyof typeof t] || booking.status}</span>
                             </div>
                         </div>
 
@@ -152,11 +155,11 @@ const SessionDetailModal: React.FC<{
                                     className="w-full py-6 bg-brand text-dark rounded-2xl font-black uppercase tracking-[0.2em] text-[13px] flex items-center justify-center gap-3 shadow-2xl shadow-brand/20 hover:bg-white hover:scale-[1.02] active:scale-95 transition-all group"
                                 >
                                     <Star size={18} className="fill-dark group-hover:scale-110 transition-transform" /> 
-                                    Leave a Review
+                                    {t.leaveReview}
                                 </button>
                             ) : booking.hasBeenReviewed ? (
                                 <div className="w-full py-5 bg-white/5 border border-white/10 text-slate-500 rounded-2xl flex items-center justify-center gap-3 text-[11px] font-black uppercase italic">
-                                    <CheckCircle2 size={16} className="text-brand" /> Feedback Provided
+                                    <CheckCircle2 size={16} className="text-brand" /> {t.feedbackProvided}
                                 </div>
                             ) : null}
                         </div>
@@ -176,23 +179,13 @@ const CustomerDashboard: React.FC = () => {
   const [viewingBooking, setViewingBooking] = useState<Booking | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
 
-  const calculateTimeRange = (startTime: string, durationMins: number = 60) => {
-    if (!startTime) return '';
-    const [hours, minutes] = startTime.split(':').map(Number);
-    const totalMinutes = hours * 60 + minutes + durationMins;
-    const endHours = Math.floor(totalMinutes / 60) % 24;
-    const endMinutes = totalMinutes % 60;
-    const endTime = `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
-    return `${startTime} - ${endTime}`;
-  };
-
   const allTrainers = useMemo(() => {
     const staticTrainers = getTrainers(language);
     const dynamicTrainers: Trainer[] = users
       .filter(u => u.roles?.includes('trainer'))
-      .map(u => ({ id: u.id, name: u.name.split('(')[0].trim(), specialty: u.name.match(/\((.*)\)/)?.[1] || 'Instructor', price: 20, image: u.image || DEFAULT_PROFILE_IMAGE, phone: u.phone || '', availability: [] }));
+      .map(u => ({ id: u.id, name: u.name.split('(')[0].trim(), specialty: u.name.match(/\((.*)\)/)?.[1] || t.trainer, price: 20, image: u.image || DEFAULT_PROFILE_IMAGE, phone: u.phone || '', availability: [] }));
     return [...staticTrainers, ...dynamicTrainers];
-  }, [language, users]);
+  }, [language, users, t]);
 
   if (!currentUser) return null;
 
@@ -202,16 +195,33 @@ const CustomerDashboard: React.FC = () => {
 
   const handleReviewSubmit = async (id: string, rating: number, text: string, isAi: boolean, trainerId: string) => {
     const booking = bookings.find(b => b.id === id);
-    await addReview({ trainerId, author: currentUser.name.split('(')[0].trim(), rating, text, isAiEnhanced: isAi, bookingId: id });
-    const newStatus = booking?.status === 'confirmed' ? 'trainer_completed' : booking?.status;
-    await updateBooking(id, { status: newStatus as any, hasBeenReviewed: true });
+    if (!booking) return;
+
+    // 1. Submit review
+    await addReview({ 
+      trainerId, 
+      author: currentUser.name.split('(')[0].trim(), 
+      rating, 
+      text, 
+      isAiEnhanced: isAi, 
+      bookingId: id 
+    });
+
+    // 2. Update status and toggle reviewed flag
+    const newStatus = booking.status === 'confirmed' ? 'trainer_completed' : booking.status;
+    await updateBooking(id, { 
+      status: newStatus as any, 
+      hasBeenReviewed: true 
+    });
+
     setBookingToReview(null);
+    setViewingBooking(null);
     await refreshData();
   };
 
   const getTrainerImage = (trainerId: string) => {
-    const t = allTrainers.find(tr => tr.id === trainerId);
-    return t?.image || DEFAULT_PROFILE_IMAGE;
+    const tImg = allTrainers.find(tr => tr.id === trainerId);
+    return tImg?.image || DEFAULT_PROFILE_IMAGE;
   };
 
   const cleanName = (name: string) => name.split('(')[0].trim();
@@ -237,7 +247,7 @@ const CustomerDashboard: React.FC = () => {
                 </div>
 
                 <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-                   <button onClick={() => setShowEditModal(true)} className="bg-white/5 hover:bg-brand hover:text-dark text-white text-[11px] font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border border-white/10 transition-all flex items-center gap-1.5"><Settings2 size={12} /> Profile Settings</button>
+                   <button onClick={() => setShowEditModal(true)} className="bg-white/5 hover:bg-brand hover:text-dark text-white text-[11px] font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border border-white/10 transition-all flex items-center gap-1.5"><Settings2 size={12} /> {t.profileSettings}</button>
                    {isAdmin && (
                       <button onClick={() => navigate('/admin')} className="bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white text-[11px] font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border border-red-500/20 transition-all flex items-center gap-1.5 shadow-lg">
                         <ShieldCheck size={12} /> Console <ChevronRight size={12} />
@@ -253,8 +263,8 @@ const CustomerDashboard: React.FC = () => {
 
       <div className="grid grid-cols-1 gap-8">
         <div className="flex items-center justify-between mb-2">
-            <h2 className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-500 italic">My Workouts</h2>
-            <div className="flex items-center gap-2 text-[10px] font-bold text-slate-700 uppercase tracking-widest"><AlertCircle size={10}/> Reviews are greatly appreciated!</div>
+            <h2 className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-500 italic">{t.myWorkouts}</h2>
+            <div className="flex items-center gap-2 text-[10px] font-bold text-slate-700 uppercase tracking-widest"><AlertCircle size={10}/> {t.interactionRequired}</div>
         </div>
         
         {myBookings.length === 0 ? (
@@ -281,9 +291,9 @@ const CustomerDashboard: React.FC = () => {
                                   <img src={getTrainerImage(booking.trainerId)} className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" />
                                 </div>
                                 <div>
-                                  <p className="text-[10px] font-black text-brand uppercase tracking-widest mb-1 italic">Coach</p>
+                                  <p className="text-[10px] font-black text-brand uppercase tracking-widest mb-1 italic">{t.trainer}</p>
                                   <h3 className="font-black uppercase italic text-2xl text-white mb-1 tracking-tighter leading-none">{trainer?.name || 'Coach'}</h3>
-                                  <p className="text-[11px] text-slate-500 font-black uppercase tracking-widest">{trainer?.specialty || 'Instructor'}</p>
+                                  <p className="text-[11px] text-slate-500 font-black uppercase tracking-widest">{trainer?.specialty || t.trainer}</p>
                                 </div>
                             </div>
                             
@@ -292,7 +302,7 @@ const CustomerDashboard: React.FC = () => {
                                   <div className="flex items-center gap-4"><Calendar className="text-brand" size={18} /><span className="text-[12px] font-black uppercase text-white tracking-widest italic">{booking.date}</span></div>
                                   <div className="flex items-center gap-4"><Clock className="text-brand" size={18} /><span className="text-[12px] font-black uppercase text-white tracking-widest italic">{booking.time} • 60M</span></div>
                                 </div>
-                                <div className="flex items-center gap-4"><MapPinned className="text-slate-500" size={20} /><span className="text-[11px] font-black uppercase text-slate-400 tracking-widest leading-relaxed italic">LEVSRI-PRIMORSKI,<br/>STUDENTSKA 1A, VARNA</span></div>
+                                <div className="flex items-center gap-4"><MapPinned className="text-slate-500" size={20} /><span className="text-[11px] font-black uppercase text-slate-400 tracking-widest leading-relaxed italic">{t.address.toUpperCase()}</span></div>
                             </div>
                             
                             <div className="shrink-0 flex flex-col items-center justify-center p-8 bg-dark/40 rounded-[2.5rem] border border-white/10 min-w-[180px] shadow-inner">
@@ -302,7 +312,7 @@ const CustomerDashboard: React.FC = () => {
                                   booking.status === 'confirmed' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 
                                   booking.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' : 
                                   'bg-brand/10 text-brand border-brand/20'
-                                }`}>{booking.status.replace('_', ' ')}</div>
+                                }`}>{t[`status${booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}` as keyof typeof t] || booking.status}</div>
                             </div>
                         </div>
                         
@@ -315,14 +325,14 @@ const CustomerDashboard: React.FC = () => {
                                   >
                                     <span className="absolute inset-0 bg-white/10 animate-pulse pointer-events-none"></span>
                                     <Star size={16} className="fill-dark group-hover:scale-125 transition-transform relative z-10" /> 
-                                    <span className="relative z-10">Leave a Review</span>
+                                    <span className="relative z-10">{t.leaveReview}</span>
                                   </button>
                                 )}
-                                {booking.hasBeenReviewed && <span className="flex items-center gap-3 px-6 py-4 bg-white/5 text-slate-500 rounded-2xl text-[11px] font-black uppercase border border-white/5 italic"><CheckCircle2 size={16} className="text-brand" /> Feedback Sent</span>}
+                                {booking.hasBeenReviewed && <span className="flex items-center gap-3 px-6 py-4 bg-white/5 text-slate-500 rounded-2xl text-[11px] font-black uppercase border border-white/5 italic"><CheckCircle2 size={16} className="text-brand" /> {t.feedbackProvided}</span>}
                             </div>
                             <div className="flex gap-3">
-                                {(booking.status === 'confirmed' || booking.status === 'pending') && <button onClick={(e) => { e.stopPropagation(); confirmAction({ title: 'Cancel Session', message: 'Proceed with cancellation?', onConfirm: () => updateBooking(booking.id, { status: 'cancelled' }) }); }} className="flex items-center gap-2 px-6 py-4 bg-red-500/10 text-red-500 rounded-2xl text-[11px] font-black uppercase hover:bg-red-500 hover:text-white transition-all border border-red-500/10"><X size={16} /> Cancel</button>}
-                                {booking.status !== 'confirmed' && booking.status !== 'pending' && <button onClick={(e) => { e.stopPropagation(); confirmAction({ title: 'Remove Session', message: 'Remove from history?', onConfirm: () => deleteBooking(booking.id) }); }} className="flex items-center gap-2 px-6 py-4 bg-white/5 text-slate-500 rounded-2xl text-[11px] font-black uppercase hover:text-red-500 transition-all"><Trash2 size={16} /> Remove</button>}
+                                {(booking.status === 'confirmed' || booking.status === 'pending') && <button onClick={(e) => { e.stopPropagation(); confirmAction({ title: t.cancel, message: t.sure, onConfirm: () => updateBooking(booking.id, { status: 'cancelled' }) }); }} className="flex items-center gap-2 px-6 py-4 bg-red-500/10 text-red-500 rounded-2xl text-[11px] font-black uppercase hover:bg-red-500 hover:text-white transition-all border border-red-500/10"><X size={16} /> {t.cancel}</button>}
+                                {booking.status !== 'confirmed' && booking.status !== 'pending' && <button onClick={(e) => { e.stopPropagation(); confirmAction({ title: t.deleteBooking, message: t.sure, onConfirm: () => deleteBooking(booking.id) }); }} className="flex items-center gap-2 px-6 py-4 bg-white/5 text-slate-500 rounded-2xl text-[11px] font-black uppercase hover:text-red-500 transition-all"><Trash2 size={16} /> {t.deleteUser}</button>}
                             </div>
                         </div>
                     </div>
@@ -347,14 +357,15 @@ const CustomerDashboard: React.FC = () => {
             booking={viewingBooking} 
             onClose={() => setViewingBooking(null)} 
             onReview={() => setBookingToReview(viewingBooking)}
-            trainer={allTrainers.find(t => t.id === viewingBooking.trainerId)}
+            trainer={allTrainers.find(tImg => tImg.id === viewingBooking.trainerId)}
+            language={language}
           />
       )}
 
       {bookingToReview && (
         <ReviewModal 
           booking={bookingToReview} 
-          trainerName={allTrainers.find(t => t.id === bookingToReview.trainerId)?.name || 'your coach'}
+          trainerName={allTrainers.find(tImg => tImg.id === bookingToReview.trainerId)?.name || 'your coach'}
           onClose={() => setBookingToReview(null)} 
           onSubmit={handleReviewSubmit} 
         />

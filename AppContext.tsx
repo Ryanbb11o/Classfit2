@@ -84,6 +84,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
            const parsedUser = JSON.parse(savedUser);
            if (parsedUser) setCurrentUser(parsedUser);
         }
+        const savedLang = localStorage.getItem('classfit_lang');
+        if (savedLang) setLanguage(savedLang as Language);
       } catch (err) {
         console.error("Database Init Error:", err);
       } finally {
@@ -92,6 +94,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     };
     init();
   }, [isDemoMode]);
+
+  const changeLanguage = (lang: Language) => {
+    setLanguage(lang);
+    localStorage.setItem('classfit_lang', lang);
+  };
 
   const logout = () => {
     setCurrentUser(null);
@@ -154,11 +161,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           if ((u.email === MASTER_EMAIL || String(u.id) === MASTER_ID)) {
             roles = Array.from(new Set([...roles, 'management', 'admin']));
           }
-
-          // Fallback languages for trainers if DB column is empty/null
           const isTrainer = roles.some(r => r === 'trainer' || r === 'trainer_pending');
           const defaultLangs = isTrainer ? ['Bulgarian', 'English'] : [];
-
           return {
             id: String(u.id),
             name: u.name || 'User',
@@ -206,9 +210,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (updates.roles !== undefined) dbPayload.roles = updates.roles;
     if (updates.commissionRate !== undefined) dbPayload.commission_rate = updates.commissionRate;
     if (updates.approvedBy !== undefined) dbPayload.approved_by = updates.approvedBy;
-    
-    // NOTE: 'languages' is excluded from DB sync to avoid schema mismatch errors.
-    // It remains supported in the frontend local state.
 
     const { error } = await supabase.from('users').update(dbPayload).eq('id', id);
     if (error) {
@@ -246,12 +247,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return;
     }
 
-    // SAFE UPDATE: Only sending columns that are guaranteed to exist.
     const { error } = await supabase.from('bookings').update({
        status: finalUpdates.status,
        payment_method: finalUpdates.payment_method,
        booking_date: finalUpdates.date,
-       booking_time: finalUpdates.time
+       booking_time: finalUpdates.time,
+       has_been_reviewed: finalUpdates.hasBeenReviewed
     }).eq('id', id);
     
     if (error) {
@@ -260,7 +261,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
        alert(`Database Error: ${error.message}`);
        return;
     }
-    
     await refreshData();
   };
 
@@ -384,7 +384,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   return (
     <AppContext.Provider value={{ 
-      language, setLanguage, bookings, reviews, addBooking, addReview, updateReview, deleteReview, updateBooking, deleteBooking, isAdmin, isManagement, currentUser, users, login, register, registerTrainer, requestTrainerUpgrade, updateUser, deleteUser, logout, refreshData, isLoading, isDemoMode, confirmAction, confirmState, closeConfirm
+      language, setLanguage: changeLanguage, bookings, reviews, addBooking, addReview, updateReview, deleteReview, updateBooking, deleteBooking, isAdmin, isManagement, currentUser, users, login, register, registerTrainer, requestTrainerUpgrade, updateUser, deleteUser, logout, refreshData, isLoading, isDemoMode, confirmAction, confirmState, closeConfirm
     }}>
       {children}
     </AppContext.Provider>

@@ -50,12 +50,15 @@ const BookingPage: React.FC = () => {
 
   const allTrainerReviews = useMemo(() => {
     if (!selectedTrainer) return [];
-    const realReviews = liveReviews.filter(r => r.trainerId === selectedTrainer.id && r.isPublished);
+    const currentUserName = currentUser?.name.split('(')[0].trim();
+    // Show published reviews OR the current user's own reviews
+    const realReviews = liveReviews.filter(r => 
+      r.trainerId === selectedTrainer.id && (r.isPublished || r.author === currentUserName)
+    );
     const demoReviews = getTrainerReviews(selectedTrainer.id, language);
     return [...realReviews, ...demoReviews].slice(0, 10);
-  }, [selectedTrainer, language, liveReviews]);
+  }, [selectedTrainer, language, liveReviews, currentUser]);
 
-  // Check for unreviewed bookings with this trainer for the current user
   const needsReview = useMemo(() => {
     if (!currentUser || !selectedTrainer) return null;
     return bookings.find(b => 
@@ -362,7 +365,7 @@ const BookingPage: React.FC = () => {
                             onClick={() => navigate('/profile')} 
                             className="px-8 py-6 bg-surface border border-brand/50 text-brand rounded-full font-black uppercase italic tracking-[0.2em] text-[11px] transition-all hover:bg-brand hover:text-dark flex items-center justify-center gap-2 shadow-xl"
                           >
-                             <Star size={16} className="fill-brand group-hover:fill-dark" /> Leave a Review
+                             <Star size={16} className="fill-brand group-hover:fill-dark" /> {t.leaveReview}
                           </button>
                         )}
                         <button onClick={initiateBooking} disabled={!selectedTime || isSubmitting} className={`w-full sm:w-auto px-16 py-6 rounded-full font-black uppercase italic tracking-[0.2em] text-[11px] transition-all shadow-xl ${selectedTime && !isSubmitting ? 'bg-brand text-dark hover:scale-105' : 'bg-white/5 text-slate-700 cursor-not-allowed border border-white/5'}`}>
@@ -397,7 +400,12 @@ const BookingPage: React.FC = () => {
                                 <div className="flex items-center gap-3">
                                    <div className="w-8 h-8 rounded-xl bg-brand text-dark text-[11px] font-black flex items-center justify-center">{review.avatar}</div>
                                    <div>
-                                      <p className="text-[11px] font-black text-white uppercase italic tracking-tight">{review.author}</p>
+                                      <div className="flex items-center gap-2">
+                                        <p className="text-[11px] font-black text-white uppercase italic tracking-tight">{review.author}</p>
+                                        {!review.isPublished && (
+                                          <span className="text-[8px] px-1 bg-yellow-500/10 text-yellow-500 rounded uppercase font-black">Private/Pending</span>
+                                        )}
+                                      </div>
                                       <p className="text-[11px] font-black uppercase text-slate-600 tracking-widest">{review.time}</p>
                                    </div>
                                 </div>

@@ -125,7 +125,6 @@ export const getReviews = (lang: Language): Review[] => {
 
 export const getTrainerReviews = (trainerId: string, lang: Language): Review[] => {
   const isBg = lang === 'bg';
-  // Demo reviews pool - strictly positive
   const reviews: Review[] = [
     { 
       id: `tr1-${trainerId}`, 
@@ -144,24 +143,6 @@ export const getTrainerReviews = (trainerId: string, lang: Language): Review[] =
       text: isBg ? 'Тренировките са тежки, но резултатите си заслужават. Препоръчвам горещо!' : 'Workouts are tough but results are worth it. Highly recommend!', 
       time: isBg ? 'преди 1 седмица' : '1 week ago', 
       avatar: 'V' 
-    },
-    { 
-      id: `tr3-${trainerId}`, 
-      trainerId,
-      author: isBg ? 'Пламен Д.' : 'Plamen D.', 
-      rating: 4, 
-      text: isBg ? 'Много добро отношение и индивидуален подход към всеки детайл.' : 'Great attitude and individual approach to every detail.', 
-      time: isBg ? 'преди 2 седмици' : '2 weeks ago', 
-      avatar: 'P' 
-    },
-    { 
-      id: `tr4-${trainerId}`, 
-      trainerId,
-      author: isBg ? 'Елена К.' : 'Elena K.', 
-      rating: 5, 
-      text: isBg ? 'Най-добрият треньор, с когото съм работила във Варна.' : 'The best trainer I have worked with in Varna.', 
-      time: isBg ? 'преди 1 месец' : '1 month ago', 
-      avatar: 'E' 
     }
   ];
   return reviews;
@@ -191,7 +172,7 @@ export const TRANSLATIONS = {
     gymPhone: '+359 88 343 0184',
     transform: 'ТРАНСФОРМИРАЙ',
     yourself: 'СЕБЕ СИ',
-    motivation: 'Вашият път към съвършенството начина тук.',
+    motivation: 'Вашият път към съвършенството започва тук.',
     joinMovement: 'Стани част от ClassFit',
     bookNow: 'Запиши час',
     eliteBase: 'Елитна База Варна',
@@ -269,7 +250,7 @@ export const TRANSLATIONS = {
     genBy: 'От',
     completedWorkouts: 'тренировки',
     financialAnalysis: 'Отчет',
-    trainer: 'Gym Coach',
+    trainer: 'Инструктор',
     workouts: 'Брой',
     cash: 'Кеш',
     card: 'Карта',
@@ -339,7 +320,7 @@ export const TRANSLATIONS = {
     joinTeamDesc: 'Развивайте бизнеса си в ClassFit.',
     trainerRegistration: 'Регистрация за треньори',
     roleUser: 'Потребител',
-    roleTrainer: 'Gym Coach',
+    roleTrainer: 'Инструктор',
     roleAdmin: 'Web Admin',
     roleManagement: 'Management',
     roleTrainerPending: 'Чакащ',
@@ -369,8 +350,21 @@ export const TRANSLATIONS = {
     professionalDetails: 'ПРОФЕСИОНАЛНИ ДЕТАЙЛИ',
     coachPhilosophy: 'Разкажете ни за вашата експертиза и защо мястото ви е в ClassFit.',
     applicationFiled: 'ЗАЯВКАТА Е ПРИЕТА',
-    pendingReviewMsg: 'Профилът ви беше создаден успешно със статус "Изчакващ". Екипът на ClassFit ще прегледа вашата експертиза и ще се свърже с вас за интервю.',
-    returnToBase: 'Към началната страница'
+    pendingReviewMsg: 'Профилът ви беше създаден успешно със статус "Изчакващ". Екипът на ClassFit ще прегледа вашата експертиза и ще се свърже с вас за интервю.',
+    returnToBase: 'Към началната страница',
+    reviewModalTitle: 'ClassFit биха се радвали да разберат за твоя опит от тренировката с',
+    reviewModalSubtitle: 'Твоят откровен отзив помага на нашата общност!',
+    yourExperience: 'Твоето преживяване',
+    submitFeedback: 'Изпрати отзив',
+    polishWithAi: 'Полирай с AI',
+    feedbackProvided: 'Отзивът е изпратен',
+    leaveReview: 'Остави отзив',
+    myWorkouts: 'Моите тренировки',
+    registryTitle: 'Регистър на тренировките',
+    interactionRequired: 'Необходим е отзив за приключените сесии',
+    profileSettings: 'Настройки на профила',
+    editIdentity: 'Редактирай идентичността',
+    coachRegistry: 'Регистър на треньори'
   },
   en: {
     home: 'Home',
@@ -574,6 +568,19 @@ export const TRANSLATIONS = {
     coachPhilosophy: 'Tell us about your expertise and why you belong at ClassFit.',
     applicationFiled: 'APPLICATION FILED',
     pendingReviewMsg: 'Your profile has been successfully created with pending status. The ClassFit team will review your expertise and contact you for an interview.',
-    returnToBase: 'Return to Base'
+    returnToBase: 'Return to Base',
+    reviewModalTitle: 'ClassFit would love to know about your experience training with',
+    reviewModalSubtitle: 'Your honest feedback helps our community!',
+    yourExperience: 'Your Experience',
+    submitFeedback: 'Submit Feedback',
+    polishWithAi: 'Polish with AI',
+    feedbackProvided: 'Feedback Provided',
+    leaveReview: 'Leave a Review',
+    myWorkouts: 'My Workouts',
+    registryTitle: 'Workout Registry',
+    interactionRequired: 'Feedback required for completed sessions',
+    profileSettings: 'Profile Settings',
+    editIdentity: 'Edit Identity',
+    coachRegistry: 'Coach Registry'
   }
 };
