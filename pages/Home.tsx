@@ -117,7 +117,7 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* Location specific section - Varna Mir */}
+      {/* Location specific section - Varna LevskiPrimorski */}
       <section className="py-32 bg-dark">
         <div className="max-w-7xl mx-auto px-6">
           <div className="bg-surface rounded-[3rem] border border-white/10 p-8 md:p-16 flex flex-col md:flex-row items-center gap-12 overflow-hidden relative">
@@ -128,14 +128,14 @@ const Home: React.FC = () => {
                   В СЪРЦЕТО НА <span className="text-brand">ВАРНА</span>
                 </h2>
                 <p className="text-slate-400 font-medium italic mb-8 leading-relaxed">
-                  Намираме се на ул. „Студентска“ 1А, непосредствено до <span className="text-white font-bold">сп. „Мир“</span>. Лесен достъп с автомобил и градски транспорт в една от най-комуникативните точки на града.
+                  Намираме се в <span className="text-white font-bold">ЛевскиПриморски, ул. „Студентска“ 1 а</span>. Лесен достъп с автомобил и градски транспорт в една от най-комуникативните точки на града.
                 </p>
                 <div className="space-y-4">
                   <div className="flex items-center gap-4 text-white font-black uppercase italic tracking-widest text-xs">
                     <Navigation className="text-brand" size={20} /> ул. „Студентска“ 1А
                   </div>
                   <div className="flex items-center gap-4 text-white font-black uppercase italic tracking-widest text-xs">
-                    <MapPin className="text-brand" size={20} /> Варна, до сп. „Мир“
+                    <MapPin className="text-brand" size={20} /> Варна, 9010
                   </div>
                 </div>
                 <a 

@@ -47,17 +47,11 @@ const BookingPage: React.FC = () => {
   const [guestPhone, setGuestPhone] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
 
-  // Combined real-time and demo reviews, filtered for published status
+  // Moderation Filtering: only show isPublished reviews
   const allTrainerReviews = useMemo(() => {
     if (!selectedTrainer) return [];
-    
-    // 1. Get real reviews from the live reviews state, only those that are published
     const realReviews = liveReviews.filter(r => r.trainerId === selectedTrainer.id && r.isPublished);
-    
-    // 2. Fallback to demo reviews (these are always considered "published")
     const demoReviews = getTrainerReviews(selectedTrainer.id, language);
-    
-    // 3. Combine and limit
     return [...realReviews, ...demoReviews].slice(0, 10);
   }, [selectedTrainer, language, liveReviews]);
 
@@ -159,6 +153,7 @@ const BookingPage: React.FC = () => {
   const handleGuestSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (guestName && guestPhone && guestEmail) {
+      // Name validation for Guest
       const nameParts = guestName.trim().split(/\s+/);
       if (nameParts.length < 2) {
         alert(language === 'bg' ? 'Моля въведете име и фамилия (напр. Иван Петров).' : 'Please enter your first and last name (e.g. John Doe).');
@@ -194,7 +189,7 @@ const BookingPage: React.FC = () => {
       duration: 60,
       price: selectedTrainer.price,
       status: 'pending',
-      gymAddress: 'бул. „Осми приморски полк“ 128 (Спирка МИР)'
+      gymAddress: 'ЛевскиПриморски, ул. „Студентска“ 1 а, 9010 Варна'
     };
 
     try {
@@ -203,25 +198,11 @@ const BookingPage: React.FC = () => {
       setShowGuestForm(false);
       setIsSuccess(true);
     } catch (error: any) {
-      console.error("Booking caught error:", error);
+      console.error("Booking error:", error);
       alert(language === 'bg' ? 'Грешка при резервация.' : 'Booking error.');
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const getGoogleCalendarUrl = (booking: Booking, trainer?: Trainer) => {
-    const [year, month, day] = booking.date.split('-');
-    const [hour, minute] = booking.time.split(':');
-    const startDate = `${year}${month}${day}T${hour.replace(':','')}${minute.replace(':','')}00`;
-    const endHour = (parseInt(hour) + 1).toString().padStart(2, '0');
-    const endDate = `${year}${month}${day}T${endHour}${minute}00`;
-    
-    const text = encodeURIComponent(`ClassFit Session with ${trainer?.name}`);
-    const details = encodeURIComponent(`Trainer: ${trainer?.name}\nSpecialty: ${trainer?.specialty}\nLocation: ClassFit Varna (near Bus Stop Mir)`);
-    const location = encodeURIComponent(`бул. „Осми приморски полк“ 128, Варна`);
-    
-    return `https://www.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${startDate}/${endDate}&details=${details}&location=${location}`;
   };
 
   if (isSuccess && lastBooking && selectedTrainer) {
@@ -235,21 +216,12 @@ const BookingPage: React.FC = () => {
           <p className="text-slate-400 mb-2 text-sm max-w-sm mx-auto">{t.trainerReviewMsg}</p>
         </div>
 
-        <div className="bg-brand/10 border border-brand/20 rounded-2xl p-6 mb-8 text-center animate-in slide-in-from-bottom-2 duration-700 delay-300">
-            <div className="flex items-center justify-center gap-3 text-brand mb-2">
-                <Mail size={16} />
-                <span className="text-[10px] font-black uppercase tracking-widest">{t.emailConfirmMsg}</span>
-            </div>
-            <p className="text-white font-bold text-sm underline decoration-brand/50 underline-offset-4">{lastBooking.customerEmail}</p>
-        </div>
-
         <div className="bg-surface border border-white/5 rounded-[2.5rem] p-8 mb-10 shadow-2xl relative overflow-hidden group">
-           <div className="absolute top-0 right-0 w-32 h-32 bg-brand/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-brand mb-6 italic">Session Confirmation</h3>
            <div className="space-y-6">
               <div className="flex items-center justify-between group/row">
                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-slate-400 group-hover/row:text-brand transition-colors">
+                    <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-slate-400">
                        <User size={18} />
                     </div>
                     <div>
@@ -257,20 +229,10 @@ const BookingPage: React.FC = () => {
                        <p className="text-white font-bold text-sm uppercase italic">{selectedTrainer.name}</p>
                     </div>
                  </div>
-                 <a href={`tel:${selectedTrainer.phone}`} className="p-3 bg-brand text-dark rounded-full hover:scale-110 transition-transform shadow-lg shadow-brand/10">
+                 <a href={`tel:${selectedTrainer.phone}`} className="p-3 bg-brand text-dark rounded-full hover:scale-110 transition-transform">
                     <Phone size={18} />
                  </a>
               </div>
-           </div>
-           <div className="mt-10 pt-8 border-t border-white/5 flex flex-col sm:flex-row gap-4">
-              <a 
-                href={getGoogleCalendarUrl(lastBooking, selectedTrainer)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-1 py-4 bg-white/5 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 hover:bg-white hover:text-dark transition-all"
-              >
-                <CalendarPlus size={16} /> {t.saveToCalendar}
-              </a>
            </div>
         </div>
 
@@ -295,7 +257,7 @@ const BookingPage: React.FC = () => {
           <div className="mb-16">
             <h1 className="text-5xl md:text-7xl font-black uppercase italic mb-4 tracking-tighter text-white">{t.booking}</h1>
             <p className="text-slate-500 font-black uppercase tracking-[0.3em] text-[10px]">
-              {language === 'bg' ? 'ClassFit Варна • сп. Мир • Изберете Вашия Професионалист' : 'ClassFit Varna • Mir Stop • Select Your Professional Coach'}
+              {language === 'bg' ? 'ClassFit Варна • ЛевскиПриморски • Изберете Треньор' : 'ClassFit Varna • LevskiPrimorski • Select Trainer'}
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -318,87 +280,63 @@ const BookingPage: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="max-w-7xl mx-auto px-6 animate-in slide-in-from-bottom-4 duration-500 relative">
-          <button onClick={() => { setSelectedTrainer(null); setSelectedTime(null); }} className="mb-12 flex items-center gap-2 text-slate-500 hover:text-white font-black uppercase tracking-widest text-[9px] transition-all group">
-            <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
-            {language === 'bg' ? 'Всички Треньори' : 'All Coaches'}
+        <div className="max-w-7xl mx-auto px-6 animate-in slide-in-from-bottom-4 duration-500">
+          <button onClick={() => { setSelectedTrainer(null); setSelectedTime(null); }} className="mb-12 flex items-center gap-2 text-slate-500 hover:text-white font-black uppercase tracking-widest text-[9px] transition-all">
+            <ArrowLeft size={14} /> {language === 'bg' ? 'Всички Треньори' : 'All Coaches'}
           </button>
           
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-            
-            {/* Left Column: Profile & Bio */}
-            <div className="lg:col-span-4 space-y-8">
+            <div className="lg:col-span-4">
                <div className="relative rounded-[2.5rem] overflow-hidden border border-white/5 bg-surface shadow-2xl">
-                  <div className="aspect-[4/5] relative overflow-hidden"><img src={selectedTrainer.image} className="w-full h-full object-cover grayscale-0" /></div>
+                  <div className="aspect-[4/5] overflow-hidden"><img src={selectedTrainer.image} className="w-full h-full object-cover" /></div>
                   <div className="p-10">
-                     <div className="text-center mb-8">
-                        <h2 className="text-4xl font-black uppercase italic text-white mb-2 leading-tight tracking-tighter">{selectedTrainer.name}</h2>
-                        <div className="inline-block px-4 py-1.5 bg-brand text-dark rounded-full text-[10px] font-black uppercase tracking-[0.2em]">{selectedTrainer.specialty}</div>
-                     </div>
-                     
-                     <div className="space-y-6 pt-6 border-t border-white/5">
-                        <div className="flex items-start gap-4">
-                            <div className="w-10 h-10 bg-brand/10 text-brand rounded-xl flex items-center justify-center shrink-0">
-                                <Award size={20} />
-                            </div>
-                            <div>
-                                <h4 className="text-[10px] font-black uppercase tracking-widest text-white mb-1">Professional Bio</h4>
-                                <p className="text-xs text-slate-400 font-medium italic leading-relaxed">
-                                    {selectedTrainer.bio}
-                                </p>
-                            </div>
-                        </div>
-                     </div>
+                     <h2 className="text-4xl font-black uppercase italic text-white mb-2 leading-tight">{selectedTrainer.name}</h2>
+                     <div className="inline-block px-4 py-1 bg-brand text-dark rounded-full text-[10px] font-black uppercase tracking-widest mb-6">{selectedTrainer.specialty}</div>
+                     <p className="text-xs text-slate-400 font-medium italic leading-relaxed border-t border-white/5 pt-6">{selectedTrainer.bio}</p>
                   </div>
                </div>
             </div>
 
-            {/* Right Column: Calendar, Booking & Reviews */}
             <div className="lg:col-span-8 space-y-12">
                <div className="bg-surface/30 backdrop-blur-sm rounded-[3rem] border border-white/5 p-8 md:p-12 shadow-2xl">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-12">
-                     <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-brand/10 rounded-xl flex items-center justify-center text-brand"><CalendarIcon size={20} /></div>
-                        <h3 className="text-2xl font-black uppercase italic text-white tracking-tighter">Session Schedule</h3>
-                     </div>
+                     <h3 className="text-2xl font-black uppercase italic text-white tracking-tighter flex items-center gap-4">
+                        <CalendarIcon className="text-brand" size={24} /> Session Schedule
+                     </h3>
                      <div className="flex items-center gap-2">
-                         <button onClick={handlePrevMonth} className="w-10 h-10 flex items-center justify-center hover:bg-white/5 rounded-full text-slate-500 hover:text-white transition-all border border-white/5"><ChevronLeft size={18} /></button>
+                         <button onClick={handlePrevMonth} className="w-10 h-10 flex items-center justify-center hover:bg-white/5 rounded-full border border-white/5"><ChevronLeft size={18} /></button>
                          <div className="px-6 py-2 bg-white/5 rounded-full border border-white/5 min-w-[140px] text-center">
-                            <span className="text-[11px] font-black uppercase tracking-widest text-white">{monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}</span>
+                            <span className="text-[11px] font-black uppercase text-white">{monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}</span>
                          </div>
-                         <button onClick={handleNextMonth} className="w-10 h-10 flex items-center justify-center hover:bg-white/5 rounded-full text-slate-500 hover:text-white transition-all border border-white/5"><ChevronRight size={18} /></button>
+                         <button onClick={handleNextMonth} className="w-10 h-10 flex items-center justify-center hover:bg-white/5 rounded-full border border-white/5"><ChevronRight size={18} /></button>
                      </div>
                   </div>
                   <div className="mb-16">
                       <div className="grid grid-cols-7 gap-1 mb-6 text-center">{weekDays.map(day => (<div key={day} className="text-[10px] font-black text-slate-600 uppercase tracking-widest">{day}</div>))}</div>
                       <div className="grid grid-cols-7 gap-3 place-items-center">{renderCalendar()}</div>
                   </div>
-                  <div className="pt-12 border-t border-white/5 mb-12">
-                     <div className="flex items-center gap-3 mb-8"><Clock className="text-brand" size={16} /><h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 italic">Available Time Slots</h3></div>
+                  <div className="pt-12 border-t border-white/5">
+                     <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 italic mb-8 flex items-center gap-2"><Clock className="text-brand" size={14} /> Available Slots</h3>
                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
                         {selectedTrainer.availability.map(time => (
-                           <button key={time} onClick={() => setSelectedTime(time)} className={`py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border ${selectedTime === time ? 'bg-brand text-dark border-brand shadow-lg shadow-brand/10' : 'bg-white/5 text-slate-400 border-white/5 hover:border-brand/40'}`}>{time}</button>
+                           <button key={time} onClick={() => setSelectedTime(time)} className={`py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border ${selectedTime === time ? 'bg-brand text-dark border-brand' : 'bg-white/5 text-slate-400 border-white/5 hover:border-brand/40'}`}>{time}</button>
                         ))}
                      </div>
                   </div>
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-10 pt-10 border-t border-white/5">
-                      <div className="text-center sm:text-left"><p className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-2">Total</p><div className="text-4xl font-black uppercase italic text-white leading-none tracking-tighter">{selectedTrainer.price} <span className="text-lg text-brand font-bold not-italic ml-1">BGN</span></div></div>
-                      <button onClick={initiateBooking} disabled={!selectedTime || isSubmitting} className={`w-full sm:w-auto px-16 py-6 rounded-full font-black uppercase italic tracking-[0.2em] text-xs transition-all shadow-xl flex items-center justify-center gap-3 ${selectedTime && !isSubmitting ? 'bg-brand text-dark hover:scale-105 shadow-brand/20' : 'bg-white/5 text-slate-700 cursor-not-allowed border border-white/5'}`}>
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-10 pt-10 border-t border-white/5 mt-12">
+                      <div className="text-center sm:text-left"><p className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-2">Session Fee</p><div className="text-4xl font-black uppercase italic text-white leading-none tracking-tighter">{selectedTrainer.price} <span className="text-lg text-brand font-bold not-italic ml-1">BGN</span></div></div>
+                      <button onClick={initiateBooking} disabled={!selectedTime || isSubmitting} className={`w-full sm:w-auto px-16 py-6 rounded-full font-black uppercase italic tracking-[0.2em] text-xs transition-all shadow-xl ${selectedTime && !isSubmitting ? 'bg-brand text-dark hover:scale-105' : 'bg-white/5 text-slate-700 cursor-not-allowed border border-white/5'}`}>
                          {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : (language === 'bg' ? 'Запази час' : 'Confirm Session')}
                       </button>
                   </div>
                </div>
 
-               {/* REVIEWS SECTION - MOVED UNDERNEATH MAIN BOOKING BLOCK */}
-               <div className="bg-surface/10 rounded-[3rem] border border-white/5 p-8 md:p-12 animate-in slide-in-from-bottom-4 duration-1000">
+               {/* REVIEWS SECTION - RELOCATED TO BOTTOM */}
+               <div className="bg-surface/10 rounded-[3rem] border border-white/5 p-8 md:p-12">
                   <div className="flex items-center justify-between mb-10">
-                     <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-brand/10 rounded-xl flex items-center justify-center text-brand"><MessageSquare size={20} /></div>
-                        <div>
-                          <h3 className="text-2xl font-black uppercase italic text-white tracking-tighter leading-none mb-1">Coach Feedback</h3>
-                          <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Verified Member Experiences</p>
-                        </div>
-                     </div>
+                     <h3 className="text-2xl font-black uppercase italic text-white tracking-tighter flex items-center gap-4">
+                        <MessageSquare className="text-brand" /> Coach Feedback
+                     </h3>
                      <div className="bg-white/5 px-4 py-2 rounded-xl border border-white/5 flex items-center gap-3">
                         <div className="flex text-brand">
                            {[1,2,3,4,5].map(i => <Star key={i} size={10} fill="currentColor" />)}
@@ -409,15 +347,15 @@ const BookingPage: React.FC = () => {
 
                   {allTrainerReviews.length === 0 ? (
                     <div className="text-center py-12 border-2 border-dashed border-white/5 rounded-[2rem]">
-                       <p className="text-slate-500 font-black uppercase tracking-widest text-[10px]">No reviews yet. Be the first!</p>
+                       <p className="text-slate-500 font-black uppercase tracking-widest text-[10px]">No verified feedback yet.</p>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                        {allTrainerReviews.map((review: any, i) => (
-                          <div key={i} className="p-6 bg-dark/40 rounded-[2rem] border border-white/5 space-y-4 hover:border-brand/20 transition-all group animate-in slide-in-from-bottom-2 duration-500" style={{ transitionDelay: `${i * 100}ms` }}>
+                          <div key={i} className="p-6 bg-dark/40 rounded-[2rem] border border-white/5 space-y-4">
                              <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                   <div className="w-8 h-8 rounded-xl bg-brand text-dark text-[10px] font-black flex items-center justify-center shadow-lg shadow-brand/10">{review.avatar || 'C'}</div>
+                                   <div className="w-8 h-8 rounded-xl bg-brand text-dark text-[10px] font-black flex items-center justify-center">{review.avatar}</div>
                                    <div>
                                       <p className="text-[11px] font-black text-white uppercase italic tracking-tight">{review.author}</p>
                                       <p className="text-[8px] font-black uppercase text-slate-600 tracking-widest">{review.time}</p>
@@ -429,18 +367,7 @@ const BookingPage: React.FC = () => {
                                    ))}
                                 </div>
                              </div>
-                             
-                             <div className="relative">
-                                <p className="text-xs text-slate-400 font-medium italic leading-relaxed">
-                                   "{review.text}"
-                                </p>
-                                {review.isAiEnhanced && (
-                                   <div className="mt-4 flex items-center gap-1.5">
-                                      <Sparkles size={10} className="text-brand" />
-                                      <span className="text-[8px] font-black uppercase tracking-widest text-brand/60">Polished by AI</span>
-                                   </div>
-                                )}
-                             </div>
+                             <p className="text-xs text-slate-400 font-medium italic leading-relaxed">"{review.text}"</p>
                           </div>
                        ))}
                     </div>

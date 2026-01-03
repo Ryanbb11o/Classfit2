@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { LayoutDashboard, ListFilter, MessageSquare, Briefcase, UserCheck, FileSpreadsheet, Users, RefreshCw, Star, Trash2, Eye, X, Save, Loader2, TrendingUp, Wallet, Check, Ban, DollarSign, PieChart, History, CreditCard, Banknote, Calendar, Clock, User, Phone, Mail, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, ListFilter, MessageSquare, Briefcase, UserCheck, FileSpreadsheet, Users, RefreshCw, Star, Trash2, Eye, X, Save, Loader2, TrendingUp, Wallet, Check, Ban, DollarSign, PieChart, History, CreditCard, Banknote, Calendar, Clock, User, Phone, Mail, ShieldCheck, AlertCircle, UserPlus, ShieldAlert } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, DEFAULT_PROFILE_IMAGE } from '../constants';
 import { User as UserType, Booking } from '../types';
@@ -85,13 +85,15 @@ const TransactionDossier: React.FC<{ booking: Booking | null; onClose: () => voi
 };
 
 const AdminPanel: React.FC = () => {
-  const { language, bookings, reviews, updateReview, deleteReview, updateBooking, deleteBooking, isAdmin, users, deleteUser, updateUser, currentUser, refreshData, confirmAction } = useAppContext();
+  // Fix: Extract currentUser from useAppContext to ensure it's available in the component scope for identity checks.
+  const { language, bookings, refreshData, updateBooking, updateUser, deleteUser, isAdmin, users, confirmAction, currentUser } = useAppContext();
   const location = useLocation();
   const t = TRANSLATIONS[language];
   
   const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'trainers' | 'finance' | 'users' | 'applications' | 'reviews'>('overview');
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [pendingSettlement, setPendingSettlement] = useState<string | null>(null);
+  const [pendingSettlementId, setPendingSettlementId] = useState<string | null>(null);
+  const [isSettling, setIsSettling] = useState(false);
   const [viewingDossier, setViewingDossier] = useState<Booking | null>(null);
 
   useEffect(() => {
@@ -100,6 +102,9 @@ const AdminPanel: React.FC = () => {
 
   const awaitingPaymentList = bookings.filter(b => b.status === 'trainer_completed');
   const completedBookings = bookings.filter(b => b.status === 'completed');
+  const activeBookings = bookings.filter(b => b.status === 'confirmed' || b.status === 'pending');
+  const pendingApps = users.filter(u => u.role === 'trainer_pending');
+  const coaches = users.filter(u => u.role === 'trainer');
 
   const totalRevenue = useMemo(() => completedBookings.reduce((sum, b) => sum + (Number(b.price) || 0), 0), [completedBookings]);
   const coachPayouts = useMemo(() => completedBookings.reduce((sum, b) => sum + (Number(b.trainerEarnings) || 0), 0), [completedBookings]);
@@ -111,16 +116,31 @@ const AdminPanel: React.FC = () => {
   };
 
   const handleExecuteSettlement = async (method: 'cash' | 'card') => {
-    if (!pendingSettlement) return;
-    await updateBooking(pendingSettlement, { status: 'completed', paymentMethod: method });
-    setPendingSettlement(null);
+    if (!pendingSettlementId) return;
+    setIsSettling(true);
+    try {
+      await updateBooking(pendingSettlementId, { status: 'completed', paymentMethod: method });
+      setPendingSettlementId(null);
+    } catch (err) {
+      alert("Settlement failed. Please try again.");
+    } finally {
+      setIsSettling(false);
+    }
   };
 
-  const handleCancelBooking = (bookingId: string) => {
+  const handleRoleUpdate = (userId: string, newRole: UserType['role']) => {
     confirmAction({
-      title: 'Void Session',
-      message: 'Are you sure you want to cancel this booking?',
-      onConfirm: async () => await updateBooking(bookingId, { status: 'cancelled' })
+      title: 'Update Authority',
+      message: `Are you sure you want to change this user's role to ${newRole.toUpperCase()}?`,
+      onConfirm: async () => await updateUser(userId, { role: newRole })
+    });
+  };
+
+  const handleDeleteUserAccount = (userId: string) => {
+    confirmAction({
+      title: 'Permanently Delete User',
+      message: 'This action will remove the user profile and all associated data. This cannot be undone.',
+      onConfirm: async () => await deleteUser(userId)
     });
   };
 
@@ -137,7 +157,7 @@ const AdminPanel: React.FC = () => {
              <h1 className="text-4xl font-black uppercase italic text-white tracking-tighter leading-none">Management Console</h1>
              <button onClick={handleManualRefresh} className={`p-2 rounded-xl bg-white/5 ${isRefreshing ? 'animate-spin text-brand' : 'text-slate-500'}`}><RefreshCw size={18} /></button>
           </div>
-          <p className="text-slate-500 font-black uppercase tracking-[0.3em] text-[10px] mt-2 italic">ClassFit Varna • Mir Stop Base</p>
+          <p className="text-slate-500 font-black uppercase tracking-[0.3em] text-[10px] mt-2 italic">ClassFit Varna • ЛевскиПриморски</p>
         </div>
         <div className="flex flex-wrap gap-2 bg-surface p-1.5 rounded-2xl border border-white/5">
             {[
@@ -145,7 +165,7 @@ const AdminPanel: React.FC = () => {
               { id: 'finance', icon: FileSpreadsheet, label: t.tabAnalysis, badge: awaitingPaymentList.length },
               { id: 'bookings', icon: ListFilter, label: t.tabBookings },
               { id: 'trainers', icon: Briefcase, label: t.trainer },
-              { id: 'applications', icon: UserCheck, label: t.tabRecruitment, badge: users.filter(u => u.role === 'trainer_pending').length },
+              { id: 'applications', icon: UserCheck, label: t.tabRecruitment, badge: pendingApps.length },
               { id: 'users', icon: Users, label: t.tabUsers }
             ].map(tab => (
                 <button key={tab.id} onClick={() => setActiveTab(tab.id as any)} className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all ${activeTab === tab.id ? 'bg-brand text-dark' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
@@ -208,8 +228,7 @@ const AdminPanel: React.FC = () => {
                            <td className="px-8 py-6 text-right font-black text-brand">{b.price.toFixed(2)}</td>
                            <td className="px-8 py-6 text-right">
                               <div className="flex justify-end gap-2">
-                                 <button onClick={() => setPendingSettlement(b.id)} className="px-4 py-2 bg-brand text-dark rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-lg shadow-brand/10 flex items-center gap-2"><Check size={14} /> Confirm Payment</button>
-                                 <button onClick={() => handleCancelBooking(b.id)} className="p-2 text-slate-600 hover:text-red-500 transition-colors"><Ban size={16} /></button>
+                                 <button onClick={() => setPendingSettlementId(b.id)} className="px-4 py-2 bg-brand text-dark rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-lg shadow-brand/10 flex items-center gap-2"><Check size={14} /> Confirm Payment</button>
                               </div>
                            </td>
                         </tr>
@@ -248,21 +267,180 @@ const AdminPanel: React.FC = () => {
          </div>
       )}
 
+      {activeTab === 'users' && (
+         <div className="animate-in slide-in-from-bottom-2 duration-500">
+            <div className="flex items-center gap-4 mb-8">
+                <div className="w-12 h-12 bg-brand/10 text-brand rounded-2xl flex items-center justify-center"><Users size={24} /></div>
+                <div><h3 className="text-2xl font-black uppercase italic text-white tracking-tighter leading-none">User Directory</h3><p className="text-[9px] font-black uppercase tracking-widest text-slate-500 italic mt-1">Member Accounts & Authority Control</p></div>
+            </div>
+            
+            <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-hidden">
+               <table className="w-full">
+                  <thead className="bg-dark/30 text-[9px] font-black uppercase text-slate-500">
+                     <tr>
+                        <th className="px-8 py-5 text-left">Member</th>
+                        <th className="px-8 py-5 text-left">Join Date</th>
+                        <th className="px-8 py-5 text-left">Role</th>
+                        <th className="px-8 py-5 text-right">Management</th>
+                     </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                     {users.length === 0 ? <tr><td colSpan={4} className="px-8 py-20 text-center text-slate-500 font-bold italic">No user accounts found.</td></tr> : users.map(user => (
+                        <tr key={user.id} className="hover:bg-white/5 transition-colors">
+                           <td className="px-8 py-6">
+                              <div className="flex items-center gap-4">
+                                 <div className="w-10 h-10 rounded-xl bg-dark border border-white/10 flex items-center justify-center text-brand font-black overflow-hidden shrink-0">
+                                    <img src={user.image || DEFAULT_PROFILE_IMAGE} className="w-full h-full object-cover" />
+                                 </div>
+                                 <div>
+                                    <p className="text-white font-black uppercase italic text-sm leading-none mb-1">{cleanName(user.name)}</p>
+                                    <p className="text-[10px] text-slate-500 font-medium">{user.email}</p>
+                                 </div>
+                              </div>
+                           </td>
+                           <td className="px-8 py-6 text-slate-400 text-xs font-bold uppercase tracking-widest">{new Date(user.joinedDate).toLocaleDateString()}</td>
+                           <td className="px-8 py-6">
+                              <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest italic border ${
+                                 user.role === 'admin' ? 'bg-red-500/10 text-red-500 border-red-500/20' : 
+                                 user.role === 'trainer' ? 'bg-brand/10 text-brand border-brand/20' : 
+                                 'bg-white/5 text-slate-400 border-white/10'
+                              }`}>
+                                 {user.role.replace('_', ' ')}
+                              </span>
+                           </td>
+                           <td className="px-8 py-6 text-right">
+                              <div className="flex justify-end gap-2">
+                                 {user.id !== currentUser?.id && (
+                                    <>
+                                       <button 
+                                          onClick={() => handleRoleUpdate(user.id, user.role === 'user' ? 'trainer' : user.role === 'trainer' ? 'admin' : 'user')}
+                                          className="px-3 py-1.5 bg-white/5 hover:bg-brand hover:text-dark text-slate-400 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all border border-white/5 flex items-center gap-1.5"
+                                       >
+                                          <UserPlus size={12} /> Toggle Role
+                                       </button>
+                                       <button 
+                                          onClick={() => handleDeleteUserAccount(user.id)}
+                                          className="p-2 text-slate-600 hover:text-red-500 transition-colors"
+                                       >
+                                          <Trash2 size={16} />
+                                       </button>
+                                    </>
+                                 )}
+                              </div>
+                           </td>
+                        </tr>
+                     ))}
+                  </tbody>
+               </table>
+            </div>
+         </div>
+      )}
+
+      {activeTab === 'applications' && (
+         <div className="animate-in slide-in-from-bottom-2 duration-500">
+            <div className="flex items-center gap-4 mb-8">
+                <div className="w-12 h-12 bg-yellow-500/10 text-yellow-500 rounded-2xl flex items-center justify-center"><UserCheck size={24} /></div>
+                <div><h3 className="text-2xl font-black uppercase italic text-white tracking-tighter leading-none">Recruitment Queue</h3><p className="text-[9px] font-black uppercase tracking-widest text-slate-500 italic mt-1">Pending Professional Coach Applications</p></div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+               {pendingApps.length === 0 ? (
+                  <div className="md:col-span-2 p-20 text-center bg-surface rounded-[3rem] border border-white/5 border-dashed">
+                     <p className="text-slate-500 font-black uppercase tracking-widest italic">No pending applications at this time.</p>
+                  </div>
+               ) : pendingApps.map(app => (
+                  <div key={app.id} className="p-8 bg-surface rounded-[3rem] border border-white/5 relative overflow-hidden group">
+                     <div className="flex items-center gap-6 mb-8">
+                        <div className="w-16 h-16 rounded-[2rem] bg-dark border border-white/10 flex items-center justify-center text-2xl font-black text-brand uppercase">
+                           {app.name.charAt(0)}
+                        </div>
+                        <div>
+                           <h4 className="text-2xl font-black uppercase italic text-white leading-none mb-2">{cleanName(app.name)}</h4>
+                           <p className="text-[10px] font-black uppercase tracking-widest text-brand italic">{app.name.match(/\((.*)\)/)?.[1] || 'Candidate'}</p>
+                        </div>
+                     </div>
+                     <div className="space-y-4 mb-10">
+                        <div className="flex items-center gap-3 text-xs text-slate-400 font-bold"><Mail size={14} className="text-slate-600"/> {app.email}</div>
+                        <div className="flex items-center gap-3 text-xs text-slate-400 font-bold"><Phone size={14} className="text-slate-600"/> {app.phone}</div>
+                        <p className="text-[10px] text-slate-500 italic leading-relaxed pt-4 border-t border-white/5">{app.bio}</p>
+                     </div>
+                     <div className="flex gap-4">
+                        <button 
+                           onClick={() => handleRoleUpdate(app.id, 'trainer')}
+                           className="flex-1 py-4 bg-brand text-dark rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-white transition-all shadow-xl shadow-brand/10 flex items-center justify-center gap-2"
+                        >
+                           <Check size={16} /> Hire Professional
+                        </button>
+                        <button 
+                           onClick={() => handleRoleUpdate(app.id, 'user')}
+                           className="px-6 py-4 bg-white/5 text-slate-500 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-red-500 hover:text-white transition-all"
+                        >
+                           <Ban size={16} />
+                        </button>
+                     </div>
+                  </div>
+               ))}
+            </div>
+         </div>
+      )}
+
+      {activeTab === 'bookings' && (
+         <div className="animate-in slide-in-from-bottom-2 duration-500">
+            <div className="flex items-center gap-4 mb-8">
+                <div className="w-12 h-12 bg-blue-500/10 text-blue-500 rounded-2xl flex items-center justify-center"><Calendar size={24} /></div>
+                <div><h3 className="text-2xl font-black uppercase italic text-white tracking-tighter leading-none">Gym Operations</h3><p className="text-[9px] font-black uppercase tracking-widest text-slate-500 italic mt-1">Global Live Schedule & Pending Requests</p></div>
+            </div>
+            
+            <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-hidden">
+               <table className="w-full">
+                  <thead className="bg-dark/30 text-[9px] font-black uppercase text-slate-500">
+                     <tr>
+                        <th className="px-8 py-5 text-left">Session</th>
+                        <th className="px-8 py-5 text-left">Member</th>
+                        <th className="px-8 py-5 text-left">Coach</th>
+                        <th className="px-8 py-5 text-right">Status</th>
+                     </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                     {activeBookings.length === 0 ? <tr><td colSpan={4} className="px-8 py-20 text-center text-slate-500 font-bold italic">No active operations scheduled.</td></tr> : activeBookings.map(b => (
+                        <tr key={b.id} className="hover:bg-white/5 transition-colors">
+                           <td className="px-8 py-6">
+                              <p className="text-white font-bold text-xs">{b.date}</p>
+                              <p className="text-[10px] text-slate-500 font-black uppercase italic">{b.time}</p>
+                           </td>
+                           <td className="px-8 py-6 text-white font-black uppercase italic text-xs tracking-tight">{b.customerName}</td>
+                           <td className="px-8 py-6 text-slate-400 font-bold uppercase italic text-xs">{cleanName(users.find(u => u.id === b.trainerId)?.name)}</td>
+                           <td className="px-8 py-6 text-right">
+                              <span className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest italic ${
+                                 b.status === 'confirmed' ? 'bg-green-500/10 text-green-500' : 'bg-yellow-500/10 text-yellow-500'
+                              }`}>
+                                 {b.status}
+                              </span>
+                           </td>
+                        </tr>
+                     ))}
+                  </tbody>
+               </table>
+            </div>
+         </div>
+      )}
+
       {/* Payment Selection Overlay */}
-      {pendingSettlement && (
+      {pendingSettlementId && (
          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-dark/95 backdrop-blur-xl animate-in fade-in duration-300">
             <div className="bg-surface border border-white/10 rounded-[3rem] p-12 w-full max-w-md shadow-2xl relative text-center">
                <div className="absolute top-0 left-0 w-full h-1 bg-brand"></div>
                <div className="w-20 h-20 bg-brand/10 text-brand rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-xl shadow-brand/5">
-                  <DollarSign size={32} />
+                  {isSettling ? <Loader2 size={32} className="animate-spin" /> : <DollarSign size={32} />}
                </div>
                <h2 className="text-2xl font-black uppercase italic text-white tracking-tighter mb-2">Finalize Settlement</h2>
                <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest italic mb-10">Select customer's payment method</p>
                
                <div className="grid grid-cols-2 gap-4">
                   <button 
+                     disabled={isSettling}
                      onClick={() => handleExecuteSettlement('cash')}
-                     className="flex flex-col items-center gap-4 p-8 bg-white/5 border border-white/5 rounded-3xl hover:border-brand hover:bg-brand/5 transition-all group"
+                     className="flex flex-col items-center gap-4 p-8 bg-white/5 border border-white/5 rounded-3xl hover:border-brand hover:bg-brand/5 transition-all group disabled:opacity-50"
                   >
                      <div className="w-12 h-12 rounded-2xl bg-brand/10 text-brand flex items-center justify-center group-hover:bg-brand group-hover:text-dark transition-all">
                         <Banknote size={24} />
@@ -270,8 +448,9 @@ const AdminPanel: React.FC = () => {
                      <span className="text-[11px] font-black uppercase tracking-widest text-slate-300 group-hover:text-white">Cash Payment</span>
                   </button>
                   <button 
+                     disabled={isSettling}
                      onClick={() => handleExecuteSettlement('card')}
-                     className="flex flex-col items-center gap-4 p-8 bg-white/5 border border-white/5 rounded-3xl hover:border-brand hover:bg-brand/5 transition-all group"
+                     className="flex flex-col items-center gap-4 p-8 bg-white/5 border border-white/5 rounded-3xl hover:border-brand hover:bg-brand/5 transition-all group disabled:opacity-50"
                   >
                      <div className="w-12 h-12 rounded-2xl bg-brand/10 text-brand flex items-center justify-center group-hover:bg-brand group-hover:text-dark transition-all">
                         <CreditCard size={24} />
@@ -280,7 +459,13 @@ const AdminPanel: React.FC = () => {
                   </button>
                </div>
                
-               <button onClick={() => setPendingSettlement(null)} className="mt-10 text-[9px] font-black uppercase tracking-widest text-slate-600 hover:text-white transition-all">Cancel Process</button>
+               <button 
+                  disabled={isSettling}
+                  onClick={() => setPendingSettlementId(null)} 
+                  className="mt-10 text-[9px] font-black uppercase tracking-widest text-slate-600 hover:text-white transition-all disabled:opacity-0"
+               >
+                  Cancel Process
+               </button>
             </div>
          </div>
       )}

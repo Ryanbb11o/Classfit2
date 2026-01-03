@@ -44,8 +44,8 @@ const TrainerDashboard: React.FC = () => {
     const endDate = `${year}${month}${day}T${endHour}${minute}00`;
     
     const text = encodeURIComponent(`ClassFit Training: ${booking.customerName}`);
-    const details = encodeURIComponent(`Client: ${booking.customerName}\nStatus: Confirmed\nLocation: ClassFit Varna (near Bus Stop Mir)`);
-    const location = encodeURIComponent(`бул. „Осми приморски полк“ 128, Варна`);
+    const details = encodeURIComponent(`Client: ${booking.customerName}\nStatus: Confirmed\nLocation: ClassFit Varna, ЛевскиПриморски, ул. „Студентска“ 1 а`);
+    const location = encodeURIComponent(`ЛевскиПриморски, ул. „Студентска“ 1 а, Варна`);
     
     return `https://www.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${startDate}/${endDate}&details=${details}&location=${location}`;
   };
@@ -74,7 +74,8 @@ const TrainerDashboard: React.FC = () => {
     const firstDay = getFirstDayOfMonth(currentMonth);
     const days = [];
 
-    for (let i = 0; i < firstDay; i++) days.push(<div key={`empty-${i}`} className="h-32 md:h-40 border border-white/5"></div>);
+    // Bigger cells: h-44
+    for (let i = 0; i < firstDay; i++) days.push(<div key={`empty-${i}`} className="h-32 md:h-44 border border-white/5 opacity-20"></div>);
 
     for (let i = 1; i <= daysInMonth; i++) {
         const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), i);
@@ -88,24 +89,34 @@ const TrainerDashboard: React.FC = () => {
             <div 
               key={i} 
               onClick={() => setSelectedDay(date)}
-              className={`h-32 md:h-40 p-4 border border-white/10 transition-all cursor-pointer relative group flex flex-col justify-between overflow-hidden
+              className={`h-32 md:h-44 p-4 border border-white/10 transition-all cursor-pointer relative group flex flex-col justify-between overflow-hidden
                 ${isBlocked ? 'bg-red-500/5' : 'bg-dark/40 hover:bg-white/5'}
               `}
             >
                 <div className="flex justify-between items-start">
-                   <span className={`text-sm font-black uppercase tracking-widest ${isBlocked ? 'text-red-500/50' : 'text-slate-500'}`}>{i}</span>
-                   {isBlocked && <Ban size={12} className="text-red-500" />}
+                   <span className={`text-sm font-black uppercase tracking-widest ${isBlocked ? 'text-red-500/50' : 'text-slate-500 group-hover:text-white'}`}>{i}</span>
+                   {isBlocked && <Ban size={14} className="text-red-500" />}
                 </div>
                 
-                <div className="flex flex-wrap gap-1.5">
-                   {hasPending && <div className="h-2 w-2 rounded-full bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.7)]"></div>}
-                   {hasConfirmed && <div className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.7)]"></div>}
+                <div className="flex flex-col gap-1.5 mt-2">
+                   {hasPending && (
+                      <div className="flex items-center gap-1.5 bg-yellow-500/10 px-2 py-0.5 rounded-md border border-yellow-500/20">
+                         <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.7)] animate-pulse"></div>
+                         <span className="text-[8px] font-black text-yellow-500 uppercase">Pending</span>
+                      </div>
+                   )}
+                   {hasConfirmed && (
+                      <div className="flex items-center gap-1.5 bg-green-500/10 px-2 py-0.5 rounded-md border border-green-500/20">
+                         <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.7)]"></div>
+                         <span className="text-[8px] font-black text-green-500 uppercase">Confirmed</span>
+                      </div>
+                   )}
                 </div>
 
-                <div className="space-y-1">
+                <div className="mt-auto">
                   {dayBookings.length > 0 && (
-                     <div className="text-[9px] font-black uppercase tracking-widest text-white italic bg-white/5 px-2 py-1 rounded-lg border border-white/5 inline-block">
-                        {dayBookings.length} {dayBookings.length === 1 ? 'SESSION' : 'SESSIONS'}
+                     <div className="text-[9px] font-black uppercase tracking-widest text-white italic bg-white/5 px-2.5 py-1 rounded-xl border border-white/10 inline-flex items-center gap-2">
+                        <Grid size={10} className="text-brand" /> {dayBookings.length} {dayBookings.length === 1 ? 'Session' : 'Sessions'}
                      </div>
                   )}
                 </div>
@@ -155,12 +166,12 @@ const TrainerDashboard: React.FC = () => {
       </div>
 
       {/* Main Interface */}
-      <div className="bg-surface rounded-[3rem] border border-white/5 overflow-hidden min-h-[600px] shadow-2xl">
-         <div className="p-6 border-b border-white/5 flex flex-col md:flex-row items-center justify-between gap-6">
+      <div className="bg-surface rounded-[3rem] border border-white/10 overflow-hidden min-h-[600px] shadow-2xl">
+         <div className="p-6 border-b border-white/10 flex flex-col md:flex-row items-center justify-between gap-6 bg-dark/20">
             <div className="flex items-center gap-4 bg-dark/40 p-1.5 rounded-2xl border border-white/5">
-               <button onClick={() => setActiveTab('calendar')} className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'calendar' ? 'bg-brand text-dark shadow-lg' : 'text-slate-500 hover:text-white'}`}>Calendar</button>
-               <button onClick={() => setActiveTab('requests')} className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'requests' ? 'bg-brand text-dark shadow-lg' : 'text-slate-500 hover:text-white'}`}>Requests {pendingRequests.length > 0 && `(${pendingRequests.length})`}</button>
-               <button onClick={() => setActiveTab('reviews')} className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'reviews' ? 'bg-brand text-dark shadow-lg' : 'text-slate-500 hover:text-white'}`}>Reviews</button>
+               <button onClick={() => setActiveTab('calendar')} className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'calendar' ? 'bg-brand text-dark shadow-lg' : 'text-slate-500 hover:text-white'}`}>Calendar</button>
+               <button onClick={() => setActiveTab('requests')} className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'requests' ? 'bg-brand text-dark shadow-lg' : 'text-slate-500 hover:text-white'}`}>Requests {pendingRequests.length > 0 && `(${pendingRequests.length})`}</button>
+               <button onClick={() => setActiveTab('reviews')} className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'reviews' ? 'bg-brand text-dark shadow-lg' : 'text-slate-500 hover:text-white'}`}>Reviews</button>
             </div>
 
             {activeTab === 'calendar' && (
@@ -171,7 +182,7 @@ const TrainerDashboard: React.FC = () => {
                   </div>
                   <div className="flex items-center gap-2">
                      <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))} className="p-2 hover:bg-white/5 rounded-full text-slate-500 transition-all"><ChevronLeft size={20} /></button>
-                     <span className="text-[10px] font-black uppercase text-white tracking-widest min-w-[120px] text-center italic">{currentMonth.toLocaleString('en-US', { month: 'long', year: 'numeric' })}</span>
+                     <span className="text-[11px] font-black uppercase text-white tracking-widest min-w-[140px] text-center italic">{currentMonth.toLocaleString('en-US', { month: 'long', year: 'numeric' })}</span>
                      <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))} className="p-2 hover:bg-white/5 rounded-full text-slate-500 transition-all"><ChevronRight size={20} /></button>
                   </div>
                </div>
@@ -182,9 +193,9 @@ const TrainerDashboard: React.FC = () => {
             {activeTab === 'calendar' && (
                calStyle === 'grid' ? (
                   <div className="animate-in fade-in duration-500 overflow-x-auto">
-                     <div className="min-w-[800px]">
-                        <div className="grid grid-cols-7 text-center py-5 bg-dark/20 border-b border-white/5">
-                           {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => <span key={d} className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500">{d}</span>)}
+                     <div className="min-w-[900px]">
+                        <div className="grid grid-cols-7 text-center py-6 bg-dark/40 border-b border-white/10">
+                           {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => <span key={d} className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-500">{d}</span>)}
                         </div>
                         <div className="grid grid-cols-7 border-collapse">
                            {renderCalendar()}
@@ -208,7 +219,7 @@ const TrainerDashboard: React.FC = () => {
                               >
                                  <CalendarPlus size={18} />
                               </a>
-                              <button onClick={() => handleAction(b.id, 'trainer_completed')} className="px-5 py-2 bg-brand text-dark text-[9px] font-black uppercase tracking-widest rounded-xl hover:bg-white transition-all">Mark Done</button>
+                              <button onClick={() => handleAction(b.id, 'trainer_completed')} className="px-5 py-2 bg-brand text-dark text-[9px] font-black uppercase tracking-widest rounded-xl hover:bg-white transition-all shadow-md shadow-brand/10">Mark Done</button>
                            </div>
                         </div>
                      ))}
