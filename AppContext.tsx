@@ -251,14 +251,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     const { error } = await supabase.from('bookings').update({
        status: finalUpdates.status,
-       payment_method: finalUpdates.payment_method,
+       payment_method: finalUpdates.paymentMethod, // Corrected mapping
        booking_date: finalUpdates.date,
        booking_time: finalUpdates.time,
        has_been_reviewed: finalUpdates.hasBeenReviewed,
        settled_at: finalUpdates.settledAt,
        settled_by: finalUpdates.settledBy,
        commission_amount: finalUpdates.commissionAmount,
-       trainer_earnings: finalUpdates.trainerEarnings
+       trainer_earnings: finalUpdates.trainerEarnings,
+       language: finalUpdates.language
     }).eq('id', id);
     
     if (error) {
