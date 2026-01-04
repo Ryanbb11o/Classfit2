@@ -25,6 +25,7 @@ interface AppContextType {
   deleteBooking: (id: string) => Promise<void>;
   isAdmin: boolean;
   isManagement: boolean;
+  isCashier: boolean;
   currentUser: User | null;
   users: User[];
   login: (email: string, pass: string) => Promise<boolean>;
@@ -69,6 +70,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const isAdmin = currentUser?.roles?.some(r => r === 'admin' || r === 'management') || false;
   const isManagement = currentUser?.roles?.includes('management') || false;
+  const isCashier = currentUser?.roles?.some(r => r === 'cashier' || r === 'management' || r === 'admin') || false;
   const isDemoMode = !isSupabaseConfigured;
 
   const confirmAction = (config: ConfirmConfig) => setConfirmState(config);
@@ -252,7 +254,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
        payment_method: finalUpdates.payment_method,
        booking_date: finalUpdates.date,
        booking_time: finalUpdates.time,
-       has_been_reviewed: finalUpdates.hasBeenReviewed
+       has_been_reviewed: finalUpdates.hasBeenReviewed,
+       settled_at: finalUpdates.settledAt,
+       settled_by: finalUpdates.settledBy,
+       commission_amount: finalUpdates.commissionAmount,
+       trainer_earnings: finalUpdates.trainerEarnings
     }).eq('id', id);
     
     if (error) {
@@ -384,7 +390,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   return (
     <AppContext.Provider value={{ 
-      language, setLanguage: changeLanguage, bookings, reviews, addBooking, addReview, updateReview, deleteReview, updateBooking, deleteBooking, isAdmin, isManagement, currentUser, users, login, register, registerTrainer, requestTrainerUpgrade, updateUser, deleteUser, logout, refreshData, isLoading, isDemoMode, confirmAction, confirmState, closeConfirm
+      language, setLanguage: changeLanguage, bookings, reviews, addBooking, addReview, updateReview, deleteReview, updateBooking, deleteBooking, isAdmin, isManagement, isCashier, currentUser, users, login, register, registerTrainer, requestTrainerUpgrade, updateUser, deleteUser, logout, refreshData, isLoading, isDemoMode, confirmAction, confirmState, closeConfirm
     }}>
       {children}
     </AppContext.Provider>

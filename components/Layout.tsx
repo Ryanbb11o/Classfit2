@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Menu, X, ShieldCheck, User as UserIcon, Home, Info, Calendar, Dumbbell, ShoppingBag, LogIn, LogOut, Phone, Briefcase, Bell, Mail, Star, MessageSquare, Check, Loader2, AlertTriangle, Wallet, Facebook, Instagram } from 'lucide-react';
+import { Menu, X, ShieldCheck, User as UserIcon, Home, Info, Calendar, Dumbbell, ShoppingBag, LogIn, LogOut, Phone, Briefcase, Bell, Mail, Star, MessageSquare, Check, Loader2, AlertTriangle, Wallet, Facebook, Instagram, Search } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS } from '../constants';
 import LanguageSwitcher from './LanguageSwitcher';
@@ -19,7 +19,7 @@ const ConfirmModal: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-dark/90 backdrop-blur-md animate-in fade-in duration-300 text-left">
-       <div className="bg-surface rounded-[2.5rem] border border-white/10 p-10 w-full max-w-sm shadow-[0_0_50px_rgba(0,0,0,0.5)] relative animate-in zoom-in-95 duration-300 overflow-hidden">
+       <div className="bg-surface rounded-[2.5rem] border border-white/10 p-10 w-full max-sm shadow-[0_0_50px_rgba(0,0,0,0.5)] relative animate-in zoom-in-95 duration-300 overflow-hidden">
           <div className={`absolute -top-20 -left-20 w-40 h-40 rounded-full blur-[80px] ${isDelete ? 'bg-red-500/20' : 'bg-brand/20'}`}></div>
           <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-8 shadow-xl ${isDelete ? 'bg-red-500/10 text-red-500 shadow-red-500/10' : 'bg-brand/10 text-brand shadow-brand/10'}`}>
              {isDelete ? <AlertTriangle size={32} /> : <Check size={32} strokeWidth={3} />}
@@ -47,7 +47,7 @@ const ConfirmModal: React.FC = () => {
 };
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { language, isAdmin, currentUser, logout, users, bookings } = useAppContext();
+  const { language, isAdmin, isCashier, currentUser, logout, users, bookings } = useAppContext();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
@@ -64,9 +64,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   const isTrainer = currentUser?.roles?.includes('trainer') || false;
   
-  // High-Priority Notification logic
   const pendingApplications = isAdmin ? users.filter(u => u.roles?.includes('trainer_pending')) : [];
-  const awaitingPayment = isAdmin ? bookings.filter(b => b.status === 'trainer_completed') : [];
+  const awaitingPayment = isCashier ? bookings.filter(b => b.status === 'trainer_completed') : [];
   const pendingBookings = isTrainer ? bookings.filter(b => b.trainerId === currentUser?.id && b.status === 'pending') : [];
 
   const totalNotifications = pendingApplications.length + awaitingPayment.length + pendingBookings.length;
@@ -76,7 +75,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   const handleNotificationClick = (type: 'application' | 'payment' | 'booking') => {
     setShowNotifications(false);
-    if (type === 'payment') navigate('/admin', { state: { activeTab: 'finance' } });
+    if (type === 'payment') navigate('/desk');
     else if (type === 'application') navigate('/admin', { state: { activeTab: 'applications' } });
     else if (type === 'booking') navigate('/trainer', { state: { activeTab: 'requests' } });
   };
@@ -98,6 +97,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                {currentUser ? (
                  <div className="flex items-center gap-4">
                    {isAdmin && <NavLink to="/admin" className="text-[11px] font-black uppercase tracking-widest text-red-500 flex items-center gap-2 transition-all hover:brightness-125"><ShieldCheck size={14} /> Web Admin</NavLink>}
+                   {isCashier && <NavLink to="/desk" className="text-[11px] font-black uppercase tracking-widest text-brand flex items-center gap-2 transition-all hover:brightness-125"><Search size={14} /> Front Desk</NavLink>}
                    {isTrainer && <NavLink to="/trainer" className="text-[11px] font-black uppercase tracking-widest text-brand flex items-center gap-2 transition-all hover:brightness-125"><Briefcase size={14} /> Gym Coach</NavLink>}
                    <NavLink to="/profile" className="text-[11px] font-black uppercase tracking-widest text-white flex items-center gap-2 hover:text-brand transition-colors"><UserIcon size={14} /> {getDisplayName(currentUser.name)}</NavLink>
                  </div>
@@ -184,6 +184,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           <nav className="flex flex-col gap-8 text-left">
             <NavLink onClick={closeMenu} to="/" className="text-2xl font-black italic uppercase tracking-tighter text-white">Home</NavLink>
             <NavLink onClick={closeMenu} to="/booking" className="text-2xl font-black italic uppercase tracking-tighter text-brand">Booking</NavLink>
+            {isCashier && <NavLink onClick={closeMenu} to="/desk" className="text-2xl font-black italic uppercase tracking-tighter text-brand">Front Desk</NavLink>}
             <NavLink onClick={closeMenu} to="/memberships" className="text-2xl font-black italic uppercase tracking-tighter text-white">Memberships</NavLink>
             <NavLink onClick={closeMenu} to="/shop" className="text-2xl font-black italic uppercase tracking-tighter text-white">Shop</NavLink>
             <NavLink onClick={closeMenu} to="/contact" className="text-2xl font-black italic uppercase tracking-tighter text-white">Contact</NavLink>

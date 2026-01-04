@@ -1,7 +1,7 @@
 
 export type Language = 'bg' | 'en';
 
-export type UserRole = 'user' | 'admin' | 'trainer_pending' | 'trainer' | 'management';
+export type UserRole = 'user' | 'admin' | 'trainer_pending' | 'trainer' | 'management' | 'cashier';
 
 export interface User {
   id: string;

@@ -53,7 +53,6 @@ const BookingPage: React.FC = () => {
   const allTrainerReviews = useMemo(() => {
     if (!selectedTrainer) return [];
     const currentUserName = currentUser?.name.split('(')[0].trim();
-    // Show published reviews OR the current user's own reviews OR all if manager
     const realReviews = liveReviews.filter(r => 
       r.trainerId === selectedTrainer.id && (r.isPublished || r.author === currentUserName || isManagement)
     );
@@ -299,13 +298,6 @@ const BookingPage: React.FC = () => {
                    <div className="absolute bottom-0 left-0 p-6 w-full">
                       <p className="text-[11px] font-black uppercase tracking-widest text-brand mb-1">{trainer.specialty}</p>
                       <h3 className="text-xl font-black uppercase italic text-white leading-tight mb-2">{trainer.name}</h3>
-                      {trainer.languages && (
-                        <div className="flex gap-1.5 flex-wrap">
-                          {trainer.languages.slice(0, 3).map(l => (
-                            <span key={l} className="text-[9px] font-black uppercase tracking-widest text-white/40 bg-white/5 px-1.5 py-0.5 rounded italic">{l.charAt(0)}</span>
-                          ))}
-                        </div>
-                      )}
                    </div>
                 </div>
               </div>
@@ -326,7 +318,6 @@ const BookingPage: React.FC = () => {
                      <h2 className="text-4xl font-black uppercase italic text-white mb-2 leading-tight">{selectedTrainer.name}</h2>
                      <div className="inline-block px-4 py-1 bg-brand text-dark rounded-full text-[11px] font-black uppercase tracking-widest mb-6">{selectedTrainer.specialty}</div>
                      
-                     {/* Spoken Languages Detail */}
                      <div className="flex items-center gap-3 mb-6 p-4 bg-dark/20 rounded-2xl border border-white/5">
                         <Languages size={18} className="text-brand" />
                         <div>
@@ -409,7 +400,7 @@ const BookingPage: React.FC = () => {
                        {allTrainerReviews.map((review: any, i) => (
                           <div 
                             key={review.id || i} 
-                            className="p-4 hover:p-8 bg-dark/40 rounded-[2rem] border border-white/5 space-y-4 relative group transition-all duration-500 ease-out shadow-sm hover:shadow-[0_20px_50px_rgba(220,38,38,0.25)]"
+                            className={`p-5 bg-dark/40 rounded-[2rem] border border-brand/20 space-y-4 relative group transition-all duration-500 ease-out shadow-sm ${isManagement ? 'hover:p-8 hover:shadow-[0_20px_50px_rgba(220,38,38,0.25)]' : ''}`}
                           >
                              {isManagement && (
                                <button 
@@ -422,7 +413,9 @@ const BookingPage: React.FC = () => {
                              )}
                              <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                   <div className="w-8 h-8 rounded-xl bg-brand text-dark text-[11px] font-black flex items-center justify-center">{review.avatar}</div>
+                                   <div className="w-10 h-10 rounded-2xl bg-brand/10 border border-brand/20 text-brand text-xs font-black flex items-center justify-center shrink-0 shadow-inner">
+                                      {review.avatar}
+                                   </div>
                                    <div>
                                       <div className="flex items-center gap-2">
                                         <p className="text-[11px] font-black text-white uppercase italic tracking-tight">{review.author}</p>

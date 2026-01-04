@@ -44,6 +44,7 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
   const roleOptions: { id: UserRole, label: string }[] = [
     { id: 'management', label: 'Management' },
     { id: 'admin', label: 'Web Admin' },
+    { id: 'cashier', label: 'Cashier/Desk' },
     { id: 'trainer', label: 'Gym Coach' },
     { id: 'user', label: 'Member' }
   ];

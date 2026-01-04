@@ -210,7 +210,6 @@ const AdminPanel: React.FC = () => {
         {activeTab === 'overview' && (
            <div className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                 {/* Total Revenue Hyperlink -> Finance */}
                  <div 
                     onClick={() => setActiveTab('finance')}
                     className="p-8 bg-brand text-dark rounded-[2.5rem] shadow-xl relative overflow-hidden group cursor-pointer hover:scale-[1.02] active:scale-95 transition-all"
@@ -223,7 +222,6 @@ const AdminPanel: React.FC = () => {
                     </div>
                  </div>
 
-                 {/* Gym Profit Hyperlink -> Finance */}
                  <div 
                     onClick={() => setActiveTab('finance')}
                     className="p-8 bg-surface border border-white/5 rounded-[2.5rem] relative overflow-hidden group cursor-pointer hover:border-brand/40 hover:scale-[1.02] active:scale-95 transition-all"
@@ -234,7 +232,6 @@ const AdminPanel: React.FC = () => {
                     <p className="text-[11px] text-slate-600 font-bold uppercase mt-4 italic tracking-widest group-hover:text-brand transition-colors">Profit Analysis →</p>
                  </div>
 
-                 {/* Pending Pay Hyperlink -> Finance */}
                  <div 
                     onClick={() => setActiveTab('finance')}
                     className="p-8 bg-surface border border-white/5 rounded-[2.5rem] relative overflow-hidden group cursor-pointer hover:border-yellow-500/40 hover:scale-[1.02] active:scale-95 transition-all"
@@ -245,7 +242,6 @@ const AdminPanel: React.FC = () => {
                     <div className="mt-4 text-[11px] font-black uppercase text-slate-400 group-hover:text-yellow-500 transition-colors">Awaiting Verification →</div>
                  </div>
 
-                 {/* Community Hyperlink -> Users */}
                  <div 
                     onClick={() => setActiveTab('users')}
                     className="p-8 bg-surface border border-white/5 rounded-[2.5rem] relative overflow-hidden group cursor-pointer hover:border-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all"
@@ -600,11 +596,11 @@ const AdminPanel: React.FC = () => {
               {pendingReviews.map(r => (
                  <div 
                     key={r.id} 
-                    className="p-6 hover:p-12 bg-surface rounded-[3rem] border border-white/5 shadow-2xl relative overflow-hidden transition-all duration-500 group hover:shadow-[0_20px_50px_rgba(220,38,38,0.25)]"
+                    className={`p-5 bg-surface rounded-[3rem] border border-brand/20 shadow-2xl relative overflow-hidden transition-all duration-500 group ${isManagement ? 'hover:p-10 hover:shadow-[0_20px_50px_rgba(220,38,38,0.25)]' : ''}`}
                  >
                     <div className="flex items-center justify-between mb-8">
                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-brand text-dark rounded-2xl flex items-center justify-center font-black italic">{r.avatar}</div>
+                          <div className="w-12 h-12 bg-brand/10 border border-brand/20 text-brand rounded-2xl flex items-center justify-center font-black italic shadow-inner">{r.avatar}</div>
                           <div>
                              <h4 className="text-sm font-black uppercase text-white italic tracking-tight">{r.author}</h4>
                              <p className="text-[11px] text-slate-500 font-bold italic">Reviewing: {cleanName(users.find(u => u.id === r.trainerId)?.name)}</p>
