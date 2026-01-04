@@ -119,7 +119,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
 
     try {
-      const { data: bData } = await supabase.from('bookings').select('*').order('created_at', { ascending: false });
+      const { data: bData, error: bError } = await supabase.from('bookings').select('*').order('created_at', { ascending: false });
+      if (bError) throw bError;
       if (bData) setBookings(bData.map((b: any) => ({
           id: String(b.id),
           checkInCode: b.check_in_code || '',
@@ -230,6 +231,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     let finalUpdates = { ...existing, ...updates };
 
+    // Logic for financial settlement if marking as completed
     if (updates.status === 'completed' && updates.commissionAmount === undefined) {
       const trainer = users.find(u => u.id === existing.trainerId);
       const rate = trainer?.commissionRate || 25; 
@@ -249,23 +251,34 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return;
     }
 
-    const { error } = await supabase.from('bookings').update({
+    // Explicit snake_case mapping for Supabase
+    const dbPayload: any = {
        status: finalUpdates.status,
-       payment_method: finalUpdates.paymentMethod, // Corrected mapping
        booking_date: finalUpdates.date,
        booking_time: finalUpdates.time,
        has_been_reviewed: finalUpdates.hasBeenReviewed,
-       settled_at: finalUpdates.settledAt,
-       settled_by: finalUpdates.settledBy,
-       commission_amount: finalUpdates.commissionAmount,
-       trainer_earnings: finalUpdates.trainerEarnings,
        language: finalUpdates.language
-    }).eq('id', id);
+    };
+
+    // Only include these if they exist in the schema to prevent 400 errors
+    // Note: User MUST run the SQL setup provided in the README for these to work.
+    if (finalUpdates.paymentMethod) dbPayload.payment_method = finalUpdates.paymentMethod;
+    if (finalUpdates.settledAt) dbPayload.settled_at = finalUpdates.settledAt;
+    if (finalUpdates.settledBy) dbPayload.settled_by = finalUpdates.settledBy;
+    if (finalUpdates.commissionAmount !== undefined) dbPayload.commission_amount = finalUpdates.commissionAmount;
+    if (finalUpdates.trainerEarnings !== undefined) dbPayload.trainer_earnings = finalUpdates.trainerEarnings;
+
+    const { error } = await supabase.from('bookings').update(dbPayload).eq('id', id);
     
     if (error) {
        console.error("Supabase Booking Update Error:", error);
        setBookings(previousBookings); 
-       alert(`Database Error: ${error.message}`);
+       // Detailed error for the user to understand if they missed the SQL step
+       if (error.message.includes('settled_by') || error.message.includes('payment_method')) {
+         alert(`CRITICAL: Database Schema Mismatch. Your 'bookings' table is missing settlement columns. Please run the SQL fix in the README. Error: ${error.message}`);
+       } else {
+         alert(`Database Error: ${error.message}`);
+       }
        return;
     }
     await refreshData();

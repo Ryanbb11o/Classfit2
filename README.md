@@ -11,6 +11,22 @@ Professional fitness management platform.
 2.  Go to your **Supabase Dashboard** -> **SQL Editor**.
 3.  Paste the SQL and click **Run**.
 
+### 🛠️ CRITICAL DATABASE FIX (Run this if you get "column not found" errors)
+If you see errors like `Could not find the 'settled_by' column`, run this snippet in your SQL editor:
+
+```sql
+-- Add missing financial and settlement columns
+ALTER TABLE bookings 
+ADD COLUMN IF NOT EXISTS settled_by TEXT,
+ADD COLUMN IF NOT EXISTS settled_at TIMESTAMPTZ,
+ADD COLUMN IF NOT EXISTS commission_amount NUMERIC DEFAULT 0,
+ADD COLUMN IF NOT EXISTS trainer_earnings NUMERIC DEFAULT 0,
+ADD COLUMN IF NOT EXISTS payment_method TEXT;
+
+-- Refresh the PostgREST schema cache
+NOTIFY pgrst, 'reload schema';
+```
+
 ### What does the SQL do?
 - Creates the `users` table for authentication and profiles.
 - Creates the `bookings` table for appointments.

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Check, Calendar as CalendarIcon, Clock, User, Phone, X, Mail, Loader2, ChevronLeft, ChevronRight, ArrowLeft, Star, Award, Zap, Quote, ThumbsUp, MapPin, Target, ShieldCheck, CalendarPlus, MessageSquare, Sparkles, Languages, MessageSquarePlus, Trash2 } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { getTrainers, TRANSLATIONS, DEFAULT_PROFILE_IMAGE, getTrainerReviews } from '../constants';
-import { Trainer, Booking } from '../types';
+import { Trainer, Booking, Review } from '../types';
 
 const BookingPage: React.FC = () => {
   const { language, addBooking, currentUser, users, bookings, reviews: liveReviews, confirmAction, deleteReview } = useAppContext();
@@ -50,6 +50,24 @@ const BookingPage: React.FC = () => {
   const [guestPhone, setGuestPhone] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
 
+  // Helper to get aggregated stats for a trainer
+  const getTrainerStats = (trainerId: string) => {
+    const currentUserName = currentUser?.name.split('(')[0].trim();
+    const realReviews = liveReviews.filter(r => 
+      r.trainerId === trainerId && (r.isPublished || r.author === currentUserName || isManagement)
+    );
+    const demoReviews = getTrainerReviews(trainerId, language);
+    const allRelevant = [...realReviews, ...demoReviews];
+    
+    if (allRelevant.length === 0) return { avg: 0, count: 0 };
+    
+    const sum = allRelevant.reduce((acc, r) => acc + r.rating, 0);
+    return {
+      avg: (sum / allRelevant.length).toFixed(1),
+      count: allRelevant.length
+    };
+  };
+
   const allTrainerReviews = useMemo(() => {
     if (!selectedTrainer) return [];
     const currentUserName = currentUser?.name.split('(')[0].trim();
@@ -57,7 +75,7 @@ const BookingPage: React.FC = () => {
       r.trainerId === selectedTrainer.id && (r.isPublished || r.author === currentUserName || isManagement)
     );
     const demoReviews = getTrainerReviews(selectedTrainer.id, language);
-    return [...realReviews, ...demoReviews].slice(0, 10);
+    return [...realReviews, ...demoReviews].sort((a, b) => b.time.localeCompare(a.time)).slice(0, 10);
   }, [selectedTrainer, language, liveReviews, currentUser, isManagement]);
 
   const needsReview = useMemo(() => {
@@ -286,22 +304,36 @@ const BookingPage: React.FC = () => {
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {trainers.map((trainer) => (
-              <div 
-                key={trainer.id}
-                onClick={() => setSelectedTrainer(trainer)}
-                className="group relative bg-surface/50 rounded-[2rem] overflow-hidden cursor-pointer transition-all duration-500 hover:-translate-y-2"
-              >
-                <div className="aspect-[3/4] relative overflow-hidden">
-                   <img src={trainer.image} className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-dark/90 via-transparent to-transparent"></div>
-                   <div className="absolute bottom-0 left-0 p-6 w-full">
-                      <p className="text-[11px] font-black uppercase tracking-widest text-brand mb-1">{trainer.specialty}</p>
-                      <h3 className="text-xl font-black uppercase italic text-white leading-tight mb-2">{trainer.name}</h3>
-                   </div>
+            {trainers.map((trainer) => {
+              const stats = getTrainerStats(trainer.id);
+              return (
+                <div 
+                  key={trainer.id}
+                  onClick={() => setSelectedTrainer(trainer)}
+                  className="group relative bg-surface/50 rounded-[2rem] overflow-hidden cursor-pointer transition-all duration-500 hover:-translate-y-2 shadow-xl hover:shadow-2xl border border-white/5"
+                >
+                  <div className="aspect-[3/4] relative overflow-hidden">
+                    <img src={trainer.image} className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-dark/95 via-dark/20 to-transparent"></div>
+                    <div className="absolute bottom-0 left-0 p-6 w-full">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-[11px] font-black uppercase tracking-widest text-brand italic">{trainer.specialty}</p>
+                          {stats.count > 0 && (
+                            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-brand/10 backdrop-blur-md rounded-lg border border-brand/20">
+                               <Star size={10} className="text-brand fill-brand" />
+                               <span className="text-[10px] font-black text-white">{stats.avg}</span>
+                            </div>
+                          )}
+                        </div>
+                        <h3 className="text-xl font-black uppercase italic text-white leading-tight mb-2 tracking-tighter">{trainer.name}</h3>
+                        <div className="flex items-center gap-2">
+                           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest italic">{stats.count > 0 ? `${stats.count} reviews` : 'New Coach'}</p>
+                        </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       ) : (
@@ -315,13 +347,21 @@ const BookingPage: React.FC = () => {
                <div className="relative rounded-[2.5rem] overflow-hidden border border-white/5 bg-surface shadow-2xl">
                   <div className="aspect-[4/5] overflow-hidden"><img src={selectedTrainer.image} className="w-full h-full object-cover" /></div>
                   <div className="p-10">
-                     <h2 className="text-4xl font-black uppercase italic text-white mb-2 leading-tight">{selectedTrainer.name}</h2>
-                     <div className="inline-block px-4 py-1 bg-brand text-dark rounded-full text-[11px] font-black uppercase tracking-widest mb-6">{selectedTrainer.specialty}</div>
+                     <div className="flex items-center justify-between mb-2">
+                        <h2 className="text-4xl font-black uppercase italic text-white leading-tight tracking-tighter">{selectedTrainer.name}</h2>
+                        {getTrainerStats(selectedTrainer.id).count > 0 && (
+                           <div className="flex items-center gap-1.5 px-3 py-1 bg-brand text-dark rounded-xl shadow-lg">
+                              <Star size={14} fill="currentColor" />
+                              <span className="text-sm font-black">{getTrainerStats(selectedTrainer.id).avg}</span>
+                           </div>
+                        )}
+                     </div>
+                     <div className="inline-block px-4 py-1 bg-brand/10 text-brand rounded-full text-[11px] font-black uppercase tracking-widest mb-6 border border-brand/20 italic">{selectedTrainer.specialty}</div>
                      
                      <div className="flex items-center gap-3 mb-6 p-4 bg-dark/20 rounded-2xl border border-white/5">
                         <Languages size={18} className="text-brand" />
                         <div>
-                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-0.5">Spoken Languages</p>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-0.5 italic">Spoken Languages</p>
                           <p className="text-xs font-black text-white italic uppercase tracking-tighter">
                             {selectedTrainer.languages?.join(', ') || 'Bulgarian, English'}
                           </p>
@@ -342,7 +382,7 @@ const BookingPage: React.FC = () => {
                      <div className="flex items-center gap-2">
                          <button onClick={handlePrevMonth} className="w-10 h-10 flex items-center justify-center hover:bg-white/5 rounded-full border border-white/5"><ChevronLeft size={18} /></button>
                          <div className="px-6 py-2 bg-white/5 rounded-full border border-white/5 min-w-[140px] text-center">
-                            <span className="text-[11px] font-black uppercase text-white">{monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}</span>
+                            <span className="text-[11px] font-black uppercase text-white tracking-widest">{monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}</span>
                          </div>
                          <button onClick={handleNextMonth} className="w-10 h-10 flex items-center justify-center hover:bg-white/5 rounded-full border border-white/5"><ChevronRight size={18} /></button>
                      </div>
@@ -360,7 +400,7 @@ const BookingPage: React.FC = () => {
                      </div>
                   </div>
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-10 pt-10 border-t border-white/5 mt-12">
-                      <div className="text-center sm:text-left"><p className="text-[11px] font-black uppercase tracking-widest text-slate-600 mb-2">Session Fee</p><div className="text-4xl font-black uppercase italic text-white leading-none tracking-tighter">{selectedTrainer.price} <span className="text-lg text-brand font-bold not-italic ml-1">BGN</span></div></div>
+                      <div className="text-center sm:text-left"><p className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-2">Session Fee</p><div className="text-4xl font-black uppercase italic text-white leading-none tracking-tighter">{selectedTrainer.price} <span className="text-lg text-brand font-bold not-italic ml-1">BGN</span></div></div>
                       
                       <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
                         {needsReview && (
@@ -393,7 +433,7 @@ const BookingPage: React.FC = () => {
 
                   {allTrainerReviews.length === 0 ? (
                     <div className="text-center py-12 border-2 border-dashed border-white/5 rounded-[2rem]">
-                       <p className="text-slate-500 font-black uppercase tracking-widest text-[11px]">No verified feedback yet.</p>
+                       <p className="text-slate-500 font-black uppercase tracking-widest text-[11px] italic">No verified feedback yet.</p>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -418,12 +458,12 @@ const BookingPage: React.FC = () => {
                                    </div>
                                    <div>
                                       <div className="flex items-center gap-2">
-                                        <p className="text-[11px] font-black text-white uppercase italic tracking-tight">{review.author}</p>
+                                        <p className="text-[11px] font-black text-white uppercase italic tracking-tight leading-none">{review.author}</p>
                                         {!review.isPublished && (
                                           <span className="text-[8px] px-1 bg-yellow-500/10 text-yellow-500 rounded uppercase font-black">Private/Pending</span>
                                         )}
                                       </div>
-                                      <p className="text-[11px] font-black uppercase text-slate-600 tracking-widest">{review.time}</p>
+                                      <p className="text-[11px] font-black uppercase text-slate-600 tracking-widest italic">{review.time}</p>
                                    </div>
                                 </div>
                                 <div className="flex gap-0.5">
@@ -451,12 +491,12 @@ const BookingPage: React.FC = () => {
               <div className="mb-8"><h2 className="text-3xl font-black uppercase italic text-white tracking-tighter mb-2">{t.finalize}</h2><p className="text-slate-500 text-[11px] font-medium">Please provide contact details to finalize your ClassFit booking.</p></div>
               <form onSubmit={handleGuestSubmit} className="space-y-4">
                 <div className="space-y-1">
-                   <label className="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-2">First & Last Name</label>
-                   <input type="text" required value={guestName} onChange={(e) => setGuestName(e.target.value)} className="w-full bg-dark/50 border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white outline-none focus:border-brand transition-all" />
+                   <label className="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-2 italic">First & Last Name</label>
+                   <input type="text" required value={guestName} onChange={(e) => setGuestName(e.target.value)} className="w-full bg-dark/50 border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white outline-none focus:border-brand transition-all italic" />
                 </div>
-                <div className="space-y-1"><label className="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-2">Phone</label><input type="tel" required value={guestPhone} onChange={(e) => setGuestPhone(e.target.value)} className="w-full bg-dark/50 border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white outline-none focus:border-brand transition-all" /></div>
-                <div className="space-y-1"><label className="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-2">Email</label><input type="email" required value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} className="w-full bg-dark/50 border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white outline-none focus:border-brand transition-all" /></div>
-                <button type="submit" disabled={isSubmitting} className="w-full bg-brand text-dark py-5 rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl shadow-brand/10 mt-6 hover:scale-[1.02] transition-all">
+                <div className="space-y-1"><label className="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-2 italic">Phone</label><input type="tel" required value={guestPhone} onChange={(e) => setGuestPhone(e.target.value)} className="w-full bg-dark/50 border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white outline-none focus:border-brand transition-all italic" /></div>
+                <div className="space-y-1"><label className="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-2 italic">Email</label><input type="email" required value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} className="w-full bg-dark/50 border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white outline-none focus:border-brand transition-all italic" /></div>
+                <button type="submit" disabled={isSubmitting} className="w-full bg-brand text-dark py-5 rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl shadow-brand/10 mt-6 hover:scale-[1.02] transition-all italic">
                    {isSubmitting ? <Loader2 className="animate-spin mx-auto" /> : t.confirmBooking}
                 </button>
               </form>
