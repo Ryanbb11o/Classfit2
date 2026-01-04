@@ -598,7 +598,10 @@ const AdminPanel: React.FC = () => {
         {activeTab === 'reviews' && ( pendingReviews.length === 0 ? <p className="text-center py-20 text-slate-500 italic">No feedback pending moderation.</p> :
            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">
               {pendingReviews.map(r => (
-                 <div key={r.id} className="p-10 bg-surface rounded-[3rem] border border-white/5 shadow-2xl relative overflow-hidden">
+                 <div 
+                    key={r.id} 
+                    className="p-6 hover:p-12 bg-surface rounded-[3rem] border border-white/5 shadow-2xl relative overflow-hidden transition-all duration-500 group"
+                 >
                     <div className="flex items-center justify-between mb-8">
                        <div className="flex items-center gap-4">
                           <div className="w-12 h-12 bg-brand text-dark rounded-2xl flex items-center justify-center font-black italic">{r.avatar}</div>
@@ -609,7 +612,7 @@ const AdminPanel: React.FC = () => {
                        </div>
                        <div className="flex text-brand gap-1">{[...Array(r.rating)].map((_, i) => <Star key={i} size={12} fill="currentColor" />)}</div>
                     </div>
-                    <div className="p-6 bg-dark/40 rounded-2xl border border-white/5 mb-10">
+                    <div className="p-6 bg-dark/40 rounded-2xl border border-white/5 mb-10 transition-all group-hover:bg-dark/60">
                         <p className="text-xs text-slate-300 italic leading-relaxed">"{r.text}"</p>
                     </div>
                     <div className="flex gap-4">

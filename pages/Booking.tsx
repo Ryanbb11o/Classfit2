@@ -407,14 +407,17 @@ const BookingPage: React.FC = () => {
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                        {allTrainerReviews.map((review: any, i) => (
-                          <div key={review.id || i} className="p-6 bg-dark/40 rounded-[2rem] border border-white/5 space-y-4 relative group">
+                          <div 
+                            key={review.id || i} 
+                            className="p-4 hover:p-8 bg-dark/40 rounded-[2rem] border border-white/5 space-y-4 relative group transition-all duration-500 ease-out shadow-sm hover:shadow-2xl"
+                          >
                              {isManagement && (
                                <button 
-                                 onClick={() => handleDeleteReview(review.id)}
-                                 className="absolute top-4 right-4 p-2 bg-red-500/10 text-red-500 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white z-10"
+                                 onClick={(e) => { e.stopPropagation(); handleDeleteReview(review.id); }}
+                                 className="absolute top-4 right-4 p-2.5 bg-red-500/10 text-red-500 rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white z-10 shadow-lg"
                                  title={t.deleteMsg}
                                >
-                                 <Trash2 size={14} />
+                                 <Trash2 size={16} />
                                </button>
                              )}
                              <div className="flex items-center justify-between">
