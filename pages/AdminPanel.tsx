@@ -600,7 +600,7 @@ const AdminPanel: React.FC = () => {
               {pendingReviews.map(r => (
                  <div 
                     key={r.id} 
-                    className="p-6 hover:p-12 bg-surface rounded-[3rem] border border-white/5 shadow-2xl relative overflow-hidden transition-all duration-500 group"
+                    className="p-6 hover:p-12 bg-surface rounded-[3rem] border border-white/5 shadow-2xl relative overflow-hidden transition-all duration-500 group hover:shadow-[0_20px_50px_rgba(220,38,38,0.25)]"
                  >
                     <div className="flex items-center justify-between mb-8">
                        <div className="flex items-center gap-4">

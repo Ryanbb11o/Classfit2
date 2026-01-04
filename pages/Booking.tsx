@@ -409,7 +409,7 @@ const BookingPage: React.FC = () => {
                        {allTrainerReviews.map((review: any, i) => (
                           <div 
                             key={review.id || i} 
-                            className="p-4 hover:p-8 bg-dark/40 rounded-[2rem] border border-white/5 space-y-4 relative group transition-all duration-500 ease-out shadow-sm hover:shadow-2xl"
+                            className="p-4 hover:p-8 bg-dark/40 rounded-[2rem] border border-white/5 space-y-4 relative group transition-all duration-500 ease-out shadow-sm hover:shadow-[0_20px_50px_rgba(220,38,38,0.25)]"
                           >
                              {isManagement && (
                                <button 
