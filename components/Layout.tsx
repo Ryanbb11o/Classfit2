@@ -97,9 +97,14 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                {currentUser ? (
                  <div className="flex items-center gap-4">
                    {isAdmin && <NavLink to="/admin" className="text-[11px] font-black uppercase tracking-widest text-red-500 flex items-center gap-2 transition-all hover:brightness-125"><ShieldCheck size={14} /> Web Admin</NavLink>}
-                   {isCashier && <NavLink to="/desk" className="text-[11px] font-black uppercase tracking-widest text-brand flex items-center gap-2 transition-all hover:brightness-125"><Search size={14} /> Front Desk</NavLink>}
+                   {isCashier && (
+                    <NavLink to="/desk" className="text-[11px] font-black uppercase tracking-widest text-brand flex items-center gap-2 transition-all hover:brightness-125 group relative">
+                      <Search size={14} /> Front Desk
+                      {awaitingPayment.length > 0 && <span className="absolute -top-2 -right-2 w-2 h-2 bg-red-500 rounded-full animate-ping"></span>}
+                    </NavLink>
+                   )}
                    {isTrainer && <NavLink to="/trainer" className="text-[11px] font-black uppercase tracking-widest text-brand flex items-center gap-2 transition-all hover:brightness-125"><Briefcase size={14} /> Gym Coach</NavLink>}
-                   <NavLink to="/profile" className="text-[11px] font-black uppercase tracking-widest text-white flex items-center gap-2 hover:text-brand transition-colors"><UserIcon size={14} /> {getDisplayName(currentUser.name)}</NavLink>
+                   <NavLink to="/profile" className="text-[11px] font-black uppercase tracking-widest text-white flex items-center gap-2 hover:text-brand transition-colors border-l border-white/10 pl-4"><UserIcon size={14} /> {getDisplayName(currentUser.name)}</NavLink>
                  </div>
                ) : (
                  <div className="flex items-center gap-6">
@@ -184,7 +189,12 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           <nav className="flex flex-col gap-8 text-left">
             <NavLink onClick={closeMenu} to="/" className="text-2xl font-black italic uppercase tracking-tighter text-white">Home</NavLink>
             <NavLink onClick={closeMenu} to="/booking" className="text-2xl font-black italic uppercase tracking-tighter text-brand">Booking</NavLink>
-            {isCashier && <NavLink onClick={closeMenu} to="/desk" className="text-2xl font-black italic uppercase tracking-tighter text-brand">Front Desk</NavLink>}
+            <NavLink onClick={closeMenu} to="/profile" className="text-2xl font-black italic uppercase tracking-tighter text-white">Profile</NavLink>
+            {isCashier && (
+              <NavLink onClick={closeMenu} to="/desk" className="text-2xl font-black italic uppercase tracking-tighter text-brand flex items-center gap-2">
+                Front Desk {awaitingPayment.length > 0 && <span className="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full">{awaitingPayment.length}</span>}
+              </NavLink>
+            )}
             <NavLink onClick={closeMenu} to="/memberships" className="text-2xl font-black italic uppercase tracking-tighter text-white">Memberships</NavLink>
             <NavLink onClick={closeMenu} to="/shop" className="text-2xl font-black italic uppercase tracking-tighter text-white">Shop</NavLink>
             <NavLink onClick={closeMenu} to="/contact" className="text-2xl font-black italic uppercase tracking-tighter text-white">Contact</NavLink>

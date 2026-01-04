@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { Calendar, Star, LogOut, Dumbbell, Loader2, X, MapPinned, Settings2, Trash2, AlertCircle, Sparkles, ShieldCheck, ChevronRight, Languages, MessageSquarePlus, Clock, Phone, MapPin, CheckCircle2, User, Heart, MessageSquareHeart } from 'lucide-react';
+import { Calendar, Star, LogOut, Dumbbell, Loader2, X, MapPinned, Settings2, Trash2, AlertCircle, Sparkles, ShieldCheck, ChevronRight, Languages, MessageSquarePlus, Clock, Phone, MapPin, CheckCircle2, User, Heart, MessageSquareHeart, Search, Briefcase } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, getTrainers, DEFAULT_PROFILE_IMAGE } from '../constants';
 import { useNavigate } from 'react-router-dom';
@@ -171,7 +171,7 @@ const SessionDetailModal: React.FC<{
 };
 
 const CustomerDashboard: React.FC = () => {
-  const { language, bookings, updateBooking, deleteBooking, currentUser, logout, users, addReview, refreshData, confirmAction, isManagement, isAdmin, updateUser } = useAppContext();
+  const { language, bookings, updateBooking, deleteBooking, currentUser, logout, users, addReview, refreshData, confirmAction, isManagement, isAdmin, isCashier, updateUser } = useAppContext();
   const t = TRANSLATIONS[language];
   const navigate = useNavigate();
 
@@ -193,11 +193,14 @@ const CustomerDashboard: React.FC = () => {
     return bookings.filter(b => b.userId === currentUser.id || b.customerEmail === currentUser.email);
   }, [bookings, currentUser]);
 
+  const awaitingDeskActions = useMemo(() => {
+    return bookings.filter(b => b.status === 'trainer_completed' && b.date === new Date().toISOString().split('T')[0]).length;
+  }, [bookings]);
+
   const handleReviewSubmit = async (id: string, rating: number, text: string, isAi: boolean, trainerId: string) => {
     const booking = bookings.find(b => b.id === id);
     if (!booking) return;
 
-    // 1. Submit review
     await addReview({ 
       trainerId, 
       author: currentUser.name.split('(')[0].trim(), 
@@ -207,7 +210,6 @@ const CustomerDashboard: React.FC = () => {
       bookingId: id 
     });
 
-    // 2. Update status and toggle reviewed flag
     const newStatus = booking.status === 'confirmed' ? 'trainer_completed' : booking.status;
     await updateBooking(id, { 
       status: newStatus as any, 
@@ -228,6 +230,7 @@ const CustomerDashboard: React.FC = () => {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-24 animate-in fade-in duration-500 text-left">
+      {/* Profile Header Card */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-12 bg-surface p-8 rounded-[3.5rem] border border-white/5 shadow-2xl relative overflow-hidden group">
          <div className="flex items-center gap-8 relative z-10">
             <div className="w-28 h-28 rounded-full p-1.5 border-4 border-brand/20 bg-dark shrink-0 overflow-hidden">
@@ -247,12 +250,7 @@ const CustomerDashboard: React.FC = () => {
                 </div>
 
                 <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-                   <button onClick={() => setShowEditModal(true)} className="bg-white/5 hover:bg-brand hover:text-dark text-white text-[11px] font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border border-white/10 transition-all flex items-center gap-1.5"><Settings2 size={12} /> {t.profileSettings}</button>
-                   {isAdmin && (
-                      <button onClick={() => navigate('/admin')} className="bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white text-[11px] font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border border-red-500/20 transition-all flex items-center gap-1.5 shadow-lg">
-                        <ShieldCheck size={12} /> Console <ChevronRight size={12} />
-                      </button>
-                   )}
+                   <button onClick={() => setShowEditModal(true)} className="bg-white/5 hover:bg-brand hover:text-dark text-white text-[11px] font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border border-white/10 transition-all flex items-center gap-1.5 font-black uppercase italic"><Settings2 size={12} /> {t.profileSettings}</button>
                 </div>
             </div>
          </div>
@@ -261,6 +259,64 @@ const CustomerDashboard: React.FC = () => {
          </button>
       </div>
 
+      {/* Staff Portals Section - ADDED THIS TO SOLVE THE PORTAL VISIBILITY ISSUE */}
+      {(isCashier || isAdmin || currentUser.roles.includes('trainer')) && (
+        <div className="mb-12 animate-in slide-in-from-top-4 duration-500 delay-150">
+           <h2 className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-500 italic mb-6">Staff Portals</h2>
+           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {isCashier && (
+                 <button 
+                  onClick={() => navigate('/desk')}
+                  className="p-8 bg-brand text-dark rounded-[2.5rem] flex flex-col items-center gap-4 transition-all hover:scale-105 active:scale-95 shadow-xl shadow-brand/10 relative overflow-hidden group"
+                 >
+                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><Search size={48} /></div>
+                    <div className="w-12 h-12 bg-dark/10 rounded-2xl flex items-center justify-center mb-2">
+                       <Search size={24} />
+                    </div>
+                    <div className="text-center">
+                       <p className="font-black uppercase italic text-lg leading-none">Front Desk</p>
+                       <p className="text-[10px] font-bold uppercase tracking-widest mt-2 opacity-60">Terminal Access</p>
+                    </div>
+                    {awaitingDeskActions > 0 && (
+                      <span className="absolute top-4 left-4 bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full animate-pulse">
+                        {awaitingDeskActions} ALERTS
+                      </span>
+                    )}
+                 </button>
+              )}
+              {currentUser.roles.includes('trainer') && (
+                 <button 
+                  onClick={() => navigate('/trainer')}
+                  className="p-8 bg-surface border border-white/5 rounded-[2.5rem] flex flex-col items-center gap-4 transition-all hover:border-brand hover:scale-105 active:scale-95 shadow-xl"
+                 >
+                    <div className="w-12 h-12 bg-brand/10 text-brand rounded-2xl flex items-center justify-center mb-2">
+                       <Briefcase size={24} />
+                    </div>
+                    <div className="text-center">
+                       <p className="font-black uppercase italic text-lg text-white leading-none">Gym Coach</p>
+                       <p className="text-[10px] font-bold uppercase tracking-widest mt-2 text-slate-500">Professional Portal</p>
+                    </div>
+                 </button>
+              )}
+              {isAdmin && (
+                 <button 
+                  onClick={() => navigate('/admin')}
+                  className="p-8 bg-surface border border-red-500/20 rounded-[2.5rem] flex flex-col items-center gap-4 transition-all hover:bg-red-500 hover:text-white hover:scale-105 active:scale-95 shadow-xl group"
+                 >
+                    <div className="w-12 h-12 bg-red-500/10 text-red-500 rounded-2xl flex items-center justify-center mb-2 group-hover:bg-white/10 group-hover:text-white">
+                       <ShieldCheck size={24} />
+                    </div>
+                    <div className="text-center">
+                       <p className="font-black uppercase italic text-lg leading-none">Web Admin</p>
+                       <p className="text-[10px] font-bold uppercase tracking-widest mt-2 group-hover:opacity-60 text-slate-500">System Console</p>
+                    </div>
+                 </button>
+              )}
+           </div>
+        </div>
+      )}
+
+      {/* Member Workouts Section */}
       <div className="grid grid-cols-1 gap-8">
         <div className="flex items-center justify-between mb-2">
             <h2 className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-500 italic">{t.myWorkouts}</h2>
