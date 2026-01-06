@@ -213,6 +213,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (updates.roles !== undefined) dbPayload.roles = updates.roles;
     if (updates.commissionRate !== undefined) dbPayload.commission_rate = updates.commissionRate;
     if (updates.approvedBy !== undefined) dbPayload.approved_by = updates.approvedBy;
+    if (updates.blockedDates !== undefined) dbPayload.blocked_dates = updates.blockedDates;
+    if (updates.languages !== undefined) dbPayload.languages = updates.languages;
 
     const { error } = await supabase.from('users').update(dbPayload).eq('id', id);
     if (error) {
@@ -231,7 +233,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     let finalUpdates = { ...existing, ...updates };
 
-    // Logic for financial settlement if marking as completed
     if (updates.status === 'completed' && updates.commissionAmount === undefined) {
       const trainer = users.find(u => u.id === existing.trainerId);
       const rate = trainer?.commissionRate || 25; 
@@ -251,7 +252,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return;
     }
 
-    // Explicit snake_case mapping for Supabase
     const dbPayload: any = {
        status: finalUpdates.status,
        booking_date: finalUpdates.date,
@@ -260,8 +260,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
        language: finalUpdates.language
     };
 
-    // Only include these if they exist in the schema to prevent 400 errors
-    // Note: User MUST run the SQL setup provided in the README for these to work.
     if (finalUpdates.paymentMethod) dbPayload.payment_method = finalUpdates.paymentMethod;
     if (finalUpdates.settledAt) dbPayload.settled_at = finalUpdates.settledAt;
     if (finalUpdates.settledBy) dbPayload.settled_by = finalUpdates.settledBy;
@@ -273,9 +271,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (error) {
        console.error("Supabase Booking Update Error:", error);
        setBookings(previousBookings); 
-       // Detailed error for the user to understand if they missed the SQL step
        if (error.message.includes('settled_by') || error.message.includes('payment_method')) {
-         alert(`CRITICAL: Database Schema Mismatch. Your 'bookings' table is missing settlement columns. Please run the SQL fix in the README. Error: ${error.message}`);
+         alert(`CRITICAL DATABASE ERROR: Column not found. Please run the SQL fix in the README to add missing columns 'settled_by', 'payment_method', etc. Error: ${error.message}`);
        } else {
          alert(`Database Error: ${error.message}`);
        }
@@ -390,7 +387,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       id: booking.id, check_in_code: checkInCode, trainer_id: booking.trainerId, user_id: booking.userId,
       customer_name: booking.customerName, customer_phone: booking.customerPhone, customer_email: booking.customerEmail,
       booking_date: booking.date, booking_time: booking.time, duration_mins: booking.duration, price: booking.price,
-      status: booking.status, language: booking.language, gym_address: booking.gymAddress
+      status: booking.status, language: booking.language, gym_address: 'бул. „Осми приморски полк“ 128'
     }]);
     if (error) throw error;
     await refreshData();

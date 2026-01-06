@@ -32,6 +32,7 @@ export interface Trainer {
   commissionRate?: number;
   approvedBy?: string;
   languages?: string[];
+  blockedDates?: string[];
 }
 
 export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'trainer_completed';

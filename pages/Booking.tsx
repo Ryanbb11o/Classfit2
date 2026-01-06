@@ -31,7 +31,8 @@ const BookingPage: React.FC = () => {
           phone: u.phone || '',
           bio: u.bio || (language === 'bg' ? 'Професионален инструктор с богат опит.' : 'Professional instructor with extensive experience.'),
           availability: ['08:00', '09:00', '10:00', '14:00', '15:00', '16:00', '17:00'],
-          languages: u.languages || ['Bulgarian', 'English']
+          languages: u.languages || ['Bulgarian', 'English'],
+          blockedDates: u.blockedDates || []
         };
       });
 
@@ -140,19 +141,21 @@ const BookingPage: React.FC = () => {
 
     for (let i = 1; i <= daysInMonth; i++) {
         const currentDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), i);
+        const dateStr = currentDate.toISOString().split('T')[0];
         const isSelected = selectedDate.toDateString() === currentDate.toDateString();
         const isToday = today.toDateString() === currentDate.toDateString();
         const isPast = currentDate < today;
+        const isTrainerBlocked = selectedTrainer?.blockedDates?.includes(dateStr);
 
         days.push(
             <button
                 key={i}
                 onClick={() => handleDateClick(i)}
-                disabled={isPast}
+                disabled={isPast || isTrainerBlocked}
                 className={`h-8 w-8 rounded-full flex items-center justify-center text-[11px] font-black transition-all duration-300
                     ${isSelected 
                         ? 'bg-brand text-dark shadow-md shadow-brand/20 scale-110' 
-                        : isPast 
+                        : (isPast || isTrainerBlocked)
                             ? 'text-slate-700 cursor-not-allowed' 
                             : 'text-white/60 hover:text-brand hover:bg-white/5'
                     }
@@ -222,7 +225,7 @@ const BookingPage: React.FC = () => {
       duration: 60,
       price: selectedTrainer.price,
       status: 'pending',
-      gymAddress: 'бул. „Осми приморски полк“ 128 (Спирка МИР)'
+      gymAddress: 'бул. „Осми приморски полк“ 128'
     };
 
     try {
@@ -300,7 +303,7 @@ const BookingPage: React.FC = () => {
           <div className="mb-16">
             <h1 className="text-5xl md:text-7xl font-black uppercase italic mb-4 tracking-tighter text-white">{t.booking}</h1>
             <p className="text-slate-500 font-black uppercase tracking-[0.3em] text-[11px]">
-              {language === 'bg' ? 'ClassFit Варна • сп. Мир • Изберете Треньор' : 'ClassFit Varna • Mir Stop • Select Trainer'}
+              {language === 'bg' ? 'ClassFit Варна • Изберете Треньор' : 'ClassFit Varna • Select Trainer'}
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

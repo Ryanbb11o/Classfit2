@@ -244,7 +244,7 @@ const CustomerDashboard: React.FC = () => {
                    
                    {currentUser.languages && currentUser.languages.length > 0 && (
                      <div className="flex items-center gap-1.5 bg-white/5 px-4 py-1.5 rounded-full border border-white/10 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 italic">
-                       <Languages size={12} /> {currentUser.languages.join(' • ')}
+                       <Languages size={12} /> {currentUser.languages?.join(' • ')}
                      </div>
                    )}
                 </div>

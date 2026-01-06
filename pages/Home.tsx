@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, MapPin, Award, Users, Zap, CheckCircle, Navigation } from 'lucide-react';
+import { ArrowRight, MapPin, Award, Users, Zap, CheckCircle, Navigation, Play } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS } from '../constants';
 import GoogleReviews from '../components/GoogleReviews';
@@ -14,80 +14,107 @@ const Home: React.FC = () => {
 
   return (
     <div className="flex flex-col">
-      {/* Hero Section */}
-      <section className="relative min-h-[90vh] flex items-center bg-dark overflow-hidden pt-20 pb-20 md:pb-0 md:pt-0">
-        <div className="absolute top-0 right-0 w-1/3 h-full bg-surface/50 -skew-x-12 transform translate-x-1/2 z-0 pointer-events-none"></div>
-        <div className="absolute bottom-0 left-0 w-24 h-24 bg-brand/10 rounded-full blur-3xl -translate-x-1/2 translate-y-1/2 pointer-events-none"></div>
+      {/* CSS for Marquee Animation */}
+      <style>{`
+        @keyframes scroll {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .animate-scroll {
+          animation: scroll 20s linear infinite;
+        }
+      `}</style>
+
+      {/* Hero Section with Video Background */}
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        {/* Video Background */}
+        <div className="absolute inset-0 z-0">
+          <video 
+            autoPlay 
+            loop 
+            muted 
+            playsInline 
+            className="w-full h-full object-cover grayscale opacity-60 scale-105"
+            poster="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop"
+          >
+            {/* High quality gym atmosphere video */}
+            <source src="https://videos.pexels.com/video-files/3209211/3209211-uhd_2560_1440_25fps.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+          {/* Dark Overlay for Text Readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-dark via-dark/80 to-dark/40"></div>
+          <div className="absolute inset-0 bg-dark/20 backdrop-blur-[1px]"></div>
+        </div>
         
-        <div className="relative z-10 max-w-7xl mx-auto px-6 w-full flex flex-col lg:flex-row items-center gap-16">
-          <div className="flex-1 text-center lg:text-left">
+        <div className="relative z-10 max-w-7xl mx-auto px-6 w-full flex flex-col items-center text-center pt-20">
             <Reveal>
-              <div className="inline-flex items-center gap-3 bg-surface text-brand px-5 py-2 rounded-full text-[11px] font-black uppercase tracking-[0.3em] mb-8 border border-white/5 justify-center lg:justify-start">
+              <div className="inline-flex items-center gap-3 bg-white/10 backdrop-blur-md text-brand px-6 py-2.5 rounded-full text-[11px] font-black uppercase tracking-[0.3em] mb-8 border border-white/10 hover:bg-white/20 transition-all cursor-default">
                 <Zap size={14} className="text-brand fill-brand" /> {t.joinMovement}
               </div>
             </Reveal>
             
-            <div className="mb-8">
-                <Reveal delay={100} direction="left">
-                    <h1 className="text-4xl sm:text-6xl md:text-8xl font-black tracking-tighter text-white leading-[0.9] uppercase italic block">
+            <div className="mb-8 relative">
+                <Reveal delay={100} direction="up">
+                    <h1 className="text-6xl sm:text-8xl md:text-[9rem] font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 leading-[0.85] uppercase italic drop-shadow-2xl">
                         {t.transform}
                     </h1>
                 </Reveal>
-                <Reveal delay={300} direction="right">
-                    <h1 className="text-4xl sm:text-6xl md:text-8xl font-black tracking-tighter text-brand leading-[0.9] uppercase italic block">
+                <Reveal delay={300} direction="up">
+                    <h1 className="text-6xl sm:text-8xl md:text-[9rem] font-black tracking-tighter text-brand leading-[0.85] uppercase italic drop-shadow-[0_0_30px_rgba(197,217,45,0.3)]">
                         {t.yourself}
                     </h1>
                 </Reveal>
             </div>
             
             <Reveal delay={500}>
-              <p className="text-lg md:text-xl text-slate-400 mb-10 font-medium max-w-lg leading-relaxed italic mx-auto lg:mx-0">
+              <p className="text-lg md:text-2xl text-slate-300 mb-12 font-medium max-w-2xl leading-relaxed italic mx-auto drop-shadow-md">
                 {t.motivation}
               </p>
             </Reveal>
 
             <Reveal delay={600}>
-              <div className="flex flex-col sm:flex-row gap-5 justify-center lg:justify-start">
+              <div className="flex flex-col sm:flex-row gap-5 justify-center">
                 <button 
                   onClick={() => navigate('/booking')}
-                  className="px-10 py-5 bg-brand text-dark rounded-full font-black uppercase italic tracking-[0.2em] hover:bg-white hover:text-dark transition-all duration-300 flex items-center justify-center gap-3 group shadow-xl shadow-brand/10"
+                  className="px-12 py-6 bg-brand text-dark rounded-full font-black uppercase italic tracking-[0.2em] hover:bg-white hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3 group shadow-[0_0_40px_rgba(197,217,45,0.3)]"
                 >
                   {t.bookNow} <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                 </button>
                 <button 
                   onClick={() => navigate('/memberships')}
-                  className="px-10 py-5 border-2 border-white/20 text-white rounded-full font-black uppercase italic tracking-[0.2em] hover:border-brand hover:text-brand transition-all duration-300"
+                  className="px-12 py-6 bg-white/5 backdrop-blur-md border border-white/20 text-white rounded-full font-black uppercase italic tracking-[0.2em] hover:bg-white hover:text-dark hover:border-white transition-all duration-300"
                 >
                   {t.memberships}
                 </button>
               </div>
             </Reveal>
-          </div>
-          
-          <div className="flex-1 w-full lg:w-auto relative hidden lg:block">
-             <Reveal delay={700}>
-               <div className="relative aspect-[4/5] rounded-[3rem] overflow-hidden shadow-2xl z-10 border-4 border-white/5 bg-surface group">
-                  <img 
-                    src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop" 
-                    alt="Lifting" 
-                    className="w-full h-full object-cover grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-dark/90 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end p-10">
-                     <p className="text-brand text-xl font-black uppercase italic">{t.eliteBase}</p>
-                  </div>
-               </div>
-               <div className="absolute -top-6 -right-6 w-full h-full border-2 border-brand/20 rounded-[3rem] -z-10 transform rotate-2"></div>
-             </Reveal>
-          </div>
+        </div>
+
+        {/* Scroll Indicator */}
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce opacity-50">
+           <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center pt-2">
+              <div className="w-1 h-2 bg-white rounded-full"></div>
+           </div>
         </div>
       </section>
 
+      {/* Infinite Marquee Bar */}
+      <div className="bg-brand border-y border-white/10 py-3 overflow-hidden relative z-20">
+        <div className="flex whitespace-nowrap animate-scroll">
+           {[...Array(10)].map((_, i) => (
+              <span key={i} className="text-dark font-black italic uppercase tracking-[0.2em] text-sm mx-8 flex items-center gap-4">
+                 CLASSFIT VARNA <span className="w-2 h-2 bg-dark rounded-full"></span> ELITE TRAINING <span className="w-2 h-2 bg-dark rounded-full"></span> NO EXCUSES <span className="w-2 h-2 bg-dark rounded-full"></span>
+              </span>
+           ))}
+        </div>
+      </div>
+
       {/* Highlights Grid */}
-      <section className="py-32 bg-surface border-y border-white/5">
+      <section className="py-32 bg-surface border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-16">
           <Reveal delay={0} className="h-full">
             <div className="group h-full">
-              <div className="w-16 h-16 bg-white/5 text-brand rounded-2xl flex items-center justify-center mb-8 shadow-sm group-hover:bg-brand group-hover:text-dark transition-all duration-500">
+              <div className="w-16 h-16 bg-white/5 text-brand rounded-2xl flex items-center justify-center mb-8 shadow-sm group-hover:bg-brand group-hover:text-dark transition-all duration-500 transform group-hover:-translate-y-2">
                 <MapPin size={28} />
               </div>
               <h3 className="text-xl font-black uppercase italic mb-4 tracking-tight text-white">{t.location}</h3>
@@ -97,7 +124,7 @@ const Home: React.FC = () => {
           
           <Reveal delay={100} className="h-full">
             <div className="group h-full">
-              <div className="w-16 h-16 bg-white/5 text-brand rounded-2xl flex items-center justify-center mb-8 shadow-sm group-hover:bg-brand group-hover:text-dark transition-all duration-500">
+              <div className="w-16 h-16 bg-white/5 text-brand rounded-2xl flex items-center justify-center mb-8 shadow-sm group-hover:bg-brand group-hover:text-dark transition-all duration-500 transform group-hover:-translate-y-2">
                 <Award size={28} />
               </div>
               <h3 className="text-xl font-black uppercase italic mb-4 tracking-tight text-white">{t.expertise}</h3>
@@ -107,7 +134,7 @@ const Home: React.FC = () => {
 
           <Reveal delay={200} className="h-full">
             <div className="group h-full">
-              <div className="w-16 h-16 bg-white/5 text-brand rounded-2xl flex items-center justify-center mb-8 shadow-sm group-hover:bg-brand group-hover:text-dark transition-all duration-500">
+              <div className="w-16 h-16 bg-white/5 text-brand rounded-2xl flex items-center justify-center mb-8 shadow-sm group-hover:bg-brand group-hover:text-dark transition-all duration-500 transform group-hover:-translate-y-2">
                 <Users size={28} />
               </div>
               <h3 className="text-xl font-black uppercase italic mb-4 tracking-tight text-white">{t.community}</h3>
@@ -120,7 +147,7 @@ const Home: React.FC = () => {
       {/* Location specific section - Varna LevskiPrimorski */}
       <section className="py-32 bg-dark">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="bg-surface rounded-[3rem] border border-white/10 p-8 md:p-16 flex flex-col md:flex-row items-center gap-12 overflow-hidden relative">
+          <div className="bg-surface rounded-[3rem] border border-white/10 p-8 md:p-16 flex flex-col md:flex-row items-center gap-12 overflow-hidden relative shadow-2xl">
             <div className="flex-1 relative z-10">
               <Reveal>
                 <div className="text-brand font-black uppercase tracking-[0.3em] text-[11px] mb-4 italic">Локация Варна</div>
@@ -142,7 +169,7 @@ const Home: React.FC = () => {
                   href="https://www.google.com/maps/search/?api=1&query=ClassFit+Varna+Studentska+1A"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 mt-10 px-8 py-4 bg-white text-dark rounded-full font-black uppercase italic tracking-widest text-[11px] hover:bg-brand transition-colors"
+                  className="inline-flex items-center gap-2 mt-10 px-8 py-4 bg-white text-dark rounded-full font-black uppercase italic tracking-widest text-[11px] hover:bg-brand transition-colors shadow-lg"
                 >
                   Отвори в Google Maps <ArrowRight size={14} />
                 </a>
@@ -186,13 +213,18 @@ const Home: React.FC = () => {
           </div>
           <div className="flex-1 relative w-full">
              <Reveal delay={300} width="100%">
-               <div className="aspect-square bg-brand rounded-full absolute -top-10 -left-10 w-2/3 h-2/3 blur-[100px] opacity-10 pointer-events-none"></div>
-               <div className="aspect-[4/3] rounded-[2.5rem] overflow-hidden shadow-2xl relative z-10 border-8 border-white/5">
+               <div className="aspect-square bg-brand rounded-full absolute -top-10 -left-10 w-2/3 h-2/3 blur-[120px] opacity-10 pointer-events-none"></div>
+               <div className="aspect-[4/3] rounded-[2.5rem] overflow-hidden shadow-2xl relative z-10 border-8 border-white/5 group">
                   <img 
                     src="https://images.unsplash.com/photo-1593079831268-3381b0db4a77?q=80&w=2069&auto=format&fit=crop" 
                     alt="Focus" 
-                    className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000"
+                    className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000 group-hover:scale-105"
                   />
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-dark/20">
+                     <div className="w-20 h-20 bg-brand text-dark rounded-full flex items-center justify-center">
+                        <Play size={30} fill="currentColor" className="ml-1"/>
+                     </div>
+                  </div>
                </div>
              </Reveal>
           </div>
@@ -212,7 +244,7 @@ const Home: React.FC = () => {
            <Reveal delay={100}>
              <button 
                onClick={() => navigate('/memberships')}
-               className="px-16 py-6 bg-brand text-dark rounded-full font-black uppercase italic tracking-[0.3em] hover:bg-white transition-all duration-300 shadow-2xl shadow-brand/20"
+               className="px-16 py-6 bg-brand text-dark rounded-full font-black uppercase italic tracking-[0.3em] hover:bg-white transition-all duration-300 shadow-2xl shadow-brand/20 hover:scale-105"
              >
                {t.joinClassfit}
              </button>
