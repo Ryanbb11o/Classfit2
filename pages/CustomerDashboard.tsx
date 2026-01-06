@@ -228,6 +228,9 @@ const CustomerDashboard: React.FC = () => {
 
   const cleanName = (name: string) => name.split('(')[0].trim();
 
+  // Safely check roles
+  const hasStaffAccess = isCashier || isAdmin || currentUser.roles?.includes('trainer');
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-24 animate-in fade-in duration-500 text-left">
       {/* Profile Header Card */}
@@ -260,7 +263,7 @@ const CustomerDashboard: React.FC = () => {
       </div>
 
       {/* Staff Portals Section - ADDED THIS TO SOLVE THE PORTAL VISIBILITY ISSUE */}
-      {(isCashier || isAdmin || currentUser.roles.includes('trainer')) && (
+      {hasStaffAccess && (
         <div className="mb-12 animate-in slide-in-from-top-4 duration-500 delay-150">
            <h2 className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-500 italic mb-6">Staff Portals</h2>
            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -284,7 +287,7 @@ const CustomerDashboard: React.FC = () => {
                     )}
                  </button>
               )}
-              {currentUser.roles.includes('trainer') && (
+              {currentUser.roles?.includes('trainer') && (
                  <button 
                   onClick={() => navigate('/trainer')}
                   className="p-8 bg-surface border border-white/5 rounded-[2.5rem] flex flex-col items-center gap-4 transition-all hover:border-brand hover:scale-105 active:scale-95 shadow-xl"

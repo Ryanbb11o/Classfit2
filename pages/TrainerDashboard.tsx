@@ -18,7 +18,8 @@ const TrainerDashboard: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
-    if (!isLoading && (!currentUser || !currentUser.roles.includes('trainer'))) {
+    // Safely check for trainer role with optional chaining
+    if (!isLoading && (!currentUser || !currentUser.roles?.includes('trainer'))) {
       navigate('/login');
     }
   }, [currentUser, isLoading]);

@@ -35,15 +35,15 @@ const Home: React.FC = () => {
             muted 
             playsInline 
             className="w-full h-full object-cover grayscale opacity-60 scale-105"
-            poster="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop"
+            poster="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2070&auto=format&fit=crop"
           >
-            {/* High quality gym atmosphere video */}
-            <source src="https://videos.pexels.com/video-files/3209211/3209211-uhd_2560_1440_25fps.mp4" type="video/mp4" />
+            {/* Dynamic Battle Ropes Video - High Intensity Gym Scene */}
+            <source src="https://videos.pexels.com/video-files/4761426/4761426-uhd_2560_1440_25fps.mp4" type="video/mp4" />
             Your browser does not support the video tag.
           </video>
           {/* Dark Overlay for Text Readability */}
           <div className="absolute inset-0 bg-gradient-to-t from-dark via-dark/80 to-dark/40"></div>
-          <div className="absolute inset-0 bg-dark/20 backdrop-blur-[1px]"></div>
+          <div className="absolute inset-0 bg-dark/30 backdrop-blur-[1px]"></div>
         </div>
         
         <div className="relative z-10 max-w-7xl mx-auto px-6 w-full flex flex-col items-center text-center pt-20">
