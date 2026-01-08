@@ -30,18 +30,7 @@ interface AppContextType {
   users: User[];
   login: (email: string, pass: string) => Promise<boolean>;
   register: (name: string, email: string, pass: string) => Promise<boolean>;
-  registerTrainer: (data: { 
-    name: string; 
-    email: string; 
-    pass: string; 
-    phone: string; 
-    specialty: string;
-    experience?: string;
-    certs?: string;
-    social?: string;
-    motivation?: string;
-    languages?: string[];
-  }) => Promise<{ success: boolean; msg?: string }>;
+  registerTrainer: (data: any) => Promise<{ success: boolean; msg?: string }>;
   requestTrainerUpgrade: (userId: string, currentName: string, phone: string, specialty: string) => Promise<{ success: boolean; msg?: string }>;
   updateUser: (id: string, updates: Partial<User>) => Promise<void>;
   deleteUser: (id: string) => Promise<void>;
@@ -56,8 +45,8 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const MASTER_ID = '26e38fa6-50ce-4a03-8b8d-cb76da6594b0';
 const MASTER_EMAIL = 'admin@classfit.bg';
+const GYM_ADDRESS = 'ул. „Студентска“ 1А, Варна';
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [language, setLanguage] = useState<Language>('bg');
@@ -119,53 +108,30 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
 
     try {
-      const { data: bData, error: bError } = await supabase.from('bookings').select('*').order('created_at', { ascending: false });
-      if (bError) throw bError;
+      const { data: bData } = await supabase.from('bookings').select('*').order('created_at', { ascending: false });
       if (bData) setBookings(bData.map((b: any) => ({
+          ...b,
           id: String(b.id),
-          checkInCode: b.check_in_code || '',
           trainerId: String(b.trainer_id),
           userId: b.user_id ? String(b.user_id) : undefined,
           customerName: b.customer_name || 'Unknown',
-          customerPhone: b.customer_phone,
-          customerEmail: b.customer_email,
           date: b.booking_date || '',
           time: b.booking_time || '',
-          duration: b.duration_mins || 60,
-          price: Number(b.price || 0),
-          status: b.status || 'pending',
-          paymentMethod: b.payment_method,
-          language: (b.language as Language) || 'bg',
-          commissionAmount: Number(b.commission_amount || 0),
-          trainerEarnings: Number(b.trainer_earnings || 0),
-          gymAddress: b.gym_address,
-          hasBeenReviewed: b.has_been_reviewed || false,
-          settledAt: b.settled_at,
-          settledBy: b.settled_by
+          price: Number(b.price || 0)
       })));
 
       const { data: rData } = await supabase.from('reviews').select('*').order('created_at', { ascending: false });
       if (rData) setReviews(rData.map((r: any) => ({
+          ...r,
           id: String(r.id),
           trainerId: String(r.trainer_id),
-          author: r.author_name || 'Anonymous',
-          rating: r.rating || 5,
-          text: r.content || '',
-          time: r.created_at ? new Date(r.created_at).toLocaleDateString() : '',
-          avatar: (r.author_name || 'A').charAt(0),
-          isAiEnhanced: r.is_ai_enhanced || false,
-          isPublished: r.is_published || false,
-          bookingId: r.booking_id ? String(r.booking_id) : undefined
+          isPublished: r.is_published || false
       })));
       
       const { data: uData } = await supabase.from('users').select('*').order('joined_date', { ascending: false });
       if (uData) setUsers(uData.map((u: any) => {
-          let roles: UserRole[] = u.roles || ['user'];
-          if ((u.email === MASTER_EMAIL || String(u.id) === MASTER_ID)) {
-            roles = Array.from(new Set([...roles, 'management', 'admin']));
-          }
-          const isTrainer = roles.some(r => r === 'trainer' || r === 'trainer_pending');
-          const defaultLangs = isTrainer ? ['Bulgarian', 'English'] : [];
+          let roles: UserRole[] = u.roles || (u.role ? [u.role as UserRole] : ['user']);
+          if (u.email === MASTER_EMAIL) roles = Array.from(new Set([...roles, 'management', 'admin']));
           return {
             id: String(u.id),
             name: u.name || 'User',
@@ -174,12 +140,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             roles: roles,
             phone: u.phone,
             image: u.image || DEFAULT_PROFILE_IMAGE, 
-            bio: u.bio,     
-            joinedDate: u.joined_date || new Date().toISOString(),
-            approvedBy: u.approved_by,
-            commissionRate: u.commission_rate || 25,
-            blockedDates: u.blocked_dates || [],
-            languages: (u.languages && u.languages.length > 0) ? u.languages : defaultLangs
+            joinedDate: u.joined_date || new Date().toISOString()
           };
       }));
     } catch (e) {
@@ -203,22 +164,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         return;
     }
 
-    const dbPayload: any = {};
-    if (updates.name !== undefined) dbPayload.name = updates.name;
-    if (updates.email !== undefined) dbPayload.email = updates.email;
-    if (updates.password !== undefined) dbPayload.password = updates.password;
-    if (updates.phone !== undefined) dbPayload.phone = updates.phone;
-    if (updates.image !== undefined) dbPayload.image = updates.image;
-    if (updates.bio !== undefined) dbPayload.bio = updates.bio;
-    if (updates.roles !== undefined) dbPayload.roles = updates.roles;
-    if (updates.commissionRate !== undefined) dbPayload.commission_rate = updates.commissionRate;
-    if (updates.approvedBy !== undefined) dbPayload.approved_by = updates.approvedBy;
-    if (updates.blockedDates !== undefined) dbPayload.blocked_dates = updates.blockedDates;
-    if (updates.languages !== undefined) dbPayload.languages = updates.languages;
-
-    const { error } = await supabase.from('users').update(dbPayload).eq('id', id);
+    const { error } = await supabase.from('users').update(updates).eq('id', id);
     if (error) {
-        console.error("Supabase User Update Error:", error);
+        console.error("Supabase Error:", error);
         setUsers(prevUsers);
         return;
     }
@@ -226,24 +174,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const updateBooking = async (id: string, updates: Partial<Booking>) => {
-    const adminName = currentUser?.name.split('(')[0].trim() || 'Admin';
-    const existing = bookings.find(b => b.id === id);
-    if (!existing) return;
-
-    let finalUpdates = { ...existing, ...updates };
-
-    if (updates.status === 'completed' && updates.commissionAmount === undefined) {
-      const trainer = users.find(u => u.id === existing.trainerId);
-      const rate = trainer?.commissionRate || 25; 
-      const gymCut = (existing.price * rate) / 100;
-      finalUpdates.commissionAmount = gymCut;
-      finalUpdates.trainerEarnings = existing.price - gymCut;
-      finalUpdates.settledAt = new Date().toISOString();
-      finalUpdates.settledBy = adminName;
-    }
-
     const previousBookings = [...bookings];
-    const newBookings = bookings.map(b => b.id === id ? { ...b, ...finalUpdates } : b);
+    const newBookings = bookings.map(b => b.id === id ? { ...b, ...updates } : b);
     setBookings(newBookings);
 
     if (isDemoMode) {
@@ -251,23 +183,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return;
     }
 
-    const dbPayload: any = {
-       status: finalUpdates.status,
-       booking_date: finalUpdates.date,
-       booking_time: finalUpdates.time,
-       has_been_reviewed: finalUpdates.hasBeenReviewed,
-       language: finalUpdates.language
-    };
-
-    if (finalUpdates.paymentMethod) dbPayload.payment_method = finalUpdates.paymentMethod;
-    if (finalUpdates.settledAt) dbPayload.settled_at = finalUpdates.settledAt;
-    if (finalUpdates.settledBy) dbPayload.settled_by = finalUpdates.settledBy;
-    if (finalUpdates.commissionAmount !== undefined) dbPayload.commission_amount = finalUpdates.commissionAmount;
-    if (finalUpdates.trainerEarnings !== undefined) dbPayload.trainer_earnings = finalUpdates.trainerEarnings;
-
-    const { error } = await supabase.from('bookings').update(dbPayload).eq('id', id);
+    const { error } = await supabase.from('bookings').update(updates).eq('id', id);
     if (error) {
-       console.error("Supabase Booking Update Error:", error);
        setBookings(previousBookings); 
        return;
     }
@@ -284,16 +201,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
     const { data } = await supabase.from('users').select('*').eq('email', email).eq('password', pass).maybeSingle();
     if (data) {
-        let roles = data.roles || ['user'];
-        if (data.email === MASTER_EMAIL || String(data.id) === MASTER_ID) {
-           roles = Array.from(new Set([...roles, 'management', 'admin']));
-        }
+        const roles = data.roles || (data.role ? [data.role as UserRole] : ['user']);
         const u: User = { 
           id: String(data.id), name: data.name, email: data.email, password: data.password, 
           roles: roles, phone: data.phone, image: data.image || DEFAULT_PROFILE_IMAGE, 
-          bio: data.bio, joinedDate: data.joined_date, approvedBy: data.approved_by, 
-          commissionRate: data.commission_rate || 25, blockedDates: data.blocked_dates || [],
-          languages: data.languages || []
+          joinedDate: data.joined_date
         };
         setCurrentUser(u); localStorage.setItem('classfit_user', JSON.stringify(u)); return true;
     }
@@ -311,13 +223,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const registerTrainer = async (data: any) => {
-    const fullName = `${data.name} (${data.specialty})`;
-    const bioText = `Experience: ${data.experience || 'N/A'}\nCertifications: ${data.certs || 'N/A'}\nSocial: ${data.social || 'N/A'}\nMotivation: ${data.motivation || 'N/A'}\nLanguages: ${data.languages?.join(', ') || 'Bulgarian'}`;
     if (isDemoMode) {
-       const u: User = { id: Math.random().toString(36).substr(2, 9), name: fullName, email: data.email, password: data.pass, phone: data.phone, bio: bioText, roles: ['user', 'trainer_pending'], joinedDate: new Date().toISOString(), image: DEFAULT_PROFILE_IMAGE, commissionRate: 25, languages: data.languages || [] };
+       const u: User = { id: Math.random().toString(36).substr(2, 9), name: data.name, email: data.email, password: data.pass, phone: data.phone, roles: ['user', 'trainer_pending'], joinedDate: new Date().toISOString(), image: DEFAULT_PROFILE_IMAGE };
        setUsers([...users, u]); return { success: true };
     }
-    const { error } = await supabase.from('users').insert([{ name: fullName, email: data.email, phone: data.phone, password: data.pass, bio: bioText, roles: ['user', 'trainer_pending'], commission_rate: 25 }]);
+    const { error } = await supabase.from('users').insert([{ name: data.name, email: data.email, phone: data.phone, password: data.pass, roles: ['user', 'trainer_pending'] }]);
     if (error) return { success: false, msg: error.message };
     await refreshData(); return { success: true };
   };
@@ -336,13 +246,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     await refreshData(); return { success: true };
   };
 
-  const addReview = async (review: Omit<Review, 'id' | 'time'>) => {
+  const addReview = async (review: any) => {
     if (isDemoMode) {
-      const newReview: Review = { ...review, id: Math.random().toString(36).substr(2, 9), time: new Date().toLocaleDateString(), avatar: review.author.charAt(0), isPublished: false };
+      const newReview: Review = { ...review, id: Math.random().toString(36).substr(2, 9), time: new Date().toLocaleDateString(), isPublished: false };
       setReviews([newReview, ...reviews]);
       return;
     }
-    const { error } = await supabase.from('reviews').insert([{ trainer_id: review.trainerId, author_name: review.author, rating: review.rating, content: review.text, is_ai_enhanced: review.isAiEnhanced, booking_id: review.bookingId, is_published: false }]);
+    const { error } = await supabase.from('reviews').insert([{ trainer_id: review.trainerId, author_name: review.author, rating: review.rating, content: review.text, is_published: false }]);
     if (error) throw error;
     await refreshData();
   };
@@ -370,16 +280,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const addBooking = async (booking: Booking) => {
-    const checkInCode = booking.id.substring(0, 6).toUpperCase();
     if (isDemoMode) {
-      setBookings([{ ...booking, checkInCode }, ...bookings]);
+      setBookings([booking, ...bookings]);
       return;
     }
     const { error } = await supabase.from('bookings').insert([{
-      id: booking.id, check_in_code: checkInCode, trainer_id: booking.trainerId, user_id: booking.userId,
+      id: booking.id, check_in_code: booking.checkInCode, trainer_id: booking.trainerId, user_id: booking.userId,
       customer_name: booking.customerName, customer_phone: booking.customerPhone, customer_email: booking.customerEmail,
       booking_date: booking.date, booking_time: booking.time, duration_mins: booking.duration, price: booking.price,
-      status: booking.status, language: booking.language, gym_address: 'ул. „Студентска“ 1А, Варна'
+      status: booking.status, language: booking.language, gym_address: GYM_ADDRESS
     }]);
     if (error) throw error;
     await refreshData();

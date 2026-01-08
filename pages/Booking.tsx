@@ -1,10 +1,11 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, Calendar as CalendarIcon, Clock, User, Phone, X, Loader2, ChevronLeft, ChevronRight, ArrowLeft, Star, MapPin, Target, ShieldCheck, CalendarPlus, MessageSquare, Sparkles, Languages } from 'lucide-react';
+import { Check, Calendar as CalendarIcon, Clock, User, Phone, X, Loader2, ChevronLeft, ChevronRight, ArrowLeft, Star, MapPin, Target, MessageSquare, Sparkles, Languages } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { getTrainers, TRANSLATIONS, DEFAULT_PROFILE_IMAGE, getTrainerReviews } from '../constants';
 import { Trainer, Booking } from '../types';
+import emailjs from '@emailjs/browser';
 
 const BookingPage: React.FC = () => {
   const { language, addBooking, currentUser, users, bookings, reviews: liveReviews } = useAppContext();
@@ -45,12 +46,45 @@ const BookingPage: React.FC = () => {
   const [guestPhone, setGuestPhone] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
 
-  const allTrainerReviews = useMemo(() => {
-    if (!selectedTrainer) return [];
-    const realReviews = liveReviews.filter(r => r.trainerId === selectedTrainer.id && r.isPublished);
-    const demoReviews = getTrainerReviews(selectedTrainer.id, language);
-    return [...realReviews, ...demoReviews].slice(0, 5);
-  }, [selectedTrainer, language, liveReviews]);
+  const sendBookingEmail = async (booking: Booking, trainer: Trainer) => {
+     try {
+       // REPLACE 'YOUR_PUBLIC_KEY' with the key from your EmailJS account dashboard
+       const PUBLIC_KEY = 'YOUR_PUBLIC_KEY'; 
+
+       // 1. Send Customer Confirmation
+       await emailjs.send(
+         'service_ienhll4', 
+         'template_18zuajh', 
+         {
+           customer_name: booking.customerName,
+           customer_email: booking.customerEmail,
+           trainer_name: trainer.name,
+           booking_date: booking.date,
+           booking_time: booking.time,
+           pin_code: booking.checkInCode,
+           trainer_phone: trainer.phone
+         },
+         PUBLIC_KEY
+       );
+
+       // 2. Send Admin/Trainer Notification
+       await emailjs.send(
+         'service_ienhll4', 
+         'template_8dnoxwb', 
+         {
+           customer_name: booking.customerName,
+           customer_phone: booking.customerPhone,
+           booking_date: booking.date,
+           booking_time: booking.time,
+           trainer_name: trainer.name,
+           pin_code: booking.checkInCode
+         },
+         PUBLIC_KEY
+       );
+     } catch (err) {
+       console.error("EmailJS delivery failed:", err);
+     }
+  };
 
   useEffect(() => { if (selectedTrainer) window.scrollTo({ top: 0, behavior: 'smooth' }); }, [selectedTrainer]);
 
@@ -102,6 +136,7 @@ const BookingPage: React.FC = () => {
     };
     try {
       await addBooking(newBooking);
+      await sendBookingEmail(newBooking, selectedTrainer);
       setLastBooking(newBooking);
       setShowGuestForm(false);
       setIsSuccess(true);
@@ -110,11 +145,66 @@ const BookingPage: React.FC = () => {
 
   if (isSuccess && lastBooking && selectedTrainer) {
     return (
-      <div className="max-w-xl mx-auto py-32 px-4 text-center">
-        <div className="w-16 h-16 bg-brand text-dark rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl"><Check size={32}/></div>
-        <h2 className="text-3xl font-black uppercase italic mb-4 text-white">{t.reqSent}</h2>
-        <p className="text-slate-400 mb-10 text-xs">{t.trainerReviewMsg}</p>
-        <button onClick={() => navigate('/profile')} className="w-full py-4 bg-white text-dark rounded-xl font-black uppercase tracking-widest text-[11px] hover:bg-brand transition-all">{t.myBookings}</button>
+      <div className="max-w-xl mx-auto py-32 px-4 animate-in zoom-in-95 duration-500 text-left">
+        <div className="text-center mb-10">
+          <div className="w-20 h-20 bg-brand text-dark rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-brand/20">
+            <Check size={40} strokeWidth={3} />
+          </div>
+          <h2 className="text-4xl font-black uppercase italic mb-2 text-white tracking-tighter leading-none">{t.reqSent}</h2>
+          <div className="inline-flex items-center gap-2 bg-yellow-500/10 px-6 py-3 rounded-full border border-yellow-500/20 mb-8">
+             <div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></div>
+             <span className="text-[11px] font-black uppercase text-yellow-500 tracking-widest">{t.waitingConfirmation}</span>
+          </div>
+          <p className="text-slate-400 text-sm font-medium italic mb-10 max-w-sm mx-auto">
+            {t.trainerReviewMsg}
+          </p>
+        </div>
+
+        <div className="bg-surface border border-white/10 rounded-[2.5rem] p-8 mb-10 shadow-2xl relative overflow-hidden">
+           <div className="absolute top-0 left-0 w-full h-1 bg-brand/30"></div>
+           <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+                 <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-2xl overflow-hidden border border-white/5 bg-dark">
+                       <img src={selectedTrainer.image} className="w-full h-full object-cover" />
+                    </div>
+                    <div>
+                       <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">{t.trainer}</p>
+                       <p className="text-white font-bold text-lg italic uppercase">{selectedTrainer.name}</p>
+                    </div>
+                 </div>
+                 <a href={`tel:${selectedTrainer.phone}`} className="flex items-center gap-3 px-6 py-4 bg-brand text-dark rounded-xl hover:scale-105 transition-transform shadow-lg w-full sm:w-auto justify-center">
+                    <Phone size={18} />
+                    <span className="text-xs font-black uppercase">{language === 'bg' ? 'Обади се' : 'Call Coach'}</span>
+                 </a>
+              </div>
+              
+              <div className="pt-6 border-t border-white/5 grid grid-cols-2 gap-4">
+                 <div>
+                    <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Date & Time</p>
+                    <p className="text-white font-bold">{lastBooking.date} @ {lastBooking.time}</p>
+                 </div>
+                 <div>
+                    <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">PIN CODE</p>
+                    <p className="text-brand font-black text-lg tracking-widest">{lastBooking.checkInCode}</p>
+                 </div>
+              </div>
+              
+              <div className="pt-4 flex items-center gap-3 text-slate-400 bg-dark/30 p-4 rounded-xl border border-white/5">
+                 <Phone size={14} className="text-brand" />
+                 <p className="text-[11px] font-bold uppercase tracking-wider">{t.trainerPhoneLabel}: {selectedTrainer.phone}</p>
+              </div>
+           </div>
+        </div>
+
+        <div className="flex flex-col gap-3">
+          <button onClick={() => navigate('/profile')} className="w-full py-5 bg-white text-dark rounded-2xl font-black uppercase tracking-widest text-[11px] hover:bg-brand transition-all shadow-xl">
+            {t.myBookings}
+          </button>
+          <button onClick={() => { setIsSuccess(false); setSelectedTrainer(null); }} className="w-full py-5 bg-surface text-slate-400 rounded-2xl font-black uppercase tracking-widest text-[11px] hover:bg-white/10 transition-all border border-white/5">
+            {t.newBooking}
+          </button>
+        </div>
       </div>
     );
   }
@@ -140,7 +230,14 @@ const BookingPage: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
             <div className="lg:col-span-4 bg-surface rounded-[2.5rem] overflow-hidden border border-white/5">
                <img src={selectedTrainer.image} className="w-full aspect-[4/5] object-cover" />
-               <div className="p-10"><h2 className="text-3xl font-black uppercase italic text-white mb-2">{selectedTrainer.name}</h2><p className="text-xs text-slate-400 italic leading-relaxed">{selectedTrainer.bio}</p></div>
+               <div className="p-10">
+                 <h2 className="text-3xl font-black uppercase italic text-white mb-2">{selectedTrainer.name}</h2>
+                 <p className="text-xs text-slate-400 italic leading-relaxed mb-6">{selectedTrainer.bio}</p>
+                 <div className="p-4 bg-dark/40 border border-white/5 rounded-2xl flex items-center gap-3">
+                    <Phone size={16} className="text-brand" />
+                    <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{selectedTrainer.phone}</span>
+                 </div>
+               </div>
             </div>
             <div className="lg:col-span-8 bg-surface/30 p-10 rounded-[3rem] border border-white/5 italic">
                <div className="flex justify-between items-center mb-8"><h3 className="text-xl font-black uppercase text-white flex items-center gap-3"><CalendarIcon className="text-brand" /> Schedule</h3><span className="text-[10px] font-black uppercase text-white">{currentMonth.toLocaleString('default', { month: 'long' })}</span></div>
