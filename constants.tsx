@@ -1,7 +1,6 @@
 
 import { Trainer, Membership, Product, Language, Review } from './types';
 
-// Updated to a gender-neutral silhouette as requested
 export const DEFAULT_PROFILE_IMAGE = "https://upload.wikimedia.org/wikipedia/commons/2/2c/Default_pfp.svg";
 
 export const getTrainers = (lang: Language): Trainer[] => {
@@ -118,34 +117,24 @@ export const getProducts = (lang: Language): Product[] => {
 export const getReviews = (lang: Language): Review[] => {
   const isBg = lang === 'bg';
   return [
-    { id: 'r1', author: isBg ? 'Георги Димитров' : 'Georgi Dimitrov', rating: 5, text: isBg ? 'Най-добрата зала във Варна! Локацията е супер.' : 'Best gym in Varna! Great location.', time: isBg ? 'преди 2 седмици' : '2 weeks ago', avatar: 'G' },
+    { id: 'r1', author: isBg ? 'Георги Димитров' : 'Georgi Dimitrov', rating: 5, text: isBg ? 'Най-добрата зала във Варна!' : 'Best gym in Varna!', time: isBg ? 'преди 2 седмици' : '2 weeks ago', avatar: 'G' },
     { id: 'r2', author: isBg ? 'Александра Н.' : 'Aleksandra N.', rating: 5, text: isBg ? 'Много чиста и подредена зала.' : 'Very clean and tidy gym.', time: isBg ? 'преди 1 месец' : '1 month ago', avatar: 'A' },
   ];
 };
 
 export const getTrainerReviews = (trainerId: string, lang: Language): Review[] => {
   const isBg = lang === 'bg';
-  const reviews: Review[] = [
+  return [
     { 
       id: `tr1-${trainerId}`, 
       trainerId,
       author: isBg ? 'Михаил Т.' : 'Michael T.', 
       rating: 5, 
-      text: isBg ? 'Изключителен професионалист! Помогна ми да кача 5кг мускулна маса за 2 месеца.' : 'Exceptional professional! Helped me gain 5kg of muscle mass in 2 months.', 
+      text: isBg ? 'Изключителен професионалист!' : 'Exceptional professional!', 
       time: isBg ? 'преди 3 дни' : '3 days ago', 
       avatar: 'M' 
-    },
-    { 
-      id: `tr2-${trainerId}`, 
-      trainerId,
-      author: isBg ? 'Виктория С.' : 'Victoria S.', 
-      rating: 5, 
-      text: isBg ? 'Тренировките са тежки, но резултатите си заслужават. Препоръчвам горещо!' : 'Workouts are tough but results are worth it. Highly recommend!', 
-      time: isBg ? 'преди 1 седмица' : '1 week ago', 
-      avatar: 'V' 
     }
   ];
-  return reviews;
 };
 
 export const TRANSLATIONS = {
@@ -164,7 +153,7 @@ export const TRANSLATIONS = {
     myBookings: 'Моите часове',
     location: 'Локация',
     locationVarna: 'Локация Варна',
-    address: 'ул. „Студентска“ 1А (до сп. Мир)',
+    address: 'ул. „Студентска“ 1А',
     stop: '9010 Варна',
     connect: 'Свържи се',
     rights: '© 2024 CLASSFIT VARNA',
@@ -181,9 +170,9 @@ export const TRANSLATIONS = {
     expertiseDesc: 'Треньори, фокусирани върху вашия прогрес.',
     community: 'Общност',
     communityDesc: 'Среда от мотивирани хора.',
-    locationDesc: 'Намираме се на ул. Студентска 1а (до сп. Мир).',
+    locationDesc: 'Намираме се на ул. Студентска 1А, Варна.',
     pushBoundaries: 'ПРЕМИНЕТЕ ГРАНИЦИТЕ СИ',
-    pushDesc: 'В ClassFit всяка тренировка е инвестиция в бъдещото ти аз. Базата ни е оборудвана с висок клас уреди.',
+    pushDesc: 'В ClassFit всяка тренировка е инвестиция в бъдещото ти аз.',
     readyLevel: 'ГОТОВИ ЛИ СТЕ ЗА СЛЕДВАЩОТО НИВО?',
     joinClassfit: 'ЕЛА В CLASSFIT',
     features: ['Топ Оборудване', 'Лични Треньори', 'Добавки', 'Общност'],
@@ -382,7 +371,7 @@ export const TRANSLATIONS = {
     myBookings: 'My Sessions',
     location: 'Location',
     locationVarna: 'Varna Location',
-    address: '1A Studentska St. (near Mir stop)',
+    address: '1A Studentska St.',
     stop: '9010 Varna',
     connect: 'Connect',
     rights: '© 2024 CLASSFIT VARNA',
@@ -399,9 +388,9 @@ export const TRANSLATIONS = {
     expertiseDesc: 'Coaches focused on your growth.',
     community: 'Community',
     communityDesc: 'Motivated environment.',
-    locationDesc: 'Located at 1A Studentska St. (near Mir stop).',
+    locationDesc: 'Located at 1A Studentska St., Varna.',
     pushBoundaries: 'PUSH YOUR BOUNDARIES',
-    pushDesc: 'Every workout is an investment. Our facility is top-tier.',
+    pushDesc: 'Every workout is an investment in your future self.',
     readyLevel: 'READY FOR THE NEXT LEVEL?',
     joinClassfit: 'JOIN CLASSFIT',
     features: ['Pro Equipment', 'Personal Trainers', 'Supplements', 'Community'],

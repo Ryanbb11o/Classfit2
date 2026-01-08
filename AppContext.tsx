@@ -220,7 +220,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (error) {
         console.error("Supabase User Update Error:", error);
         setUsers(prevUsers);
-        alert(`Account update failed: ${error.message}`);
         return;
     }
     await refreshData();
@@ -267,15 +266,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (finalUpdates.trainerEarnings !== undefined) dbPayload.trainer_earnings = finalUpdates.trainerEarnings;
 
     const { error } = await supabase.from('bookings').update(dbPayload).eq('id', id);
-    
     if (error) {
        console.error("Supabase Booking Update Error:", error);
        setBookings(previousBookings); 
-       if (error.message.includes('settled_by') || error.message.includes('payment_method')) {
-         alert(`CRITICAL DATABASE ERROR: Column not found. Please run the SQL fix in the README to add missing columns 'settled_by', 'payment_method', etc. Error: ${error.message}`);
-       } else {
-         alert(`Database Error: ${error.message}`);
-       }
        return;
     }
     await refreshData();
@@ -295,7 +288,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         if (data.email === MASTER_EMAIL || String(data.id) === MASTER_ID) {
            roles = Array.from(new Set([...roles, 'management', 'admin']));
         }
-
         const u: User = { 
           id: String(data.id), name: data.name, email: data.email, password: data.password, 
           roles: roles, phone: data.phone, image: data.image || DEFAULT_PROFILE_IMAGE, 
@@ -334,7 +326,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const formattedName = `${currentName} (${specialty})`;
     const user = users.find(u => u.id === userId);
     if (!user) return { success: false, msg: 'User not found' };
-    const newRoles: UserRole[] = Array.from(new Set([...user.roles, 'trainer_pending' as UserRole]));
+    const newRoles: UserRole[] = Array.from(new Set([...(user.roles || []), 'trainer_pending' as UserRole]));
     if (isDemoMode) { 
       setUsers(users.map(u => u.id === userId ? { ...u, roles: newRoles, phone, name: formattedName } : u)); 
       return { success: true }; 
@@ -387,7 +379,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       id: booking.id, check_in_code: checkInCode, trainer_id: booking.trainerId, user_id: booking.userId,
       customer_name: booking.customerName, customer_phone: booking.customerPhone, customer_email: booking.customerEmail,
       booking_date: booking.date, booking_time: booking.time, duration_mins: booking.duration, price: booking.price,
-      status: booking.status, language: booking.language, gym_address: 'бул. „Осми приморски полк“ 128'
+      status: booking.status, language: booking.language, gym_address: 'ул. „Студентска“ 1А, Варна'
     }]);
     if (error) throw error;
     await refreshData();

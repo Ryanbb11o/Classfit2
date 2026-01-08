@@ -159,10 +159,10 @@ const Home: React.FC = () => {
                 </p>
                 <div className="space-y-4">
                   <div className="flex items-center gap-4 text-white font-black uppercase italic tracking-widest text-[11px]">
-                    <Navigation className="text-brand" size={20} /> {t.address.split('(')[0]}
+                    <Navigation className="text-brand" size={20} /> {t.address}
                   </div>
                   <div className="flex items-center gap-4 text-white font-black uppercase italic tracking-widest text-[11px]">
-                    <MapPin className="text-brand" size={20} /> {t.address.match(/\((.*)\)/)?.[1] || 'сп. Мир'}, {t.stop}
+                    <MapPin className="text-brand" size={20} /> {t.stop}
                   </div>
                 </div>
                 <a 
