@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { Calendar, Star, LogOut, Loader2, X, Settings2, Trash2, AlertCircle, Sparkles, Languages, Clock, MapPin, CheckCircle2, User, Heart, Search, Briefcase, ShieldCheck } from 'lucide-react';
+import { Calendar, Star, LogOut, Loader2, X, Settings2, Trash2, AlertCircle, Sparkles, Languages, Clock, MapPin, CheckCircle2, User, Heart, Search, Briefcase, ShieldCheck, Globe } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, getTrainers, DEFAULT_PROFILE_IMAGE } from '../constants';
 import { useNavigate } from 'react-router-dom';
@@ -121,10 +121,26 @@ const CustomerDashboard: React.FC = () => {
             </div>
             <div>
                 <h1 className="text-3xl font-black uppercase italic text-white mb-2 tracking-tighter">{currentUser.name.split('(')[0].trim()}</h1>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 mb-3">
                    <span className="text-brand bg-brand/10 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border border-brand/20">{(currentUser.roles?.[0] || 'member').toUpperCase()}</span>
                    <button onClick={() => setShowEditModal(true)} className="bg-white/5 hover:bg-brand hover:text-dark text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border border-white/10 transition-all flex items-center gap-1.5"><Settings2 size={10} /> {t.profileSettings}</button>
                 </div>
+                
+                {/* Spoken Languages Display */}
+                {currentUser.languages && currentUser.languages.length > 0 && (
+                  <div className="flex items-center gap-3">
+                     <div className="flex items-center gap-1.5 text-slate-500 font-black uppercase tracking-widest text-[9px]">
+                        <Globe size={10} className="text-brand" /> Spoken:
+                     </div>
+                     <div className="flex flex-wrap gap-1.5">
+                        {currentUser.languages.map(lang => (
+                          <span key={lang} className="text-white/60 text-[9px] font-black uppercase italic tracking-tighter bg-white/5 px-2 py-0.5 rounded border border-white/5">
+                            {lang}
+                          </span>
+                        ))}
+                     </div>
+                  </div>
+                )}
             </div>
          </div>
          <button onClick={() => { logout(); navigate('/'); }} className="px-6 py-3 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-red-500/10 flex items-center gap-2">

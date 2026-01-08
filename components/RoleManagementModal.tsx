@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { X, CheckSquare, Loader2, Save, Languages, Percent, Image as ImageIcon, Briefcase, Target, User as UserIcon, Upload, Camera, RotateCcw } from 'lucide-react';
+import { X, CheckSquare, Loader2, Save, Languages, Percent, Image as ImageIcon, Briefcase, Target, User as UserIcon, Upload, Camera, RotateCcw, Check } from 'lucide-react';
 import { User, UserRole } from '../types';
 import { DEFAULT_PROFILE_IMAGE } from '../constants';
 
@@ -32,7 +32,9 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
       setEditSpecialty(nameParts ? nameParts[2] : '');
       setEditImage(user.image || '');
       setEditCommission(user.commissionRate || 25);
-      setEditLangs(user.languages || ['Bulgarian']);
+      
+      // Ensure we pull languages correctly from the user object
+      setEditLangs(user.languages && user.languages.length > 0 ? user.languages : ['Bulgarian']);
       setShowSuccess(false);
     }
   }, [user]);
@@ -62,11 +64,13 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
   };
 
   const handleToggleLang = (lang: string) => {
-    if (editLangs.includes(lang)) {
-      setEditLangs(editLangs.filter(l => l !== lang));
-    } else {
-      setEditLangs([...editLangs, lang]);
-    }
+    setEditLangs(prev => {
+      if (prev.includes(lang)) {
+        return prev.filter(l => l !== lang);
+      } else {
+        return [...prev, lang];
+      }
+    });
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -192,19 +196,22 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
                   <Languages size={14} /> {isTrainerMode ? 'Coach Languages' : 'Spoken Languages'}
                </label>
                <div className="flex flex-wrap gap-2">
-                  {languageOptions.map(lang => (
-                     <button 
-                        key={lang} 
-                        onClick={() => handleToggleLang(lang)}
-                        className={`px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all border ${
-                           editLangs.includes(lang) 
-                           ? 'bg-brand text-dark border-brand shadow-lg shadow-brand/10' 
-                           : 'bg-white/5 text-slate-500 border-white/5 hover:border-brand/40'
-                        }`}
-                     >
-                        {editLangs.includes(lang) && '✓ '} {lang}
-                     </button>
-                  ))}
+                  {languageOptions.map(lang => {
+                     const isActive = editLangs.includes(lang);
+                     return (
+                        <button 
+                           key={lang} 
+                           onClick={() => handleToggleLang(lang)}
+                           className={`px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all border flex items-center gap-2 ${
+                              isActive 
+                              ? 'bg-brand text-dark border-brand shadow-lg shadow-brand/10' 
+                              : 'bg-white/5 text-slate-500 border-white/5 hover:border-brand/40'
+                           }`}
+                        >
+                           {isActive && <Check size={12} strokeWidth={3} />} {lang}
+                        </button>
+                     );
+                  })}
                </div>
             </div>
 
