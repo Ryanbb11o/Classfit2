@@ -35,10 +35,10 @@ const Home: React.FC = () => {
             muted 
             playsInline 
             className="w-full h-full object-cover grayscale opacity-60 scale-105"
-            poster="https://images.unsplash.com/photo-1571902943202-507ec2618e8f?q=80&w=2070&auto=format&fit=crop"
+            poster="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop"
           >
-            {/* Personal Training Video - Focused on technique and coaching */}
-            <source src="https://videos.pexels.com/video-files/4761614/4761614-hd_1920_1080_25fps.mp4" type="video/mp4" />
+            {/* High-intensity lifting and coaching video */}
+            <source src="https://videos.pexels.com/video-files/4761612/4761612-hd_1920_1080_25fps.mp4" type="video/mp4" />
             Your browser does not support the video tag.
           </video>
           {/* Dark Overlay for Text Readability */}
@@ -144,25 +144,25 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* Location specific section - Varna LevskiPrimorski */}
+      {/* Location specific section - Varna Levski/Studentska */}
       <section className="py-32 bg-dark">
         <div className="max-w-7xl mx-auto px-6">
           <div className="bg-surface rounded-[3rem] border border-white/10 p-8 md:p-16 flex flex-col md:flex-row items-center gap-12 overflow-hidden relative shadow-2xl">
             <div className="flex-1 relative z-10">
               <Reveal>
-                <div className="text-brand font-black uppercase tracking-[0.3em] text-[11px] mb-4 italic">Локация Варна</div>
+                <div className="text-brand font-black uppercase tracking-[0.3em] text-[11px] mb-4 italic">{t.locationVarna}</div>
                 <h2 className="text-4xl md:text-5xl font-black uppercase italic text-white mb-6 leading-none">
-                  В СЪРЦЕТО НА <span className="text-brand">ВАРНА</span>
+                  {language === 'bg' ? 'В СЪРЦЕТО НА' : 'IN THE HEART OF'} <span className="text-brand">ВАРНА</span>
                 </h2>
                 <p className="text-slate-400 font-medium italic mb-8 leading-relaxed">
-                  Намираме се в <span className="text-white font-bold">ЛевскиПриморски, ул. „Студентска“ 1 а</span>. Лесен достъп с автомобил и градски транспорт в една от най-комуникативните точки на града.
+                  {t.locationDesc}
                 </p>
                 <div className="space-y-4">
                   <div className="flex items-center gap-4 text-white font-black uppercase italic tracking-widest text-[11px]">
-                    <Navigation className="text-brand" size={20} /> ул. „Студентска“ 1А
+                    <Navigation className="text-brand" size={20} /> {t.address.split('(')[0]}
                   </div>
                   <div className="flex items-center gap-4 text-white font-black uppercase italic tracking-widest text-[11px]">
-                    <MapPin className="text-brand" size={20} /> Варна, 9010
+                    <MapPin className="text-brand" size={20} /> {t.address.match(/\((.*)\)/)?.[1] || 'сп. Мир'}, {t.stop}
                   </div>
                 </div>
                 <a 
@@ -171,7 +171,7 @@ const Home: React.FC = () => {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 mt-10 px-8 py-4 bg-white text-dark rounded-full font-black uppercase italic tracking-widest text-[11px] hover:bg-brand transition-colors shadow-lg"
                 >
-                  Отвори в Google Maps <ArrowRight size={14} />
+                  {t.viewOnGoogle} <ArrowRight size={14} />
                 </a>
               </Reveal>
             </div>
