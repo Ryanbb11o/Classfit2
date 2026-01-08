@@ -24,6 +24,10 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
   const [showSuccess, setShowSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Check if current user is an Admin or higher for authority tasks
+  // Note: we'll trust the prop passed from the parent but refine logic here
+  const hasAuthority = isManagement || (user?.roles?.includes('admin' as any) === false); 
+
   useEffect(() => {
     if (user) {
       setSelectedRoles(user.roles || ['user']);
@@ -33,7 +37,6 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
       setEditImage(user.image || '');
       setEditCommission(user.commissionRate || 25);
       
-      // Ensure we pull languages correctly from the user object
       setEditLangs(user.languages && user.languages.length > 0 ? user.languages : ['Bulgarian']);
       setShowSuccess(false);
     }
@@ -54,8 +57,9 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
   const languageOptions = ['Bulgarian', 'English', 'Russian', 'German', 'Turkish', 'Other'];
 
   const handleToggleRole = (role: UserRole) => {
-    if (!isManagement) return;
-    if (role === 'management' && user.roles.includes('management')) return;
+    // Only management can remove management role
+    if (role === 'management' && !isManagement) return;
+    
     if (selectedRoles.includes(role)) {
       setSelectedRoles(selectedRoles.filter(r => r !== role));
     } else {
@@ -64,33 +68,20 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
   };
 
   const handleToggleLang = (lang: string) => {
-    setEditLangs(prev => {
-      if (prev.includes(lang)) {
-        return prev.filter(l => l !== lang);
-      } else {
-        return [...prev, lang];
-      }
-    });
+    setEditLangs(prev => prev.includes(lang) ? prev.filter(l => l !== lang) : [...prev, lang]);
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        alert("Image too large (Max 2MB)");
-        return;
-      }
+      if (file.size > 2 * 1024 * 1024) { alert("Image too large (Max 2MB)"); return; }
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setEditImage(reader.result as string);
-      };
+      reader.onloadend = () => setEditImage(reader.result as string);
       reader.readAsDataURL(file);
     }
   };
 
-  const handleResetImage = () => {
-    setEditImage(DEFAULT_PROFILE_IMAGE);
-  };
+  const handleResetImage = () => setEditImage(DEFAULT_PROFILE_IMAGE);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -101,13 +92,10 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
         name: finalName,
         image: editImage,
         languages: editLangs,
+        roles: selectedRoles, // Always update roles if modal is open via Admin
+        commissionRate: editCommission,
         bio: isTrainerMode ? user.bio : `Fitness Goal: ${editSpecialty}`
       };
-
-      if (isManagement) {
-        updates.roles = selectedRoles;
-        updates.commissionRate = editCommission;
-      }
 
       await onUpdate(user.id, updates);
       setShowSuccess(true);
@@ -134,11 +122,11 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
                    {isTrainerMode ? <Briefcase size={16} /> : <UserIcon size={16} />}
                 </div>
                 <h2 className="text-3xl font-black uppercase italic text-white tracking-tighter leading-none">
-                   {isTrainerMode ? 'COACH PROFILE' : 'MEMBER IDENTITY'}
+                   IDENTITY MGMT
                 </h2>
              </div>
              <p className="text-slate-500 text-[11px] font-black uppercase tracking-widest italic ml-11">
-                {isTrainerMode ? 'Refine your professional profile and club terms' : 'Manage your member profile and workout preferences'}
+                Refine profile details and system access levels
              </p>
           </div>
 
@@ -157,12 +145,11 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
                 </div>
                 <div className="text-center">
                    <p className="text-[11px] font-black uppercase text-white tracking-widest mb-1">Profile Photo</p>
-                   <p className="text-[11px] text-slate-500 font-bold italic uppercase mb-3">PNG/JPG up to 2MB</p>
                    <button 
                     onClick={(e) => { e.stopPropagation(); handleResetImage(); }}
                     className="flex items-center gap-2 px-4 py-1.5 bg-white/5 hover:bg-white/10 text-white rounded-full text-[11px] font-black uppercase tracking-widest transition-all border border-white/10"
                    >
-                     <RotateCcw size={12} className="text-brand" /> Reset to Default
+                     <RotateCcw size={12} className="text-brand" /> Reset
                    </button>
                 </div>
             </div>
@@ -170,7 +157,7 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
             {/* Core Identity Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                   <label className="text-[11px] font-black uppercase text-slate-500 ml-2">Име / Name</label>
+                   <label className="text-[11px] font-black uppercase text-slate-500 ml-2">Display Name</label>
                    <input 
                       value={editName} 
                       onChange={(e) => setEditName(e.target.value)} 
@@ -193,7 +180,7 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
             {/* Languages Section */}
             <div className="space-y-4">
                <label className="flex items-center gap-2 text-[11px] font-black uppercase text-brand ml-2">
-                  <Languages size={14} /> {isTrainerMode ? 'Coach Languages' : 'Spoken Languages'}
+                  <Languages size={14} /> Languages
                </label>
                <div className="flex flex-wrap gap-2">
                   {languageOptions.map(lang => {
@@ -203,9 +190,7 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
                            key={lang} 
                            onClick={() => handleToggleLang(lang)}
                            className={`px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all border flex items-center gap-2 ${
-                              isActive 
-                              ? 'bg-brand text-dark border-brand shadow-lg shadow-brand/10' 
-                              : 'bg-white/5 text-slate-500 border-white/5 hover:border-brand/40'
+                              isActive ? 'bg-brand text-dark border-brand shadow-lg' : 'bg-white/5 text-slate-500 border-white/5'
                            }`}
                         >
                            {isActive && <Check size={12} strokeWidth={3} />} {lang}
@@ -215,61 +200,54 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
                </div>
             </div>
 
-            {/* Management Exclusive Tools */}
-            {isManagement && (
-               <div className="space-y-8 animate-in slide-in-from-top-2">
-                  <div className="p-8 bg-[#1e293b]/50 rounded-[2.5rem] border border-white/10 relative group">
-                    <div className="flex justify-between items-center mb-6">
-                       <label className="text-[11px] font-black uppercase text-brand tracking-widest">Club Commission Share</label>
-                       <span className="text-[11px] font-black text-slate-500 uppercase">Current Ledger: {user.commissionRate}%</span>
-                    </div>
-                    <div className="relative">
-                       <input 
-                          type="number" 
-                          value={editCommission} 
-                          onChange={(e) => setEditCommission(Number(e.target.value))}
-                          className="w-full bg-[#131b27] border border-white/5 focus:border-brand rounded-2xl px-8 py-5 text-2xl font-black text-white outline-none transition-all text-center"
-                       />
-                       <Percent size={24} className="absolute right-8 top-1/2 -translate-y-1/2 text-brand" />
-                    </div>
-                  </div>
-
-                  <div className="pt-6 border-t border-white/5">
-                    <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-500 mb-6 italic">Authority Delegation</h3>
-                    <div className="grid grid-cols-2 gap-2">
-                       {roleOptions.map((opt) => {
-                          const active = selectedRoles.includes(opt.id);
-                          return (
-                             <button 
-                                key={opt.id} 
-                                onClick={() => handleToggleRole(opt.id)}
-                                className={`flex items-center justify-between p-4 rounded-2xl border text-[11px] font-black uppercase transition-all ${
-                                   active ? 'bg-white/5 border-brand/50 text-white' : 'bg-dark/20 border-white/5 text-slate-600'
-                                }`}
-                             >
-                                {opt.label}
-                                {active && <CheckSquare size={14} className="text-brand" />}
-                             </button>
-                          );
-                       })}
-                    </div>
-                  </div>
+            {/* Authority Delegation Section */}
+            <div className="space-y-8 animate-in slide-in-from-top-2">
+               <div className="p-8 bg-[#1e293b]/50 rounded-[2.5rem] border border-white/10 relative group">
+                 <div className="flex justify-between items-center mb-6">
+                    <label className="text-[11px] font-black uppercase text-brand tracking-widest">Commission Share (%)</label>
+                 </div>
+                 <div className="relative">
+                    <input 
+                       type="number" 
+                       value={editCommission} 
+                       onChange={(e) => setEditCommission(Number(e.target.value))}
+                       className="w-full bg-[#131b27] border border-white/5 focus:border-brand rounded-2xl px-8 py-5 text-2xl font-black text-white outline-none transition-all text-center"
+                    />
+                    <Percent size={24} className="absolute right-8 top-1/2 -translate-y-1/2 text-brand" />
+                 </div>
                </div>
-            )}
+
+               <div className="pt-6 border-t border-white/5">
+                 <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-500 mb-6 italic">Authority Delegation</h3>
+                 <div className="grid grid-cols-2 gap-2">
+                    {roleOptions.map((opt) => {
+                       const active = selectedRoles.includes(opt.id);
+                       return (
+                          <button 
+                             key={opt.id} 
+                             onClick={() => handleToggleRole(opt.id)}
+                             className={`flex items-center justify-between p-4 rounded-2xl border text-[11px] font-black uppercase transition-all ${
+                                active ? 'bg-white/5 border-brand/50 text-white' : 'bg-dark/20 border-white/5 text-slate-600'
+                             }`}
+                          >
+                             {opt.label}
+                             {active && <CheckSquare size={14} className="text-brand" />}
+                          </button>
+                       );
+                    })}
+                 </div>
+               </div>
+            </div>
             
-            {/* Manual Image Link (Optional) */}
             <div className="space-y-2">
-               <label className="text-[11px] font-black uppercase text-slate-500 ml-2">Public Image Link (Optional)</label>
+               <label className="text-[11px] font-black uppercase text-slate-500 ml-2">Public Image Link</label>
                <input 
-                  value={editImage.startsWith('data:') ? 'Local Image Base64 Uploaded' : editImage} 
+                  value={editImage.startsWith('data:') ? 'Custom Uploaded Image' : editImage} 
                   onChange={(e) => setEditImage(e.target.value)} 
                   disabled={editImage.startsWith('data:')}
                   placeholder="https://..."
                   className="w-full bg-[#131b27] border border-white/5 focus:border-brand rounded-2xl px-6 py-4 text-[11px] font-medium text-slate-400 outline-none transition-all truncate" 
                />
-               {editImage.startsWith('data:') && (
-                 <button onClick={() => setEditImage('')} className="text-[11px] text-red-500 uppercase font-black ml-2 hover:underline">Clear Uploaded Image</button>
-               )}
             </div>
           </div>
 
@@ -281,7 +259,7 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
                    showSuccess ? 'bg-green-500 text-white' : 'bg-brand text-dark hover:brightness-110 active:scale-95'
                 }`}
              >
-                {isSaving ? <Loader2 className="animate-spin" /> : showSuccess ? 'Identity Updated' : <><Save size={18}/> Commit Changes</>}
+                {isSaving ? <Loader2 className="animate-spin" /> : showSuccess ? 'Access Granted' : <><Save size={18}/> Commit Updates</>}
              </button>
           </div>
        </div>

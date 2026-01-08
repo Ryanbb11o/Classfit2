@@ -32,7 +32,7 @@ const BookingPage: React.FC = () => {
         };
       });
     return [...staticTrainers, ...dynamicTrainers];
-  }, [language, users]);
+  }, [language, users, t.trainer]);
 
   const [selectedTrainer, setSelectedTrainer] = useState<Trainer | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -256,7 +256,7 @@ const BookingPage: React.FC = () => {
       )}
       {showGuestForm && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-dark/95 backdrop-blur-md">
-           <div className="bg-surface rounded-[2.5rem] p-10 max-w-sm w-full border border-white/10 italic">
+           <div className="bg-surface rounded-[3rem] p-10 max-w-sm w-full border border-white/10 italic">
               <h2 className="text-2xl font-black uppercase italic text-white mb-6">Guest Info</h2>
               <form onSubmit={(e)=>{e.preventDefault(); finalizeBooking(guestName, guestPhone, undefined, guestEmail)}} className="space-y-4">
                 <input type="text" placeholder="Name & Surname" required value={guestName} onChange={(e)=>setGuestName(e.target.value)} className="w-full bg-dark border border-white/10 rounded-xl px-4 py-3 text-sm text-white" />

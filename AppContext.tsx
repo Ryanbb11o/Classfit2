@@ -108,18 +108,24 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
 
     try {
+      // 1. Fetch Bookings with camelCase mapping for PIN codes (checkInCode)
       const { data: bData } = await supabase.from('bookings').select('*').order('created_at', { ascending: false });
       if (bData) setBookings(bData.map((b: any) => ({
           ...b,
           id: String(b.id),
+          checkInCode: b.check_in_code || '', // CRITICAL FIX: Explicit mapping
           trainerId: String(b.trainer_id),
           userId: b.user_id ? String(b.user_id) : undefined,
           customerName: b.customer_name || 'Unknown',
+          customerPhone: b.customer_phone,
+          customerEmail: b.customer_email,
           date: b.booking_date || '',
           time: b.booking_time || '',
-          price: Number(b.price || 0)
+          price: Number(b.price || 0),
+          hasBeenReviewed: b.has_been_reviewed || false
       })));
 
+      // 2. Fetch Reviews
       const { data: rData } = await supabase.from('reviews').select('*').order('created_at', { ascending: false });
       if (rData) setReviews(rData.map((r: any) => ({
           ...r,
@@ -128,6 +134,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           isPublished: r.is_published || false
       })));
       
+      // 3. Fetch Users
       const { data: uData } = await supabase.from('users').select('*').order('joined_date', { ascending: false });
       if (uData) setUsers(uData.map((u: any) => {
           let roles: UserRole[] = u.roles || (u.role ? [u.role as UserRole] : ['user']);
@@ -140,7 +147,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             roles: roles,
             phone: u.phone,
             image: u.image || DEFAULT_PROFILE_IMAGE, 
-            joinedDate: u.joined_date || new Date().toISOString()
+            joinedDate: u.joined_date || new Date().toISOString(),
+            commissionRate: u.commission_rate || 25,
+            languages: u.languages || ['Bulgarian'],
+            bio: u.bio || ''
           };
       }));
     } catch (e) {
@@ -149,6 +159,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const updateUser = async (id: string, updates: Partial<User>) => {
+    const dbUpdates: any = { ...updates };
+    if (updates.commissionRate) {
+      dbUpdates.commission_rate = updates.commissionRate;
+      delete dbUpdates.commissionRate;
+    }
+
     const prevUsers = [...users];
     const updatedUsers = users.map(u => u.id === id ? { ...u, ...updates } : u);
     setUsers(updatedUsers);
@@ -164,16 +180,21 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         return;
     }
 
-    const { error } = await supabase.from('users').update(updates).eq('id', id);
+    const { error } = await supabase.from('users').update(dbUpdates).eq('id', id);
     if (error) {
-        console.error("Supabase Error:", error);
         setUsers(prevUsers);
+        alert("Failed to update user profile in database.");
         return;
     }
     await refreshData();
   };
 
   const updateBooking = async (id: string, updates: Partial<Booking>) => {
+    const dbUpdates: any = { ...updates };
+    // Handle mapping for camelCase fields to snake_case in DB
+    if (updates.checkInCode) { dbUpdates.check_in_code = updates.checkInCode; delete dbUpdates.checkInCode; }
+    if (updates.hasBeenReviewed !== undefined) { dbUpdates.has_been_reviewed = updates.hasBeenReviewed; delete dbUpdates.hasBeenReviewed; }
+
     const previousBookings = [...bookings];
     const newBookings = bookings.map(b => b.id === id ? { ...b, ...updates } : b);
     setBookings(newBookings);
@@ -183,7 +204,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return;
     }
 
-    const { error } = await supabase.from('bookings').update(updates).eq('id', id);
+    const { error } = await supabase.from('bookings').update(dbUpdates).eq('id', id);
     if (error) {
        setBookings(previousBookings); 
        return;
@@ -205,7 +226,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         const u: User = { 
           id: String(data.id), name: data.name, email: data.email, password: data.password, 
           roles: roles, phone: data.phone, image: data.image || DEFAULT_PROFILE_IMAGE, 
-          joinedDate: data.joined_date
+          joinedDate: data.joined_date, commissionRate: data.commission_rate || 25,
+          languages: data.languages || ['Bulgarian'], bio: data.bio || ''
         };
         setCurrentUser(u); localStorage.setItem('classfit_user', JSON.stringify(u)); return true;
     }
@@ -285,13 +307,23 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return;
     }
     const { error } = await supabase.from('bookings').insert([{
-      id: booking.id, check_in_code: booking.checkInCode, trainer_id: booking.trainerId, user_id: booking.userId,
-      customer_name: booking.customerName, customer_phone: booking.customerPhone, customer_email: booking.customerEmail,
-      booking_date: booking.date, booking_time: booking.time, duration_mins: booking.duration, price: booking.price,
-      status: booking.status, language: booking.language, gym_address: GYM_ADDRESS
+      id: booking.id, 
+      check_in_code: booking.checkInCode, // Ensure snake_case for Supabase
+      trainer_id: booking.trainerId, 
+      user_id: booking.userId,
+      customer_name: booking.customerName, 
+      customer_phone: booking.customerPhone, 
+      customer_email: booking.customerEmail,
+      booking_date: booking.date, 
+      booking_time: booking.time, 
+      duration_mins: booking.duration, 
+      price: booking.price,
+      status: booking.status, 
+      language: booking.language, 
+      gym_address: GYM_ADDRESS
     }]);
     if (error) throw error;
-    await refreshData();
+    await refreshData(); // Auto-updates all components including Profile
   };
 
   const deleteBooking = async (id: string) => {
