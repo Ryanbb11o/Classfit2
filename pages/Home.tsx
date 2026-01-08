@@ -34,11 +34,11 @@ const Home: React.FC = () => {
             loop 
             muted 
             playsInline 
-            className="w-full h-full object-cover grayscale opacity-50 scale-105"
-            poster="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop"
+            className="w-full h-full object-cover grayscale opacity-60 scale-105"
+            poster="https://images.unsplash.com/photo-1571902943202-507ec2618e8f?q=80&w=2070&auto=format&fit=crop"
           >
-            {/* Weightlifting Video - Bench Press / Free Weights */}
-            <source src="https://videos.pexels.com/video-files/3209663/3209663-uhd_2560_1440_25fps.mp4" type="video/mp4" />
+            {/* Personal Training Video - Focused on technique and coaching */}
+            <source src="https://videos.pexels.com/video-files/4761614/4761614-hd_1920_1080_25fps.mp4" type="video/mp4" />
             Your browser does not support the video tag.
           </video>
           {/* Dark Overlay for Text Readability */}
