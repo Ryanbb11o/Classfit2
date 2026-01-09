@@ -132,7 +132,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           id: String(r.id),
           trainerId: String(r.trainer_id),
           author: r.author_name || 'Anonymous', 
-          text: r.content || r.text || '', // Defensive mapping: checking both fields
+          text: r.content || r.text || '', // Fix: mapping Supabase 'content' to state 'text'
           isPublished: r.is_published || false,
           rating: Number(r.rating || 5),
           time: r.created_at ? new Date(r.created_at).toLocaleDateString() : 'Recently'
@@ -221,7 +221,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const login = async (email: string, pass: string): Promise<boolean> => {
     if (isDemoMode) {
-      const u = users.find(u => u.email === email && u.password === pass);
+      const u = (users || []).find(u => u.email === email && u.password === pass);
       if (u) { 
         setCurrentUser(u); localStorage.setItem('classfit_user', JSON.stringify(u)); return true; 
       }
@@ -264,7 +264,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const requestTrainerUpgrade = async (userId: string, currentName: string, phone: string, specialty: string) => {
     const formattedName = `${currentName} (${specialty})`;
-    const user = users.find(u => u.id === userId);
+    const user = (users || []).find(u => u.id === userId);
     if (!user) return { success: false, msg: 'User not found' };
     const newRoles: UserRole[] = Array.from(new Set([...(user.roles || []), 'trainer_pending' as UserRole]));
     if (isDemoMode) { 
