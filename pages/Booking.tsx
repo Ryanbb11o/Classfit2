@@ -1,13 +1,13 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, Calendar as CalendarIcon, Clock, User, Phone, X, Loader2, ChevronLeft, ChevronRight, ArrowLeft, ArrowRight, Star, MapPin, Target, MessageSquare, Sparkles, Languages, ExternalLink, Navigation, PhoneCall, Info, Zap, CalendarDays } from 'lucide-react';
+import { Check, Calendar as CalendarIcon, Clock, User, Phone, X, Loader2, ChevronLeft, ChevronRight, ArrowLeft, ArrowRight, Star, MapPin, Target, MessageSquare, ExternalLink, Navigation, PhoneCall, Info, Zap, CalendarDays } from 'lucide-react';
 import { useAppContext } from '../AppContext';
-import { getTrainers, TRANSLATIONS, DEFAULT_PROFILE_IMAGE, getTrainerReviews } from '../constants';
+import { getTrainers, TRANSLATIONS, DEFAULT_PROFILE_IMAGE } from '../constants';
 import { Trainer, Booking } from '../types';
 
 const BookingPage: React.FC = () => {
-  const { language, addBooking, currentUser, users, bookings, reviews: liveReviews } = useAppContext();
+  const { language, addBooking, currentUser, users, reviews: liveReviews } = useAppContext();
   const navigate = useNavigate();
   const t = TRANSLATIONS[language];
   
@@ -26,7 +26,7 @@ const BookingPage: React.FC = () => {
           price: 20, 
           image: u.image || DEFAULT_PROFILE_IMAGE, 
           phone: u.phone || '',
-          bio: u.bio || (language === 'bg' ? 'Професионален инструктор с доказани резултати.' : 'Professional instructor with proven results.'),
+          bio: u.bio || (language === 'bg' ? 'Професионален инструктор с богат опит в ClassFit Varna.' : 'Professional instructor with extensive experience at ClassFit Varna.'),
           availability: ['08:00', '09:00', '10:00', '14:00', '15:00', '16:00', '17:00']
         };
       });
@@ -46,7 +46,7 @@ const BookingPage: React.FC = () => {
   const [guestEmail, setGuestEmail] = useState('');
 
   const getReviewCount = (trainerId: string) => {
-    return liveReviews.filter(r => r.trainerId === trainerId && r.isPublished).length + 24;
+    return liveReviews.filter(r => r.trainerId === trainerId && r.isPublished).length + 32;
   };
 
   useEffect(() => { if (selectedTrainer) window.scrollTo({ top: 0, behavior: 'smooth' }); }, [selectedTrainer]);
@@ -63,7 +63,7 @@ const BookingPage: React.FC = () => {
     const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay();
     const offset = firstDay === 0 ? 6 : firstDay - 1;
     const days = [];
-    for (let i = 0; i < offset; i++) days.push(<div key={`empty-${i}`} className="h-12 w-12 md:h-14 md:w-14"></div>);
+    for (let i = 0; i < offset; i++) days.push(<div key={`empty-${i}`} className="h-10 w-10 md:h-12 md:w-12"></div>);
     const today = new Date();
     today.setHours(0,0,0,0);
     for (let i = 1; i <= daysInMonth; i++) {
@@ -71,7 +71,7 @@ const BookingPage: React.FC = () => {
         const isSelected = selectedDate.toDateString() === current.toDateString();
         const isPast = current < today;
         days.push(
-            <button key={i} onClick={() => handleDateClick(i)} disabled={isPast} className={`h-12 w-12 md:h-14 md:w-14 rounded-2xl flex items-center justify-center text-sm font-black transition-all ${isSelected ? 'bg-brand text-dark shadow-xl scale-110 z-10' : isPast ? 'text-slate-800 cursor-not-allowed border border-white/5' : 'text-white hover:bg-white/10 border border-white/10 hover:border-brand/40'}`}>{i}</button>
+            <button key={i} onClick={() => handleDateClick(i)} disabled={isPast} className={`h-10 w-10 md:h-12 md:w-12 rounded-xl flex items-center justify-center text-xs font-black transition-all ${isSelected ? 'bg-brand text-dark shadow-lg scale-110 z-10' : isPast ? 'text-slate-800 cursor-not-allowed border border-white/5' : 'text-white hover:bg-white/10 border border-white/10 hover:border-brand/40'}`}>{i}</button>
         );
     }
     return days;
@@ -108,93 +108,84 @@ const BookingPage: React.FC = () => {
   if (isSuccess && lastBooking && selectedTrainer) {
     return (
       <div className="max-w-4xl mx-auto py-32 px-6 animate-in zoom-in-95 duration-500 text-left">
-        <div className="text-center mb-12">
-          <div className="w-24 h-24 bg-brand text-dark rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl animate-bounce">
-            <Check size={48} strokeWidth={4} />
-          </div>
-          <h2 className="text-5xl md:text-6xl font-black uppercase italic mb-4 text-white tracking-tighter leading-none">{t.reqSent}</h2>
-          <div className="inline-flex items-center gap-4 bg-yellow-500/10 px-8 py-3 rounded-full border border-yellow-500/20">
-             <div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></div>
-             <span className="text-xs font-black uppercase text-yellow-500 tracking-widest">{t.waitingConfirmation}</span>
-          </div>
-        </div>
-
-        <div className="bg-surface border border-white/10 rounded-[3rem] p-10 md:p-12 mb-10 shadow-2xl relative overflow-hidden">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-12 bg-surface border border-white/10 rounded-[3rem] p-12 shadow-2xl relative overflow-hidden">
            <div className="absolute top-0 left-0 w-full h-2 bg-brand"></div>
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-              <div className="space-y-8">
-                 <div className="flex items-center gap-6">
-                    <div className="w-24 h-24 rounded-3xl overflow-hidden border-2 border-brand shrink-0">
-                        <img src={selectedTrainer.image} className="w-full h-full object-cover" />
-                    </div>
-                    <div>
-                        <p className="text-[10px] font-black uppercase text-brand tracking-widest italic">{selectedTrainer.specialty}</p>
-                        <h3 className="text-3xl font-black uppercase italic text-white leading-none">{selectedTrainer.name}</h3>
-                    </div>
+           <div className="md:w-1/2 space-y-8">
+              <div className="w-20 h-20 bg-brand text-dark rounded-full flex items-center justify-center shadow-2xl animate-bounce">
+                <Check size={32} strokeWidth={4} />
+              </div>
+              <div>
+                <h2 className="text-5xl font-black uppercase italic mb-4 text-white tracking-tighter leading-none">{t.reqSent}</h2>
+                <p className="text-slate-400 italic text-sm leading-relaxed">{t.trainerReviewMsg}</p>
+              </div>
+              <div className="flex flex-col gap-3">
+                <button onClick={() => navigate('/profile')} className="w-full py-4 bg-white text-dark rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-brand transition-all">
+                  {t.myBookings}
+                </button>
+                <button onClick={() => { setIsSuccess(false); setSelectedTrainer(null); }} className="w-full py-4 bg-surface text-white rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-white/10 transition-all border border-white/10">
+                  {t.newBooking}
+                </button>
+              </div>
+           </div>
+           
+           <div className="md:w-1/2 bg-dark/40 rounded-[2.5rem] p-10 border border-white/5 relative">
+              <div className="flex items-center gap-4 mb-10">
+                 <div className="w-14 h-14 rounded-2xl overflow-hidden border border-brand/50 shadow-xl">
+                    <img src={selectedTrainer.image} className="w-full h-full object-cover" />
                  </div>
-                 <div className="space-y-4">
-                    <a href={`tel:${selectedTrainer.phone}`} className="flex items-center justify-between p-6 bg-white/5 text-white rounded-2xl border border-white/10 hover:bg-white hover:text-dark transition-all group">
-                       <div className="flex items-center gap-4">
-                         <PhoneCall size={20} className="text-brand group-hover:text-dark" />
-                         <span className="text-xs font-black uppercase italic">{t.trainerPhoneLabel}</span>
-                       </div>
-                       <span className="text-lg font-black">{selectedTrainer.phone}</span>
-                    </a>
-                    <a href="https://www.google.com/maps/search/?api=1&query=ClassFit+Varna+Studentska+1A" target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-6 bg-white/5 text-white rounded-2xl border border-white/10 hover:bg-brand hover:text-dark transition-all group">
-                       <div className="flex items-center gap-4">
-                         <Navigation size={20} className="text-brand group-hover:text-dark" />
-                         <span className="text-xs font-black uppercase italic">{language === 'bg' ? 'СПИРКА МИР' : 'MIR BUS STOP'}</span>
-                       </div>
-                       <ExternalLink size={16} />
-                    </a>
+                 <div>
+                    <p className="text-[9px] font-black uppercase text-brand tracking-widest italic">{selectedTrainer.specialty}</p>
+                    <p className="text-white font-black text-xl italic uppercase tracking-tighter">{selectedTrainer.name}</p>
                  </div>
               </div>
-              
-              <div className="bg-dark/40 rounded-[2.5rem] p-8 border border-white/5 flex flex-col justify-center text-center">
-                 <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest mb-2 italic">YOUR ENTRY PIN</p>
-                 <p className="text-6xl font-black text-brand tracking-widest italic leading-none drop-shadow-[0_0_20px_rgba(197,217,45,0.4)]">{lastBooking.checkInCode}</p>
-                 <div className="mt-8 pt-8 border-t border-white/5">
-                    <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest mb-1 italic">SCHEDULED TIME</p>
-                    <p className="text-white font-black uppercase italic text-xl">{lastBooking.date} @ {lastBooking.time}</p>
+              <div className="space-y-6">
+                 <div>
+                    <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest mb-1">ENTRY PIN</p>
+                    <p className="text-5xl font-black text-brand tracking-widest italic">{lastBooking.checkInCode}</p>
+                 </div>
+                 <div className="pt-6 border-t border-white/5 grid grid-cols-2 gap-4">
+                    <div>
+                       <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest mb-1 italic">DATE</p>
+                       <p className="text-white font-black uppercase italic text-sm">{lastBooking.date}</p>
+                    </div>
+                    <div>
+                       <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest mb-1 italic">TIME</p>
+                       <p className="text-white font-black uppercase italic text-sm">{lastBooking.time}</p>
+                    </div>
                  </div>
               </div>
            </div>
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <button onClick={() => navigate('/profile')} className="px-10 py-5 bg-brand text-dark rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-white transition-all shadow-xl">
-            {t.myBookings}
-          </button>
-          <button onClick={() => { setIsSuccess(false); setSelectedTrainer(null); }} className="px-10 py-5 bg-surface text-slate-400 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-white/10 transition-all border border-white/5">
-            {t.newBooking}
-          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-[1400px] mx-auto px-6 py-24 text-left">
+    <div className="max-w-[1500px] mx-auto px-6 py-24 text-left">
       {!selectedTrainer ? (
         <>
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
-            <div>
-              <h1 className="text-5xl md:text-8xl font-black uppercase italic mb-6 tracking-tighter text-white leading-[0.8] drop-shadow-2xl">
-                SELECT <span className="text-brand">YOUR COACH</span>
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-12 mb-20">
+            <div className="max-w-2xl">
+              <h1 className="text-6xl md:text-8xl font-black uppercase italic mb-6 tracking-tighter text-white leading-[0.8]">
+                ELITE <span className="text-brand">PERSONNEL</span>
               </h1>
-              <div className="flex items-center gap-4 bg-white/5 w-fit px-6 py-2.5 rounded-2xl border border-white/10">
+              <div className="flex items-center gap-4 bg-white/5 w-fit px-6 py-2.5 rounded-full border border-white/10 shadow-xl">
                  <Zap size={16} className="text-brand fill-brand" />
-                 <p className="text-slate-400 font-black uppercase tracking-[0.4em] text-[9px] italic">Official ClassFit Varna Roster</p>
+                 <p className="text-slate-400 font-black uppercase tracking-[0.5em] text-[9px] italic">Official ClassFit Varna Coach Roster</p>
               </div>
+            </div>
+            <div className="hidden lg:block text-right">
+               <p className="text-[10px] font-black uppercase text-slate-600 tracking-[0.4em] mb-2 italic">LOCATED NEAR</p>
+               <h3 className="text-xl font-black uppercase italic text-white tracking-tighter">BUS STOP MIR, VARNA</h3>
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {trainers.map((trainer) => (
-              <div key={trainer.id} onClick={() => setSelectedTrainer(trainer)} className="group relative bg-surface rounded-[2.5rem] overflow-hidden cursor-pointer hover:-translate-y-4 transition-all duration-500 border border-white/5 hover:border-brand/50 shadow-2xl">
+              <div key={trainer.id} onClick={() => setSelectedTrainer(trainer)} className="group relative bg-surface/40 rounded-[2.5rem] overflow-hidden cursor-pointer hover:-translate-y-3 transition-all duration-500 border border-white/5 hover:border-brand/40 shadow-2xl">
                 <div className="aspect-[4/5] overflow-hidden relative">
-                   <img src={trainer.image} className="w-full h-full object-cover grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-1000 group-hover:scale-110" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-dark/95 via-dark/20 to-transparent"></div>
+                   <img src={trainer.image} className="w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-1000 group-hover:scale-110" />
+                   <div className="absolute inset-0 bg-gradient-to-t from-dark/95 via-dark/10 to-transparent"></div>
                    
                    <div className="absolute top-6 right-6">
                      <div className="px-4 py-2 bg-brand text-dark rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl">
@@ -203,11 +194,11 @@ const BookingPage: React.FC = () => {
                    </div>
 
                    <div className="absolute bottom-6 left-6 right-6">
-                      <div className="flex items-center gap-2 mb-3 bg-dark/60 backdrop-blur-md w-fit px-3 py-1.5 rounded-xl border border-white/10">
+                      <div className="flex items-center gap-2 mb-3 bg-dark/60 backdrop-blur-md w-fit px-3 py-1.5 rounded-xl border border-white/10 shadow-xl">
                         <Star size={12} className="text-brand fill-brand" />
                         <span className="text-[11px] font-black text-white italic">5.0 <span className="text-slate-500 ml-1">({getReviewCount(trainer.id)})</span></span>
                       </div>
-                      <h3 className="text-2xl font-black uppercase text-white leading-none tracking-tighter group-hover:text-brand transition-colors mb-1 italic">{trainer.name}</h3>
+                      <h3 className="text-3xl font-black uppercase text-white leading-none tracking-tighter group-hover:text-brand transition-colors mb-1 italic">{trainer.name}</h3>
                       <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] italic mb-6">{trainer.specialty}</p>
                       
                       <div className="flex gap-2">
@@ -215,7 +206,7 @@ const BookingPage: React.FC = () => {
                             <PhoneCall size={16} />
                          </div>
                          <div className="flex-[3] flex items-center justify-center gap-2 p-3 bg-brand text-dark rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg italic">
-                            VIEW PROFILE <ArrowRight size={14} />
+                            VIEW DETAILS <ArrowRight size={14} />
                          </div>
                       </div>
                    </div>
@@ -227,10 +218,11 @@ const BookingPage: React.FC = () => {
       ) : (
         <div className="animate-in slide-in-from-bottom-12 duration-700">
           <button onClick={() => setSelectedTrainer(null)} className="mb-16 flex items-center gap-4 text-slate-500 hover:text-brand font-black uppercase tracking-[0.4em] text-[10px] transition-all italic">
-            <ArrowLeft size={16} /> BACK TO COACHES
+            <ArrowLeft size={16} /> BACK TO COACH ROSTER
           </button>
           
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
+            {/* LEFT COLUMN: Trainer Info Details */}
             <div className="lg:col-span-5 space-y-8">
                <div className="bg-surface rounded-[4rem] overflow-hidden border border-white/10 shadow-2xl group">
                   <div className="relative aspect-square overflow-hidden">
@@ -246,14 +238,14 @@ const BookingPage: React.FC = () => {
                   <div className="p-10">
                      <div className="grid grid-cols-2 gap-6 mb-10">
                         <div className="p-6 bg-dark/40 rounded-3xl border border-white/5 text-center shadow-inner">
-                           <p className="text-[10px] font-black uppercase text-slate-600 tracking-[0.3em] mb-2 italic">AVG RATING</p>
+                           <p className="text-[10px] font-black uppercase text-slate-600 tracking-[0.3em] mb-2 italic">AVERAGE RATING</p>
                            <div className="flex items-center justify-center gap-2">
                               <Star size={18} className="text-brand fill-brand" />
                               <span className="text-2xl font-black text-white italic">5.0</span>
                            </div>
                         </div>
                         <div className="p-6 bg-dark/40 rounded-3xl border border-white/5 text-center shadow-inner">
-                           <p className="text-[10px] font-black uppercase text-slate-600 tracking-[0.3em] mb-2 italic">REVIEWS</p>
+                           <p className="text-[10px] font-black uppercase text-slate-600 tracking-[0.3em] mb-2 italic">TOTAL REVIEWS</p>
                            <p className="text-2xl font-black text-white italic">{getReviewCount(selectedTrainer.id)}</p>
                         </div>
                      </div>
@@ -286,6 +278,7 @@ const BookingPage: React.FC = () => {
                </div>
             </div>
 
+            {/* RIGHT COLUMN: Booking Matrix & Slots */}
             <div className="lg:col-span-7 space-y-12">
                <div className="bg-surface/30 backdrop-blur-[60px] p-10 md:p-16 rounded-[4rem] border border-white/10 shadow-2xl italic">
                   <div className="flex flex-col sm:flex-row justify-between items-center gap-8 mb-16">
