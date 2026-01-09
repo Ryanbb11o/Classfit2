@@ -122,7 +122,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           time: b.booking_time || '',
           price: Number(b.price || 0),
           status: b.status,
-          hasBeenReviewed: b.has_been_reviewed || false
+          hasBeenReviewed: b.has_been_reviewed || false,
+          paymentMethod: b.payment_method,
+          commissionAmount: Number(b.commission_amount || 0),
+          trainerEarnings: Number(b.trainer_earnings || 0),
+          settledAt: b.settled_at,
+          settledBy: b.settled_by
       })));
 
       const { data: rData } = await supabase.from('reviews').select('*').order('created_at', { ascending: false });
@@ -132,7 +137,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           id: String(r.id),
           trainerId: String(r.trainer_id),
           author: r.author_name || 'Anonymous', 
-          text: r.content || r.text || '', // Fix: mapping Supabase 'content' to state 'text'
+          text: r.content || r.text || '', 
           isPublished: r.is_published || false,
           rating: Number(r.rating || 5),
           time: r.created_at ? new Date(r.created_at).toLocaleDateString() : 'Recently'
@@ -204,8 +209,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const updateBooking = async (id: string, updates: Partial<Booking>) => {
     const dbUpdates: any = { ...updates };
+    
+    // CRITICAL: Database Column Mapping Fix
     if (updates.checkInCode) { dbUpdates.check_in_code = updates.checkInCode; delete dbUpdates.checkInCode; }
     if (updates.hasBeenReviewed !== undefined) { dbUpdates.has_been_reviewed = updates.hasBeenReviewed; delete dbUpdates.hasBeenReviewed; }
+    if (updates.paymentMethod) { dbUpdates.payment_method = updates.paymentMethod; delete dbUpdates.paymentMethod; }
+    if (updates.commissionAmount !== undefined) { dbUpdates.commission_amount = updates.commissionAmount; delete dbUpdates.commissionAmount; }
+    if (updates.trainerEarnings !== undefined) { dbUpdates.trainer_earnings = updates.trainerEarnings; delete dbUpdates.trainerEarnings; }
+    if (updates.settledAt) { dbUpdates.settled_at = updates.settledAt; delete dbUpdates.settledAt; }
+    if (updates.settledBy) { dbUpdates.settled_by = updates.settledBy; delete dbUpdates.settledBy; }
+    if (updates.trainerId) { dbUpdates.trainer_id = updates.trainerId; delete dbUpdates.trainerId; }
+    if (updates.userId) { dbUpdates.user_id = updates.userId; delete dbUpdates.userId; }
 
     if (isDemoMode) {
       const newBookings = bookings.map(b => b.id === id ? { ...b, ...updates } : b);
@@ -215,7 +229,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
 
     const { error } = await supabase.from('bookings').update(dbUpdates).eq('id', id);
-    if (error) throw error;
+    if (error) {
+        console.error("Supabase update error (bookings):", error);
+        throw error;
+    }
     await refreshData();
   };
 

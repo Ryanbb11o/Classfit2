@@ -16,6 +16,7 @@ import Register from './pages/Register';
 import TrainerSignUp from './pages/TrainerSignUp';
 import TrainerDashboard from './pages/TrainerDashboard';
 import Contact from './pages/Contact';
+import NotFound from './pages/NotFound'; // Import the new 404 page
 import { Loader2, AlertTriangle, X, Copy, ExternalLink, RefreshCw, Database } from 'lucide-react';
 
 interface ErrorBoundaryProps {
@@ -45,25 +46,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   
   render() {
     if (this.state.hasError) {
-      return (
-        <div className="min-h-screen bg-dark flex items-center justify-center p-6">
-          <div className="max-w-md w-full bg-surface border border-white/10 rounded-[2.5rem] p-10 text-center shadow-2xl">
-            <div className="w-20 h-20 bg-red-500/10 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-8">
-              <AlertTriangle size={40} />
-            </div>
-            <h1 className="text-3xl font-black uppercase italic text-white mb-4 tracking-tighter">Something went wrong</h1>
-            <p className="text-slate-400 font-medium mb-10 text-sm leading-relaxed italic">
-              The application encountered an unexpected error.
-            </p>
-            <button 
-              onClick={() => window.location.reload()}
-              className="w-full py-4 bg-brand text-dark rounded-xl font-black uppercase tracking-widest hover:bg-white transition-all flex items-center justify-center gap-3"
-            >
-              <RefreshCw size={18} /> Reload Application
-            </button>
-          </div>
-        </div>
-      );
+      return <NotFound />; // Use the aesthetic 404 for catastrophic errors too
     }
 
     return this.props.children;
@@ -90,7 +73,8 @@ const App: React.FC = () => {
               <Route path="/trainer-signup" element={<TrainerSignUp />} />
               <Route path="/trainer" element={<TrainerDashboard />} />
               <Route path="/contact" element={<Contact />} />
-              <Route path="*" element={<Home />} />
+              {/* Catch-all route for 404 */}
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </Layout>
         </Router>
