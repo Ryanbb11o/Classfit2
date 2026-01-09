@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { Calendar, Star, LogOut, Loader2, X, Settings2, Trash2, AlertCircle, Sparkles, Languages, Clock, MapPin, CheckCircle2, User, Heart, Search, Briefcase, ShieldCheck, Globe, Navigation, Phone, ExternalLink, ArrowRight } from 'lucide-react';
+import { Calendar, Star, LogOut, Loader2, X, Settings2, Trash2, AlertCircle, Sparkles, Languages, Clock, MapPin, CheckCircle2, User, Heart, Search, Briefcase, ShieldCheck, Globe, Navigation, Phone, ExternalLink, ArrowRight, PhoneCall, Zap } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, getTrainers, DEFAULT_PROFILE_IMAGE } from '../constants';
 import { useNavigate } from 'react-router-dom';
@@ -50,37 +50,37 @@ const ReviewModal: React.FC<{
   };
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-dark/95 backdrop-blur-md animate-in fade-in duration-300">
-       <div className="bg-[#1a2332] rounded-[4rem] border border-white/10 w-full max-w-md p-12 text-center relative shadow-[0_0_80px_rgba(0,0,0,0.5)] animate-in zoom-in-95 duration-300 italic">
-          <div className="absolute top-0 left-0 w-full h-1 bg-brand"></div>
-          <button onClick={onClose} className="absolute top-10 right-10 p-2 bg-white/5 rounded-full text-slate-500 hover:text-white transition-all"><X size={20} /></button>
+    <div className="fixed inset-0 z-[300] flex items-center justify-center p-6 bg-dark/98 backdrop-blur-[100px] animate-in fade-in duration-700">
+       <div className="bg-[#1a2332] rounded-[5rem] border-2 border-white/10 w-full max-w-2xl p-20 sm:p-24 text-center relative shadow-[0_0_200px_rgba(0,0,0,1)] animate-in zoom-in-95 duration-500 italic">
+          <div className="absolute top-0 left-0 w-full h-3 bg-brand"></div>
+          <button onClick={onClose} className="absolute top-16 right-16 p-4 bg-white/5 rounded-full text-slate-500 hover:text-white transition-all"><X size={40} /></button>
           
-          <div className="w-20 h-20 bg-brand/10 text-brand rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-xl">
-            <Heart size={40} className="fill-brand" />
+          <div className="w-32 h-32 bg-brand/10 text-brand rounded-[3rem] flex items-center justify-center mx-auto mb-12 shadow-2xl">
+            <Heart size={64} className="fill-brand" />
           </div>
           
-          <h2 className="text-3xl font-black uppercase italic text-white mb-4 tracking-tighter leading-none">
+          <h2 className="text-5xl sm:text-6xl font-black uppercase italic text-white mb-8 tracking-tighter leading-none">
             REview <span className="text-brand">{trainerName}</span>
           </h2>
-          <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.3em] mb-10 italic">How was your transformation session?</p>
+          <p className="text-slate-500 text-sm font-black uppercase tracking-[0.5em] mb-16 italic">How was your transformation session?</p>
           
-          <form onSubmit={(e) => { e.preventDefault(); setIsSubmitting(true); onSubmit(booking.id, rating, comment, isAiEnhanced, booking.trainerId).finally(() => setIsSubmitting(false)); }} className="space-y-6 text-left">
-             <div className="flex justify-center gap-3 mb-8">
-                {[1,2,3,4,5].map(s => <button key={s} type="button" onClick={() => setRating(s)} className="p-1 transition-all hover:scale-150"><Star size={32} className={`${s <= rating ? 'text-brand fill-brand drop-shadow-[0_0_10px_rgba(197,217,45,0.5)]' : 'text-slate-800'}`} /></button>)}
+          <form onSubmit={(e) => { e.preventDefault(); setIsSubmitting(true); onSubmit(booking.id, rating, comment, isAiEnhanced, booking.trainerId).finally(() => setIsSubmitting(false)); }} className="space-y-12 text-left">
+             <div className="flex justify-center gap-6 mb-12">
+                {[1,2,3,4,5].map(s => <button key={s} type="button" onClick={() => setRating(s)} className="p-3 transition-all hover:scale-150"><Star size={64} className={`${s <= rating ? 'text-brand fill-brand drop-shadow-[0_0_40px_rgba(197,217,45,0.7)]' : 'text-slate-800'}`} /></button>)}
              </div>
              
-             <div className="space-y-2">
-                <div className="flex items-center justify-between px-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 italic">YOUR FEEDBACK</label>
-                  <button type="button" onClick={handleAiEnhance} disabled={isEnhancing || !comment.trim()} className="flex items-center gap-1.5 px-3 py-1 bg-brand text-dark rounded-full text-[9px] font-black uppercase italic hover:bg-white transition-all shadow-lg">
-                    {isEnhancing ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />} AI POLISH
+             <div className="space-y-6">
+                <div className="flex items-center justify-between px-6">
+                  <label className="text-sm font-black uppercase tracking-[0.4em] text-slate-600 italic">YOUR FEEDBACK</label>
+                  <button type="button" onClick={handleAiEnhance} disabled={isEnhancing || !comment.trim()} className="flex items-center gap-3 px-8 py-3 bg-brand text-dark rounded-full text-xs font-black uppercase italic hover:bg-white transition-all shadow-2xl">
+                    {isEnhancing ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />} AI POLISH
                   </button>
                 </div>
-                <textarea rows={4} value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Type your experience here..." className="w-full bg-dark/50 border border-white/5 focus:border-brand rounded-[2rem] px-6 py-5 text-white text-sm outline-none resize-none transition-all italic font-medium" />
+                <textarea rows={6} value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Type your experience here..." className="w-full bg-dark/50 border-2 border-white/10 focus:border-brand rounded-[3rem] px-10 py-8 text-white text-xl outline-none resize-none transition-all italic font-medium shadow-inner" />
              </div>
              
-             <button type="submit" disabled={isSubmitting} className="w-full py-5 bg-brand text-dark rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] hover:bg-white transition-all shadow-2xl shadow-brand/10">
-               {isSubmitting ? <Loader2 className="animate-spin mx-auto" size={18} /> : 'COMMIT REVIEW'}
+             <button type="submit" disabled={isSubmitting} className="w-full py-10 bg-brand text-dark rounded-[3rem] font-black uppercase tracking-[0.5em] text-lg hover:bg-white transition-all shadow-[0_40px_100px_rgba(197,217,45,0.3)]">
+               {isSubmitting ? <Loader2 className="animate-spin mx-auto" size={40} /> : 'COMMIT REVIEW'}
              </button>
           </form>
        </div>
@@ -128,38 +128,38 @@ const CustomerDashboard: React.FC = () => {
   const hasStaffAccess = isCashier || isAdmin || currentUser.roles?.includes('trainer');
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-24 animate-in fade-in duration-500 text-left selection:bg-brand selection:text-dark">
-      <div className="flex flex-col md:flex-row items-center justify-between gap-12 mb-16 bg-surface p-12 rounded-[4rem] border border-white/5 shadow-[0_0_60px_rgba(0,0,0,0.3)] relative overflow-hidden group">
-         <div className="absolute top-0 right-0 w-64 h-64 bg-brand/5 rounded-full blur-[100px] pointer-events-none group-hover:bg-brand/10 transition-all duration-700"></div>
-         <div className="flex items-center gap-10 relative z-10">
+    <div className="max-w-[1600px] mx-auto px-6 py-24 animate-in fade-in duration-1000 text-left selection:bg-brand selection:text-dark">
+      <div className="flex flex-col xl:flex-row items-center justify-between gap-16 mb-24 bg-surface p-16 sm:p-24 rounded-[6rem] border-2 border-white/10 shadow-[0_0_150px_rgba(0,0,0,0.8)] relative overflow-hidden group">
+         <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-brand/5 rounded-full blur-[200px] pointer-events-none group-hover:bg-brand/10 transition-all duration-1000"></div>
+         <div className="flex flex-col md:flex-row items-center gap-16 relative z-10 text-center md:text-left w-full xl:w-auto">
             <div className="relative">
-              <div className="w-32 h-32 rounded-full p-1.5 bg-gradient-to-tr from-brand to-transparent shrink-0 overflow-hidden shadow-2xl">
-                  <img src={currentUser.image || DEFAULT_PROFILE_IMAGE} className="w-full h-full object-cover rounded-full grayscale group-hover:grayscale-0 transition-all duration-700" />
+              <div className="w-56 h-56 sm:w-72 sm:h-72 rounded-full p-3 bg-gradient-to-tr from-brand to-transparent shrink-0 overflow-hidden shadow-[0_0_100px_rgba(197,217,45,0.2)]">
+                  <img src={currentUser.image || DEFAULT_PROFILE_IMAGE} className="w-full h-full object-cover rounded-full grayscale group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-110" />
               </div>
-              <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-brand text-dark rounded-full flex items-center justify-center border-4 border-surface shadow-xl">
-                 <ShieldCheck size={20} />
+              <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-brand text-dark rounded-[2.5rem] flex items-center justify-center border-8 border-surface shadow-[0_20px_50px_rgba(0,0,0,0.5)] rotate-12 group-hover:rotate-0 transition-transform">
+                 <ShieldCheck size={48} />
               </div>
             </div>
-            <div>
-                <h1 className="text-4xl sm:text-5xl font-black uppercase italic text-white mb-3 tracking-tighter leading-none">{currentUser.name.split('(')[0].trim()}</h1>
-                <div className="flex flex-wrap gap-2 mb-6">
+            <div className="flex-grow">
+                <h1 className="text-6xl sm:text-9xl font-black uppercase italic text-white mb-6 tracking-[0.02em] leading-[0.75] drop-shadow-2xl">{currentUser.name.split('(')[0].trim()}</h1>
+                <div className="flex flex-wrap justify-center md:justify-start gap-5 mb-10">
                    {currentUser.roles?.map(role => (
-                     <span key={role} className="text-brand bg-brand/10 text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full border border-brand/20 shadow-sm">
+                     <span key={role} className="text-brand bg-brand/10 text-sm font-black uppercase tracking-[0.5em] px-10 py-4 rounded-full border-2 border-brand/20 shadow-2xl italic">
                        {role.toUpperCase()}
                      </span>
                    ))}
-                   <button onClick={() => setShowEditModal(true)} className="bg-white/5 hover:bg-white hover:text-dark text-white text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full border border-white/10 transition-all flex items-center gap-2 group/btn">
-                     <Settings2 size={12} className="group-hover/btn:rotate-90 transition-transform" /> {t.profileSettings}
+                   <button onClick={() => setShowEditModal(true)} className="bg-white/5 hover:bg-white hover:text-dark text-white text-sm font-black uppercase tracking-[0.5em] px-10 py-4 rounded-full border-2 border-white/10 transition-all flex items-center gap-4 group/btn italic shadow-xl">
+                     <Settings2 size={24} className="group-hover/btn:rotate-90 transition-transform" /> {t.profileSettings}
                    </button>
                 </div>
                 
-                <div className="flex items-center gap-6">
-                   <div className="flex items-center gap-2.5 text-slate-500 font-black uppercase tracking-widest text-[9px] italic">
-                      <Globe size={12} className="text-brand" /> {language === 'bg' ? 'Езици:' : 'Communication:'}
+                <div className="flex flex-col sm:flex-row items-center justify-center md:justify-start gap-12">
+                   <div className="flex items-center gap-5 text-slate-500 font-black uppercase tracking-[0.6em] text-sm italic">
+                      <Globe size={24} className="text-brand" /> {language === 'bg' ? 'ЕЗИЦИ' : 'DIALECTS'}
                    </div>
-                   <div className="flex flex-wrap gap-2">
+                   <div className="flex flex-wrap justify-center gap-4">
                       {currentUser.languages?.map(lang => (
-                        <span key={lang} className="text-white/60 text-[9px] font-black uppercase italic tracking-tighter bg-white/5 px-3 py-1 rounded-lg border border-white/5">
+                        <span key={lang} className="text-white text-base font-black uppercase italic tracking-[0.1em] bg-white/5 px-6 py-3 rounded-2xl border-2 border-white/5 shadow-inner">
                           {lang}
                         </span>
                       ))}
@@ -167,98 +167,100 @@ const CustomerDashboard: React.FC = () => {
                 </div>
             </div>
          </div>
-         <button onClick={() => { logout(); navigate('/'); }} className="px-8 py-4 bg-red-500/5 text-red-500 hover:bg-red-500 hover:text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all border border-red-500/10 flex items-center gap-3 shadow-lg">
-           <LogOut size={16} /> {t.logout}
+         <button onClick={() => { logout(); navigate('/'); }} className="w-full xl:w-auto px-16 py-10 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded-[3rem] text-sm font-black uppercase tracking-[0.5em] transition-all border-2 border-red-500/20 flex items-center justify-center gap-6 shadow-[0_20px_80px_rgba(239,68,68,0.2)] italic">
+           <LogOut size={32} /> {t.logout}
          </button>
       </div>
 
       {hasStaffAccess && (
-        <div className="mb-20">
-           <h2 className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-600 italic mb-6">SYSTEM PORTALS</h2>
-           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-              {isCashier && <button onClick={() => navigate('/desk')} className="group p-8 bg-brand text-dark rounded-[2.5rem] flex items-center justify-between transition-all hover:scale-[1.03] shadow-[0_20px_40px_rgba(197,217,45,0.15)] font-black uppercase italic text-sm">
-                <div className="flex items-center gap-4"><Search size={22}/> FRONT DESK</div>
-                <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+        <div className="mb-32">
+           <h2 className="text-sm font-black uppercase tracking-[0.8em] text-slate-600 italic mb-12 text-center sm:text-left">SYSTEM PORTALS</h2>
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+              {isCashier && <button onClick={() => navigate('/desk')} className="group p-12 bg-brand text-dark rounded-[4rem] flex items-center justify-between transition-all hover:scale-[1.03] shadow-[0_50px_100px_rgba(197,217,45,0.25)] font-black uppercase italic text-3xl tracking-tighter">
+                <div className="flex items-center gap-8"><Search size={48}/> FRONT DESK</div>
+                <ArrowRight size={40} className="group-hover:translate-x-4 transition-transform" />
               </button>}
-              {currentUser.roles?.includes('trainer') && <button onClick={() => navigate('/trainer')} className="group p-8 bg-surface border border-brand/20 text-brand rounded-[2.5rem] flex items-center justify-between transition-all hover:scale-[1.03] font-black uppercase italic text-sm">
-                <div className="flex items-center gap-4"><Briefcase size={22}/> COACH TERMINAL</div>
-                <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+              {currentUser.roles?.includes('trainer') && <button onClick={() => navigate('/trainer')} className="group p-12 bg-surface border-2 border-brand/50 text-brand rounded-[4rem] flex items-center justify-between transition-all hover:scale-[1.03] shadow-[0_50px_100px_rgba(0,0,0,0.5)] font-black uppercase italic text-3xl tracking-tighter">
+                <div className="flex items-center gap-8"><Briefcase size={48}/> COACH TERMINAL</div>
+                <ArrowRight size={40} className="group-hover:translate-x-4 transition-transform" />
               </button>}
-              {isAdmin && <button onClick={() => navigate('/admin')} className="group p-8 bg-surface border border-red-500/20 text-red-500 rounded-[2.5rem] flex items-center justify-between transition-all hover:scale-[1.03] font-black uppercase italic text-sm">
-                <div className="flex items-center gap-4"><ShieldCheck size={22}/> ADMIN CONSOLE</div>
-                <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+              {isAdmin && <button onClick={() => navigate('/admin')} className="group p-12 bg-surface border-2 border-red-500/50 text-red-500 rounded-[4rem] flex items-center justify-between transition-all hover:scale-[1.03] shadow-[0_50px_100px_rgba(0,0,0,0.5)] font-black uppercase italic text-3xl tracking-tighter">
+                <div className="flex items-center gap-8"><ShieldCheck size={48}/> ADMIN CONSOLE</div>
+                <ArrowRight size={40} className="group-hover:translate-x-4 transition-transform" />
               </button>}
            </div>
         </div>
       )}
 
-      <div className="space-y-8">
-        <h2 className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-600 italic">TRANSFORMATION JOURNEY</h2>
+      <div className="space-y-16">
+        <h2 className="text-sm font-black uppercase tracking-[0.8em] text-slate-600 italic text-center sm:text-left">TRANSFORMATION JOURNEY</h2>
         {myBookings.length === 0 ? (
-            <div className="text-center py-32 bg-surface/10 rounded-[4rem] border-2 border-dashed border-white/5 italic">
-                <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-700">
-                  <Calendar size={32} />
+            <div className="text-center py-64 bg-surface/10 rounded-[6rem] border-[6px] border-dashed border-white/5 italic">
+                <div className="w-32 h-32 bg-white/5 rounded-[3.5rem] flex items-center justify-center mx-auto mb-16 text-slate-800 shadow-2xl">
+                  <Calendar size={64} />
                 </div>
-                <p className="text-slate-500 font-black uppercase tracking-[0.3em] text-[11px] mb-8">{t.noBookings}</p>
-                <button onClick={() => navigate('/booking')} className="px-12 py-5 bg-brand text-dark rounded-full font-black uppercase tracking-widest text-xs shadow-2xl shadow-brand/20 hover:bg-white transition-all transform hover:scale-105">{t.makeFirst}</button>
+                <p className="text-slate-500 font-black uppercase tracking-[0.6em] text-lg mb-16">{t.noBookings}</p>
+                <button onClick={() => navigate('/booking')} className="px-24 py-10 bg-brand text-dark rounded-full font-black uppercase tracking-[0.5em] text-sm shadow-[0_40px_100px_rgba(197,217,45,0.3)] hover:bg-white transition-all transform hover:scale-105 italic">{t.makeFirst}</button>
             </div>
         ) : (
-            <div className="grid grid-cols-1 gap-6">
+            <div className="grid grid-cols-1 gap-12">
               {myBookings.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(booking => {
                   const trainer = allTrainers.find(tr => tr.id === booking.trainerId);
                   const canReview = booking.status === 'completed' && !booking.hasBeenReviewed;
                   
                   return (
-                      <div key={booking.id} className="bg-surface/30 border border-white/5 rounded-[3rem] p-10 hover:border-brand/40 transition-all duration-500 group relative overflow-hidden flex flex-col xl:flex-row gap-10 items-start xl:items-center shadow-xl">
-                          <div className="flex flex-col md:flex-row gap-8 items-center flex-grow">
-                             <div className="w-24 h-24 rounded-3xl overflow-hidden bg-dark border border-white/10 shrink-0 shadow-lg group-hover:border-brand transition-all">
-                               <img src={trainer?.image || DEFAULT_PROFILE_IMAGE} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000" />
+                      <div key={booking.id} className="bg-surface/50 border-2 border-white/10 rounded-[5rem] p-12 sm:p-20 hover:border-brand/60 transition-all duration-1000 group relative overflow-hidden flex flex-col xl:flex-row gap-16 items-start xl:items-center shadow-[0_40px_120px_rgba(0,0,0,0.6)]">
+                          <div className="flex flex-col md:flex-row gap-16 items-center flex-grow w-full md:w-auto">
+                             <div className="w-48 h-48 sm:w-64 sm:h-64 rounded-[4rem] overflow-hidden bg-dark border-4 border-white/10 shrink-0 shadow-2xl group-hover:border-brand transition-all duration-1000">
+                               <img src={trainer?.image || DEFAULT_PROFILE_IMAGE} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-110" />
                              </div>
-                             <div className="text-center md:text-left">
-                                <p className="text-[10px] font-black uppercase text-brand mb-1 italic tracking-[0.2em]">{trainer?.specialty || 'SPECIALIST'}</p>
-                                <h3 className="font-black uppercase italic text-3xl text-white mb-3 tracking-tighter leading-none group-hover:text-brand transition-colors">{trainer?.name || 'Unknown Coach'}</h3>
-                                <div className="flex flex-wrap justify-center md:justify-start gap-4">
-                                   <div className="flex items-center gap-2 text-[10px] font-black uppercase text-slate-400 italic"><Clock size={12} className="text-brand" /> {booking.date} @ {booking.time}</div>
-                                   <div className="flex items-center gap-2 text-[10px] font-black uppercase text-slate-400 italic"><MapPin size={12} className="text-brand" /> UL. STUDENTSKA 1A</div>
+                             <div className="text-center md:text-left flex-grow space-y-8">
+                                <div className="space-y-2">
+                                   <p className="text-sm font-black uppercase text-brand italic tracking-[0.6em]">{trainer?.specialty || 'ELITE PERSONNEL'}</p>
+                                   <h3 className="font-black uppercase italic text-7xl sm:text-8xl text-white tracking-tighter leading-[0.75] group-hover:text-brand transition-colors drop-shadow-2xl">{trainer?.name || 'Unknown Coach'}</h3>
+                                </div>
+                                <div className="flex flex-wrap justify-center md:justify-start gap-12 pt-4">
+                                   <div className="flex items-center gap-6 text-xl font-black uppercase text-slate-300 italic tracking-tighter"><Clock size={32} className="text-brand" /> {booking.date} <span className="text-white font-black italic">@</span> {booking.time}</div>
+                                   <div className="flex items-center gap-6 text-xl font-black uppercase text-slate-300 italic tracking-tighter"><MapPin size={32} className="text-brand" /> MIR STOP, VARNA</div>
                                 </div>
                              </div>
                           </div>
                           
-                          <div className="flex flex-col sm:flex-row xl:flex-col gap-4 w-full xl:w-auto shrink-0">
-                             <div className="bg-dark/60 p-5 rounded-[2rem] border border-white/5 flex flex-col items-center justify-center min-w-[140px]">
-                                <p className="text-[8px] font-black uppercase text-slate-700 mb-1 tracking-widest">SESSION PIN</p>
-                                <p className="text-2xl font-black text-brand tracking-widest italic leading-none">{booking.checkInCode || 'N/A'}</p>
+                          <div className="flex flex-col sm:flex-row xl:flex-col gap-8 w-full xl:w-auto shrink-0 justify-center">
+                             <div className="bg-dark/90 backdrop-blur-2xl p-10 sm:p-14 rounded-[4rem] border-4 border-white/5 flex flex-col items-center justify-center min-w-[280px] shadow-[0_30px_60px_rgba(0,0,0,0.5)] group-hover:border-brand/30 transition-colors">
+                                <p className="text-xs font-black uppercase text-slate-600 mb-4 tracking-[0.6em] italic">SESSION PIN</p>
+                                <p className="text-7xl font-black text-brand tracking-[0.3em] italic leading-none drop-shadow-[0_0_20px_rgba(197,217,45,0.4)]">{booking.checkInCode || 'N/A'}</p>
                              </div>
-                             <div className={`px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] text-center border shadow-sm ${
-                               booking.status === 'completed' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 
-                               booking.status === 'confirmed' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' : 
-                               booking.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' : 
-                               'bg-white/5 text-slate-500 border-white/10'
+                             <div className={`px-10 py-6 rounded-3xl text-sm font-black uppercase tracking-[0.6em] text-center border-4 shadow-2xl italic ${
+                               booking.status === 'completed' ? 'bg-green-500/10 text-green-500 border-green-500/40' : 
+                               booking.status === 'confirmed' ? 'bg-blue-500/10 text-blue-500 border-blue-500/40' : 
+                               booking.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/40' : 
+                               'bg-white/5 text-slate-500 border-white/20'
                              }`}>
                                {booking.status.replace('_', ' ')}
                              </div>
                           </div>
 
-                          <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto">
+                          <div className="flex flex-col sm:flex-row gap-6 w-full xl:w-auto">
                              {canReview ? (
-                               <button onClick={() => setBookingToReview(booking)} className="flex-1 xl:w-48 px-6 py-5 bg-brand text-dark rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-xl shadow-brand/10 flex items-center justify-center gap-3 italic">
-                                 <Star size={16} fill="currentColor"/> LEAVE REVIEW
+                               <button onClick={() => setBookingToReview(booking)} className="flex-1 xl:w-80 px-12 py-10 bg-brand text-dark rounded-[3.5rem] text-lg font-black uppercase tracking-[0.3em] hover:bg-white transition-all shadow-[0_40px_100px_rgba(197,217,45,0.3)] flex items-center justify-center gap-6 italic">
+                                 <Star size={32} fill="currentColor"/> LEAVE REVIEW
                                </button>
                              ) : booking.hasBeenReviewed ? (
-                               <div className="flex-1 xl:w-48 px-6 py-5 bg-white/5 text-brand rounded-2xl text-[10px] font-black uppercase tracking-widest border border-brand/20 flex items-center justify-center gap-3 italic opacity-60">
-                                 <CheckCircle2 size={16}/> REVIEWED
+                               <div className="flex-1 xl:w-80 px-12 py-10 bg-white/5 text-brand rounded-[3.5rem] text-sm font-black uppercase tracking-[0.3em] border-4 border-brand/40 flex items-center justify-center gap-6 italic opacity-80">
+                                 <CheckCircle2 size={32}/> REVIEWED
                                </div>
                              ) : null}
                              
-                             <div className="flex gap-2 flex-1 xl:flex-none">
-                               <a href={`tel:${trainer?.phone}`} className="flex-1 xl:w-14 h-14 bg-white/5 hover:bg-white hover:text-dark text-white rounded-2xl flex items-center justify-center border border-white/10 transition-all group/icon shadow-lg">
-                                  <Phone size={20} className="text-brand group-hover/icon:text-dark" />
+                             <div className="flex gap-6 flex-1 xl:flex-none">
+                               <a href={`tel:${trainer?.phone}`} className="flex-1 xl:w-28 h-28 bg-white/5 hover:bg-white hover:text-dark text-white rounded-[2.5rem] flex items-center justify-center border-4 border-white/10 transition-all group/icon shadow-2xl">
+                                  <PhoneCall size={48} className="text-brand group-hover/icon:text-dark" />
                                </a>
-                               <a href="https://www.google.com/maps/search/?api=1&query=ClassFit+Varna+Studentska+1A" target="_blank" rel="noopener noreferrer" className="flex-1 xl:w-14 h-14 bg-white/5 hover:bg-brand hover:text-dark text-white rounded-2xl flex items-center justify-center border border-white/10 transition-all group/icon shadow-lg">
-                                  <Navigation size={20} className="text-brand group-hover/icon:text-dark" />
+                               <a href="https://www.google.com/maps/search/?api=1&query=ClassFit+Varna+Studentska+1A" target="_blank" rel="noopener noreferrer" className="flex-1 xl:w-28 h-28 bg-white/5 hover:bg-brand hover:text-dark text-white rounded-[2.5rem] flex items-center justify-center border-4 border-white/10 transition-all group/icon shadow-2xl">
+                                  <Navigation size={48} className="text-brand group-hover/icon:text-dark" />
                                </a>
-                               <button onClick={() => confirmAction({ title: t.deleteBooking, message: t.sure, onConfirm: () => deleteBooking(booking.id) })} className="flex-1 xl:w-14 h-14 bg-white/5 hover:bg-red-500 hover:text-white text-slate-500 rounded-2xl flex items-center justify-center border border-white/10 transition-all shadow-lg">
-                                 <Trash2 size={20}/>
+                               <button onClick={() => confirmAction({ title: t.deleteBooking, message: t.sure, onConfirm: () => deleteBooking(booking.id) })} className="flex-1 xl:w-28 h-28 bg-white/5 hover:bg-red-500 hover:text-white text-slate-500 rounded-[2.5rem] flex items-center justify-center border-4 border-white/10 transition-all shadow-2xl">
+                                 <Trash2 size={48}/>
                                </button>
                              </div>
                           </div>
