@@ -108,7 +108,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
 
     try {
-      // 1. Fetch Bookings with camelCase mapping for PIN codes (checkInCode)
       const { data: bData } = await supabase.from('bookings').select('*').order('created_at', { ascending: false });
       if (bData) setBookings(bData.map((b: any) => ({
           ...b,
@@ -126,7 +125,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           hasBeenReviewed: b.has_been_reviewed || false
       })));
 
-      // 2. Fetch Reviews
       const { data: rData } = await supabase.from('reviews').select('*').order('created_at', { ascending: false });
       if (rData) setReviews(rData.map((r: any) => ({
           ...r,
@@ -135,7 +133,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           isPublished: r.is_published || false
       })));
       
-      // 3. Fetch Users
       const { data: uData } = await supabase.from('users').select('*').order('joined_date', { ascending: false });
       if (uData) {
         const mappedUsers = uData.map((u: any) => {
@@ -152,12 +149,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             joinedDate: u.joined_date || new Date().toISOString(),
             commissionRate: u.commission_rate || 25,
             languages: u.languages || ['Bulgarian'],
-            bio: u.bio || ''
+            bio: u.bio || '',
+            blockedDates: u.blocked_dates || []
           };
         });
         setUsers(mappedUsers);
 
-        // Update current user from fresh data if they are logged in
         const currentStoredUser = localStorage.getItem('classfit_user');
         if (currentStoredUser) {
            const parsed = JSON.parse(currentStoredUser);
@@ -175,10 +172,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const updateUser = async (id: string, updates: Partial<User>) => {
     const dbUpdates: any = { ...updates };
-    if (updates.commissionRate) {
-      dbUpdates.commission_rate = updates.commissionRate;
-      delete dbUpdates.commissionRate;
-    }
+    if (updates.commissionRate) { dbUpdates.commission_rate = updates.commissionRate; delete dbUpdates.commissionRate; }
+    if (updates.blockedDates) { dbUpdates.blocked_dates = updates.blockedDates; delete dbUpdates.blockedDates; }
+    if (updates.joinedDate) { dbUpdates.joined_date = updates.joinedDate; delete dbUpdates.joinedDate; }
 
     if (isDemoMode) {
         const updatedUsers = users.map(u => u.id === id ? { ...u, ...updates } : u);
@@ -194,8 +190,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     const { error } = await supabase.from('users').update(dbUpdates).eq('id', id);
     if (error) {
-        alert("Failed to update user profile in database.");
-        return;
+        console.error("Supabase update error:", error);
+        throw new Error("Failed to update user profile in database.");
     }
     await refreshData();
   };
@@ -213,7 +209,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
 
     const { error } = await supabase.from('bookings').update(dbUpdates).eq('id', id);
-    if (error) return;
+    if (error) throw error;
     await refreshData();
   };
 
@@ -232,7 +228,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           id: String(data.id), name: data.name, email: data.email, password: data.password, 
           roles: roles, phone: data.phone, image: data.image || DEFAULT_PROFILE_IMAGE, 
           joinedDate: data.joined_date, commissionRate: data.commission_rate || 25,
-          languages: data.languages || ['Bulgarian'], bio: data.bio || ''
+          languages: data.languages || ['Bulgarian'], bio: data.bio || '',
+          blockedDates: data.blocked_dates || []
         };
         setCurrentUser(u); localStorage.setItem('classfit_user', JSON.stringify(u)); return true;
     }
@@ -241,7 +238,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const register = async (name: string, email: string, pass: string): Promise<boolean> => {
     if (isDemoMode) {
-       const mock: User = { id: Math.random().toString(36).substr(2, 9), name, email, password: pass, roles: ['user'], joinedDate: new Date().toISOString(), image: DEFAULT_PROFILE_IMAGE };
+       const mock: User = { id: Math.random().toString(36).substr(2, 9), name, email, password: pass, roles: ['user'], joinedDate: new Date().toISOString(), image: DEFAULT_PROFILE_IMAGE, blockedDates: [] };
        setUsers([...users, mock]); setCurrentUser(mock); localStorage.setItem('classfit_user', JSON.stringify(mock)); return true;
     }
     const { error } = await supabase.from('users').insert([{ name, email, password: pass, roles: ['user'] }]);
@@ -251,7 +248,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const registerTrainer = async (data: any) => {
     if (isDemoMode) {
-       const u: User = { id: Math.random().toString(36).substr(2, 9), name: data.name, email: data.email, password: data.pass, phone: data.phone, roles: ['user', 'trainer_pending'], joinedDate: new Date().toISOString(), image: DEFAULT_PROFILE_IMAGE };
+       const u: User = { id: Math.random().toString(36).substr(2, 9), name: data.name, email: data.email, password: data.pass, phone: data.phone, roles: ['user', 'trainer_pending'], joinedDate: new Date().toISOString(), image: DEFAULT_PROFILE_IMAGE, blockedDates: [] };
        setUsers([...users, u]); return { success: true };
     }
     const { error } = await supabase.from('users').insert([{ name: data.name, email: data.email, phone: data.phone, password: data.pass, roles: ['user', 'trainer_pending'] }]);

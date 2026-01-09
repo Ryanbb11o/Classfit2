@@ -197,7 +197,19 @@ export const TRANSLATIONS = {
     coachPhilosophy: 'Разкажете ни за вашата експертиза.',
     deleteMsg: 'Изтрий',
     statusCompleted: 'Платен',
-    statusTrainerCompleted: 'За плащане'
+    statusTrainerCompleted: 'За плащане',
+    // Added missing keys for About and Contact pages
+    ourDna: 'Нашето DNA',
+    weAre: 'НИЕ СМЕ CLASSFIT',
+    aboutDesc: 'Ние сме повече от фитнес зала. Ние сме общност, посветена на постигането на върхови резултати.',
+    mission: 'Мисия',
+    missionDesc: 'Да вдъхновяваме и подкрепяме всеки по пътя към по-добрата му версия.',
+    values: 'Ценности',
+    valuesDesc: 'Дисциплина, отдаденост и взаимно уважение са в основата на всичко, което правим.',
+    vision: 'Визия',
+    visionDesc: 'Да бъдем стандарт за професионализъм и иновации във фитнес индустрията.',
+    beLegendary: 'БЪДИ ЛЕГЕНДАРЕН',
+    phone: 'Телефон'
   },
   en: {
     home: 'Home',
@@ -292,6 +304,18 @@ export const TRANSLATIONS = {
     coachPhilosophy: 'Tell us about your expertise.',
     deleteMsg: 'Delete',
     statusCompleted: 'Paid',
-    statusTrainerCompleted: 'Awaiting Payment'
+    statusTrainerCompleted: 'Awaiting Payment',
+    // Added missing keys for About and Contact pages
+    ourDna: 'Our DNA',
+    weAre: 'WE ARE CLASSFIT',
+    aboutDesc: 'We are more than just a gym. We are a community dedicated to achieving peak performance.',
+    mission: 'Mission',
+    missionDesc: 'To inspire and support everyone on their journey to a better version of themselves.',
+    values: 'Values',
+    valuesDesc: 'Discipline, dedication, and mutual respect are at the core of everything we do.',
+    vision: 'Vision',
+    visionDesc: 'To be the standard for professionalism and innovation in the fitness industry.',
+    beLegendary: 'BE LEGENDARY',
+    phone: 'Phone'
   }
 };

@@ -162,11 +162,12 @@ const Home: React.FC = () => {
                   {t.locationDesc}
                 </p>
                 <div className="space-y-4">
+                  {/* Fixed Lucide icons by removing invalid 'sm' prop */}
                   <div className="flex items-center gap-4 text-white font-black uppercase italic tracking-widest text-[10px] sm:text-[11px]">
-                    <Navigation className="text-brand" size={18} sm={20} /> {t.address}
+                    <Navigation className="text-brand" size={18} /> {t.address}
                   </div>
                   <div className="flex items-center gap-4 text-white font-black uppercase italic tracking-widest text-[10px] sm:text-[11px]">
-                    <MapPin className="text-brand" size={18} sm={20} /> {t.stop}
+                    <MapPin className="text-brand" size={18} /> {t.stop}
                   </div>
                 </div>
                 <a 
@@ -225,8 +226,9 @@ const Home: React.FC = () => {
                     className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-dark/20">
+                     {/* Fixed Lucide icon by removing invalid 'sm' prop */}
                      <div className="w-16 h-16 sm:w-20 h-20 bg-brand text-dark rounded-full flex items-center justify-center">
-                        <Play size={24} sm={30} fill="currentColor" className="ml-1"/>
+                        <Play size={24} fill="currentColor" className="ml-1"/>
                      </div>
                   </div>
                </div>
