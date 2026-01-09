@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X, CheckSquare, Loader2, Save, Languages, Percent, Image as ImageIcon, Briefcase, Target, User as UserIcon, Upload, Camera, RotateCcw, Check } from 'lucide-react';
 import { User, UserRole } from '../types';
 import { DEFAULT_PROFILE_IMAGE } from '../constants';
+import { useAppContext } from '../AppContext';
 
 interface RoleManagementModalProps {
   user: User | null;
@@ -14,6 +15,7 @@ interface RoleManagementModalProps {
 }
 
 const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose, onUpdate, language, isManagement, isSelf }) => {
+  const { isAdmin } = useAppContext();
   const [selectedRoles, setSelectedRoles] = useState<UserRole[]>([]);
   const [editName, setEditName] = useState('');
   const [editSpecialty, setEditSpecialty] = useState('');
@@ -24,9 +26,9 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
   const [showSuccess, setShowSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Check if current user is an Admin or higher for authority tasks
-  // Note: we'll trust the prop passed from the parent but refine logic here
-  const hasAuthority = isManagement || (user?.roles?.includes('admin' as any) === false); 
+  // Security Logic: Only admins can see/edit roles of others. 
+  // No one (even admins) should accidentally downgrade themselves in this modal without careful thought.
+  const canEditAuthority = isAdmin && !isSelf;
 
   useEffect(() => {
     if (user) {
@@ -57,7 +59,7 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
   const languageOptions = ['Bulgarian', 'English', 'Russian', 'German', 'Turkish', 'Other'];
 
   const handleToggleRole = (role: UserRole) => {
-    // Only management can remove management role
+    if (!canEditAuthority) return;
     if (role === 'management' && !isManagement) return;
     
     if (selectedRoles.includes(role)) {
@@ -92,7 +94,7 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
         name: finalName,
         image: editImage,
         languages: editLangs,
-        roles: selectedRoles, // Always update roles if modal is open via Admin
+        roles: selectedRoles, 
         commissionRate: editCommission,
         bio: isTrainerMode ? user.bio : `Fitness Goal: ${editSpecialty}`
       };
@@ -122,11 +124,11 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
                    {isTrainerMode ? <Briefcase size={16} /> : <UserIcon size={16} />}
                 </div>
                 <h2 className="text-3xl font-black uppercase italic text-white tracking-tighter leading-none">
-                   IDENTITY MGMT
+                   {isSelf ? 'PROFILE SETTINGS' : 'IDENTITY MGMT'}
                 </h2>
              </div>
              <p className="text-slate-500 text-[11px] font-black uppercase tracking-widest italic ml-11">
-                Refine profile details and system access levels
+                {isSelf ? 'Customize your appearance on ClassFit' : 'Refine profile details and system access levels'}
              </p>
           </div>
 
@@ -200,44 +202,46 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
                </div>
             </div>
 
-            {/* Authority Delegation Section */}
-            <div className="space-y-8 animate-in slide-in-from-top-2">
-               <div className="p-8 bg-[#1e293b]/50 rounded-[2.5rem] border border-white/10 relative group">
-                 <div className="flex justify-between items-center mb-6">
-                    <label className="text-[11px] font-black uppercase text-brand tracking-widest">Commission Share (%)</label>
+            {/* Authority Delegation Section - PROTECTED */}
+            {canEditAuthority && (
+              <div className="space-y-8 animate-in slide-in-from-top-2 border-t border-white/5 pt-10">
+                 <div className="p-8 bg-[#1e293b]/50 rounded-[2.5rem] border border-white/10 relative group">
+                   <div className="flex justify-between items-center mb-6">
+                      <label className="text-[11px] font-black uppercase text-brand tracking-widest">Commission Share (%)</label>
+                   </div>
+                   <div className="relative">
+                      <input 
+                         type="number" 
+                         value={editCommission} 
+                         onChange={(e) => setEditCommission(Number(e.target.value))}
+                         className="w-full bg-[#131b27] border border-white/5 focus:border-brand rounded-2xl px-8 py-5 text-2xl font-black text-white outline-none transition-all text-center"
+                      />
+                      <Percent size={24} className="absolute right-8 top-1/2 -translate-y-1/2 text-brand" />
+                   </div>
                  </div>
-                 <div className="relative">
-                    <input 
-                       type="number" 
-                       value={editCommission} 
-                       onChange={(e) => setEditCommission(Number(e.target.value))}
-                       className="w-full bg-[#131b27] border border-white/5 focus:border-brand rounded-2xl px-8 py-5 text-2xl font-black text-white outline-none transition-all text-center"
-                    />
-                    <Percent size={24} className="absolute right-8 top-1/2 -translate-y-1/2 text-brand" />
-                 </div>
-               </div>
 
-               <div className="pt-6 border-t border-white/5">
-                 <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-500 mb-6 italic">Authority Delegation</h3>
-                 <div className="grid grid-cols-2 gap-2">
-                    {roleOptions.map((opt) => {
-                       const active = selectedRoles.includes(opt.id);
-                       return (
-                          <button 
-                             key={opt.id} 
-                             onClick={() => handleToggleRole(opt.id)}
-                             className={`flex items-center justify-between p-4 rounded-2xl border text-[11px] font-black uppercase transition-all ${
-                                active ? 'bg-white/5 border-brand/50 text-white' : 'bg-dark/20 border-white/5 text-slate-600'
-                             }`}
-                          >
-                             {opt.label}
-                             {active && <CheckSquare size={14} className="text-brand" />}
-                          </button>
-                       );
-                    })}
+                 <div className="pt-6">
+                   <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-500 mb-6 italic">Authority Delegation</h3>
+                   <div className="grid grid-cols-2 gap-2">
+                      {roleOptions.map((opt) => {
+                         const active = selectedRoles.includes(opt.id);
+                         return (
+                            <button 
+                               key={opt.id} 
+                               onClick={() => handleToggleRole(opt.id)}
+                               className={`flex items-center justify-between p-4 rounded-2xl border text-[11px] font-black uppercase transition-all ${
+                                  active ? 'bg-white/5 border-brand/50 text-white' : 'bg-dark/20 border-white/5 text-slate-600'
+                               }`}
+                            >
+                               {opt.label}
+                               {active && <CheckSquare size={14} className="text-brand" />}
+                            </button>
+                         );
+                      })}
+                   </div>
                  </div>
-               </div>
-            </div>
+              </div>
+            )}
             
             <div className="space-y-2">
                <label className="text-[11px] font-black uppercase text-slate-500 ml-2">Public Image Link</label>

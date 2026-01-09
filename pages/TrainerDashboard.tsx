@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar as CalendarIcon, Clock, CheckCircle, XCircle, User, Briefcase, RefreshCw, Check, LayoutDashboard, Loader2, ChevronLeft, ChevronRight, Ban, Unlock, X, CalendarPlus, ShieldCheck, Mail, Phone, ExternalLink, ArrowRight } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, CheckCircle, XCircle, User, Briefcase, RefreshCw, Check, LayoutDashboard, Loader2, ChevronLeft, ChevronRight, Ban, Unlock, X, CalendarPlus, ShieldCheck, Mail, Phone, ExternalLink, ArrowRight, Edit3 } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS } from '../constants';
 import { Booking } from '../types';
@@ -15,12 +15,13 @@ const TrainerDashboard: React.FC = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<Date | null>(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [editingBookingId, setEditingBookingId] = useState<string | null>(null);
+  const [newTime, setNewTime] = useState('');
 
   useEffect(() => {
     if (!isLoading && (!currentUser || !currentUser.roles?.includes('trainer'))) {
       navigate('/login');
     }
-    // Force refresh on mount to ensure bookings are loaded
     refreshData();
   }, [currentUser, isLoading]);
 
@@ -41,6 +42,13 @@ const TrainerDashboard: React.FC = () => {
     });
   };
 
+  const handleReschedule = async (bookingId: string) => {
+    if (!newTime) return;
+    await updateBooking(bookingId, { time: newTime });
+    setEditingBookingId(null);
+    setNewTime('');
+  };
+
   const getGoogleCalendarUrl = (booking: Booking) => {
     const [year, month, day] = booking.date.split('-');
     const [hour, minute] = booking.time.split(':');
@@ -53,7 +61,6 @@ const TrainerDashboard: React.FC = () => {
     return `https://www.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${startDate}/${endDate}&details=${details}&location=ClassFit+Varna`;
   };
 
-  // STRICT ID COMPARISON: Use String() to ensure IDs match regardless of type (uuid vs string)
   const myBookings = useMemo(() => {
     if (!currentUser) return [];
     return bookings.filter(b => String(b.trainerId) === String(currentUser.id));
@@ -62,11 +69,10 @@ const TrainerDashboard: React.FC = () => {
   const pendingRequests = useMemo(() => myBookings.filter(b => b.status === 'pending'), [myBookings]);
   const rosterSessions = useMemo(() => myBookings.filter(b => b.status === 'confirmed').sort((a,b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time)), [myBookings]);
 
-  // Calendar Logic
   const getDaysInMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
   const getFirstDayOfMonth = (date: Date) => {
     const d = new Date(date.getFullYear(), date.getMonth(), 1).getDay();
-    return d === 0 ? 6 : d - 1; // Monday starts
+    return d === 0 ? 6 : d - 1; 
   };
 
   const handleToggleBlockDate = (dateStr: string) => {
@@ -76,7 +82,7 @@ const TrainerDashboard: React.FC = () => {
     
     confirmAction({
       title: isBlocked ? 'Unlock Day' : 'Block Day',
-      message: isBlocked ? `Make ${dateStr} available for bookings?` : `Block all new sessions on ${dateStr}?`,
+      message: isBlocked ? `Make ${dateStr} available for bookings?` : `Block all new sessions on ${dateStr}? This will hide this day from customers.`,
       onConfirm: async () => {
         const newBlocks = isBlocked ? currentBlocks.filter(d => d !== dateStr) : [...currentBlocks, dateStr];
         await updateUser(currentUser.id, { blockedDates: newBlocks });
@@ -189,9 +195,30 @@ const TrainerDashboard: React.FC = () => {
                                    <div className="flex items-center gap-2 text-brand font-black italic uppercase text-xs">
                                       <Clock size={12}/> {b.time}
                                    </div>
-                                   <span className={`text-[7px] font-black uppercase px-1.5 py-0.5 rounded ${b.status === 'confirmed' ? 'bg-green-500 text-white' : 'bg-yellow-500 text-dark'}`}>{b.status}</span>
+                                   <div className="flex items-center gap-2">
+                                      <a href={getGoogleCalendarUrl(b)} target="_blank" rel="noopener noreferrer" className="p-1.5 bg-white/5 text-slate-400 hover:text-brand rounded transition-all" title="Sync to GCal"><CalendarPlus size={14}/></a>
+                                      <span className={`text-[7px] font-black uppercase px-1.5 py-0.5 rounded ${b.status === 'confirmed' ? 'bg-green-500 text-white' : 'bg-yellow-500 text-dark'}`}>{b.status}</span>
+                                   </div>
                                 </div>
                                 <p className="text-sm font-black uppercase italic text-white mb-3 tracking-tighter">{b.customerName}</p>
+                                
+                                {editingBookingId === b.id ? (
+                                  <div className="flex gap-2 mb-4 animate-in slide-in-from-top-1">
+                                     <input 
+                                       type="time" 
+                                       value={newTime} 
+                                       onChange={(e) => setNewTime(e.target.value)}
+                                       className="bg-dark border border-white/10 rounded px-2 text-[10px] text-white outline-none focus:border-brand"
+                                     />
+                                     <button onClick={() => handleReschedule(b.id)} className="bg-brand text-dark p-1 rounded"><Check size={12}/></button>
+                                     <button onClick={() => setEditingBookingId(null)} className="bg-white/5 text-slate-500 p-1 rounded"><X size={12}/></button>
+                                  </div>
+                                ) : (
+                                  <div className="flex justify-end mb-3">
+                                     <button onClick={() => { setEditingBookingId(b.id); setNewTime(b.time); }} className="text-[8px] font-black uppercase text-slate-600 hover:text-brand flex items-center gap-1 italic"><Edit3 size={10}/> Reschedule</button>
+                                  </div>
+                                )}
+
                                 <div className="grid grid-cols-2 gap-2 pt-3 border-t border-white/5">
                                    <a href={`tel:${b.customerPhone}`} className="p-2 bg-white/5 hover:bg-brand hover:text-dark rounded-lg flex items-center justify-center transition-all"><Phone size={12}/></a>
                                    <a href={`mailto:${b.customerEmail}`} className="p-2 bg-white/5 hover:bg-brand hover:text-dark rounded-lg flex items-center justify-center transition-all"><Mail size={12}/></a>

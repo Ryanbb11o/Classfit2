@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, Calendar as CalendarIcon, Clock, User, Phone, X, Mail, Loader2, ChevronLeft, ChevronRight, ArrowLeft, Star, Award, Zap, Quote, ThumbsUp, MapPin, Target, ShieldCheck, CalendarPlus, MessageSquare, Sparkles } from 'lucide-react';
+import { Check, Calendar as CalendarIcon, Clock, User, Phone, X, Mail, Loader2, ChevronLeft, ChevronRight, ArrowLeft, Star, Award, Zap, Quote, ThumbsUp, MapPin, Target, ShieldCheck, CalendarPlus, MessageSquare, Sparkles, Ban } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { getTrainers, TRANSLATIONS, DEFAULT_PROFILE_IMAGE, getTrainerReviews } from '../constants';
 import { Trainer, Booking } from '../types';
@@ -28,7 +28,8 @@ const BookingPage: React.FC = () => {
           image: u.image || DEFAULT_PROFILE_IMAGE, 
           phone: u.phone || '',
           bio: u.bio || (language === 'bg' ? 'Професионален инструктор с богат опит.' : 'Professional instructor with extensive experience.'),
-          availability: ['08:00', '09:00', '10:00', '14:00', '15:00', '16:00', '17:00']
+          availability: ['08:00', '09:00', '10:00', '14:00', '15:00', '16:00', '17:00'],
+          blockedDates: u.blockedDates || []
         };
       });
 
@@ -85,7 +86,10 @@ const BookingPage: React.FC = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    if (newDate >= today) {
+    const dateStr = newDate.toISOString().split('T')[0];
+    const isTrainerBlocked = selectedTrainer?.blockedDates?.includes(dateStr);
+
+    if (newDate >= today && !isTrainerBlocked) {
         setSelectedDate(newDate);
         setSelectedTime(null);
     }
@@ -98,7 +102,7 @@ const BookingPage: React.FC = () => {
 
     const days = [];
     for (let i = 0; i < startDayIndex; i++) {
-        days.push(<div key={`empty-${i}`} className="h-8 w-8"></div>);
+        days.push(<div key={`empty-${i}`} className="h-10 w-10"></div>);
     }
 
     const today = new Date();
@@ -106,26 +110,30 @@ const BookingPage: React.FC = () => {
 
     for (let i = 1; i <= daysInMonth; i++) {
         const currentDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), i);
+        const dateStr = currentDate.toISOString().split('T')[0];
         const isSelected = selectedDate.toDateString() === currentDate.toDateString();
         const isToday = today.toDateString() === currentDate.toDateString();
         const isPast = currentDate < today;
+        const isTrainerBlocked = selectedTrainer?.blockedDates?.includes(dateStr);
 
         days.push(
             <button
                 key={i}
                 onClick={() => handleDateClick(i)}
-                disabled={isPast}
-                className={`h-8 w-8 rounded-full flex items-center justify-center text-[11px] font-black transition-all duration-300
+                disabled={isPast || isTrainerBlocked}
+                className={`h-10 w-10 rounded-full flex flex-col items-center justify-center text-[11px] font-black transition-all duration-300 relative
                     ${isSelected 
                         ? 'bg-brand text-dark shadow-md shadow-brand/20 scale-110' 
-                        : isPast 
+                        : (isPast || isTrainerBlocked)
                             ? 'text-slate-700 cursor-not-allowed' 
                             : 'text-white/60 hover:text-brand hover:bg-white/5'
                     }
                     ${isToday && !isSelected ? 'border border-brand/40 text-brand' : ''}
+                    ${isTrainerBlocked ? 'bg-red-500/5' : ''}
                 `}
             >
                 {i}
+                {isTrainerBlocked && <Ban size={8} className="text-red-500/40 absolute -bottom-1" />}
             </button>
         );
     }

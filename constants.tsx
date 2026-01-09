@@ -63,7 +63,7 @@ export const getMemberships = (lang: Language): Membership[] => {
     {
       id: 'unlimited_women',
       name: isBg ? 'Карта Жени (30 дни)' : 'Women Unlimited (30d)',
-      price: '35.00', // EUR (Adjusted from 70 BGN)
+      price: '35.00', // EUR
       unit: isBg ? 'МЕСЕЦ' : 'MONTH',
       features: isBg 
         ? ['Неограничени посещения', 'Професионално оборудване'] 
@@ -72,7 +72,7 @@ export const getMemberships = (lang: Language): Membership[] => {
     {
       id: 'unlimited_men',
       name: isBg ? 'Карта Мъже (30 дни)' : 'Men Unlimited (30d)',
-      price: '45.00', // EUR (Adjusted from 90 BGN)
+      price: '45.00', // EUR
       unit: isBg ? 'МЕСЕЦ' : 'MONTH',
       features: isBg 
         ? ['Неограничени посещения', 'Професионално оборудване'] 
@@ -202,14 +202,14 @@ export const TRANSLATIONS = {
     weAre: 'НИЕ СМЕ CLASSFIT',
     aboutDesc: 'Ние сме повече от фитнес зала. Ние сме общност, посветена на постигането на върхови резултати.',
     mission: 'Мисия',
-    missionDesc: 'Да вдъхновяваме и подкрепяме всеки по пътя към по-добрата му версия.',
+    missionDesc: 'Да вдхновяваме и подкрепяме всеки по пътя към по-добрата му версия.',
     values: 'Ценности',
     valuesDesc: 'Дисциплина, отдаденост и взаимно уважение са в основата на всичко, което правим.',
     vision: 'Визия',
-    visionDesc: 'Да бъдем стандарт за професионализъм и иновации във фитнес индустрията.',
+    visionDesc: 'Да бъдем стандарт за професионализъм и иновации във фитнес индустриата.',
     beLegendary: 'БЪДИ ЛЕГЕНДАРЕН',
     phone: 'Телефон',
-    // New Admin Translations
+    // Web Admin Panel Translations
     mgmtConsole: 'Конзола за Управление',
     officialControl: 'Официален Център за Контрол',
     stats: 'Статистика',
@@ -221,8 +221,8 @@ export const TRANSLATIONS = {
     gymNetProfit: 'Чиста Печалба за Залата',
     grossIntake: 'Брутни приходи',
     trainingsToday: 'Тренировки днес',
-    activeRegistry: 'Активен Регистър',
-    profitLedger: 'Дневник на печалбите (Gym Cuts)',
+    activeRegistry: 'Общо Членове',
+    profitLedger: 'Дневник на приходите (25% Gym Cut)',
     date: 'Дата',
     coach: 'Треньор',
     price: 'Цена',
@@ -241,9 +241,13 @@ export const TRANSLATIONS = {
     sessionDetails: 'Детайли за Сесията',
     permanentRemoval: 'Перманентно изтриване?',
     nothingScheduled: 'Няма планирани тренировки.',
-    noFinancials: 'Няма финансови записи в матрицата.',
-    noVerifiedProfits: 'Няма записани потвърдени печалби.',
-    noReviews: 'Няма нови отзиви за одобрение.'
+    noFinancials: 'Няма финансови записи.',
+    noVerifiedProfits: 'Няма записи за печалби.',
+    noReviews: 'Няма нови отзиви за одобрение.',
+    trainingLedger: 'Дневник на тренировките',
+    upcoming: 'Предстоящи',
+    past: 'Минали',
+    totalMembers: 'Общо Членове'
   },
   en: {
     home: 'Home',
@@ -350,7 +354,7 @@ export const TRANSLATIONS = {
     visionDesc: 'To be the standard for professionalism and innovation in the fitness industry.',
     beLegendary: 'BE LEGENDARY',
     phone: 'Phone',
-    // New Admin Translations
+    // Web Admin Panel Translations
     mgmtConsole: 'Management Console',
     officialControl: 'Official Control Center',
     stats: 'Stats',
@@ -362,8 +366,8 @@ export const TRANSLATIONS = {
     gymNetProfit: 'Gym Net Profit',
     grossIntake: 'Gross Intake',
     trainingsToday: 'Trainings Today',
-    activeRegistry: 'Active Registry',
-    profitLedger: 'Profit Ledger (Gym Cuts)',
+    activeRegistry: 'Total Members',
+    profitLedger: 'Profit Ledger (25% Gym Cut)',
     date: 'Date',
     coach: 'Coach',
     price: 'Price',
@@ -382,8 +386,12 @@ export const TRANSLATIONS = {
     sessionDetails: 'Session Details',
     permanentRemoval: 'Permanent removal?',
     nothingScheduled: 'Nothing scheduled.',
-    noFinancials: 'No financial records in the matrix.',
+    noFinancials: 'No financial records.',
     noVerifiedProfits: 'No verified profits recorded.',
-    noReviews: 'No new reviews to moderate.'
+    noReviews: 'No new reviews to moderate.',
+    trainingLedger: 'Training Ledger',
+    upcoming: 'Upcoming',
+    past: 'Past',
+    totalMembers: 'Total Members'
   }
 };
