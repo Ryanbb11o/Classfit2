@@ -165,16 +165,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           };
         });
         setUsers(mappedUsers);
-
-        const currentStoredUser = localStorage.getItem('classfit_user');
-        if (currentStoredUser) {
-           const parsed = JSON.parse(currentStoredUser);
-           const freshSelf = mappedUsers.find(u => u.id === parsed.id);
-           if (freshSelf) {
-             setCurrentUser(freshSelf);
-             localStorage.setItem('classfit_user', JSON.stringify(freshSelf));
-           }
-        }
       }
     } catch (e) {
       console.error("Refresh failed:", e);
@@ -200,22 +190,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
 
     const { error } = await supabase.from('users').update(dbUpdates).eq('id', id);
-    if (error) {
-        console.error("Supabase update error:", error);
-        throw new Error(`Failed to update user profile: ${error.message}`);
-    }
+    if (error) throw error;
     await refreshData();
   };
 
   const updateBooking = async (id: string, updates: Partial<Booking>) => {
     const dbUpdates: any = { ...updates };
     
-    // CRITICAL: Database Column Mapping Fix
+    // STRICT COLUMN MAPPING WITH TYPE CASTING
     if (updates.checkInCode) { dbUpdates.check_in_code = updates.checkInCode; delete dbUpdates.checkInCode; }
     if (updates.hasBeenReviewed !== undefined) { dbUpdates.has_been_reviewed = updates.hasBeenReviewed; delete dbUpdates.hasBeenReviewed; }
     if (updates.paymentMethod) { dbUpdates.payment_method = updates.paymentMethod; delete dbUpdates.paymentMethod; }
-    if (updates.commissionAmount !== undefined) { dbUpdates.commission_amount = updates.commissionAmount; delete dbUpdates.commissionAmount; }
-    if (updates.trainerEarnings !== undefined) { dbUpdates.trainer_earnings = updates.trainerEarnings; delete dbUpdates.trainerEarnings; }
+    
+    // Forced numeric conversion for financial fields
+    if (updates.commissionAmount !== undefined) { dbUpdates.commission_amount = Number(updates.commissionAmount); delete dbUpdates.commissionAmount; }
+    if (updates.trainerEarnings !== undefined) { dbUpdates.trainer_earnings = Number(updates.trainerEarnings); delete dbUpdates.trainerEarnings; }
+    
     if (updates.settledAt) { dbUpdates.settled_at = updates.settledAt; delete dbUpdates.settledAt; }
     if (updates.settledBy) { dbUpdates.settled_by = updates.settledBy; delete dbUpdates.settledBy; }
     if (updates.trainerId) { dbUpdates.trainer_id = updates.trainerId; delete dbUpdates.trainerId; }
@@ -230,7 +220,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     const { error } = await supabase.from('bookings').update(dbUpdates).eq('id', id);
     if (error) {
-        console.error("Supabase update error (bookings):", error);
+        console.error("Critical Supabase Error (Update Booking):", error);
         throw error;
     }
     await refreshData();

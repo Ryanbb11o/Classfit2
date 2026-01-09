@@ -11,7 +11,6 @@ import {
 } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, DEFAULT_PROFILE_IMAGE } from '../constants';
-// Added UserRole to the imports from ../types to fix the "Cannot find name 'UserRole'" error.
 import { User as UserType, Booking, Review, UserRole } from '../types';
 import RoleManagementModal from '../components/RoleManagementModal';
 
@@ -40,6 +39,7 @@ const AdminPanel: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [userForRoles, setUserForRoles] = useState<UserType | null>(null);
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
 
   useEffect(() => {
     if (location.state?.activeTab) {
@@ -90,10 +90,11 @@ const AdminPanel: React.FC = () => {
       return;
     }
 
+    setIsVerifying(true);
     const trainer = safeUsers.find(u => String(u.id) === String(booking.trainerId));
     const rate = trainer?.commissionRate || 25;
-    const gymCut = booking.price * (rate / 100);
-    const trainerCut = booking.price - gymCut;
+    const gymCut = Number(booking.price * (rate / 100));
+    const trainerCut = Number(booking.price - gymCut);
 
     try {
         await updateBooking(booking.id, { 
@@ -106,7 +107,10 @@ const AdminPanel: React.FC = () => {
         });
         setVerifyingId(null);
     } catch (e) {
-        alert("Verification failed. Check console.");
+        console.error("Verification failed:", e);
+        alert("Verification logic error. Check console.");
+    } finally {
+        setIsVerifying(false);
     }
   };
 
@@ -124,6 +128,35 @@ const AdminPanel: React.FC = () => {
   return (
     <div className="max-w-[1400px] mx-auto px-4 py-16 animate-in fade-in duration-500 text-left">
       
+      {/* 1. HEADLINE AT THE TOP */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
+        <div>
+          <div className="flex items-center gap-4">
+             <h1 className="text-4xl md:text-5xl font-black uppercase italic text-white tracking-tighter leading-none">{t.mgmtConsole}</h1>
+             <button onClick={handleManualRefresh} className={`p-2 rounded-xl bg-white/5 ${isRefreshing ? 'animate-spin text-brand' : 'text-slate-500'}`}><RefreshCw size={22} /></button>
+          </div>
+          <p className="text-slate-500 font-black uppercase tracking-[0.3em] text-[10px] mt-3 italic">{t.officialControl}</p>
+        </div>
+        
+        {/* TAB SWITCHER */}
+        <div className="flex flex-wrap gap-1 bg-surface p-1 rounded-2xl border border-white/5">
+            {[
+              { id: 'overview', icon: BarChart3, label: t.stats },
+              { id: 'finance', icon: FileSpreadsheet, label: t.finance, badge: awaitingPaymentList.length },
+              { id: 'bookings', icon: ListFilter, label: t.sessions },
+              { id: 'applications', icon: UserCheck, label: t.recruits, badge: pendingApps.length },
+              { id: 'users', icon: Users, label: t.registry },
+              { id: 'reviews', icon: Star, label: t.moderation, badge: pendingReviews.length }
+            ].map(tab => (
+                <button key={tab.id} onClick={() => setActiveTab(tab.id as any)} className={`px-4 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-2 transition-all ${activeTab === tab.id ? 'bg-brand text-dark' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
+                    <tab.icon size={11} /> {tab.label}
+                    {tab.badge ? <span className="px-1.5 py-0.5 rounded-full text-[8px] bg-red-500 text-white">{tab.badge}</span> : null}
+                </button>
+            ))}
+        </div>
+      </div>
+
+      {/* 2. STATS CARDS BELOW HEADER */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-12">
           <button onClick={() => setActiveTab('finance')} className="p-8 bg-brand text-dark rounded-[2rem] shadow-xl hover:shadow-[0_0_40px_rgba(197,217,45,0.7)] transition-all group relative overflow-hidden active:scale-[0.98]">
              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-12 transition-transform"><TrendingUp size={60}/></div>
@@ -145,32 +178,8 @@ const AdminPanel: React.FC = () => {
           </div>
       </div>
 
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
-        <div>
-          <div className="flex items-center gap-4">
-             <h1 className="text-3xl font-black uppercase italic text-white tracking-tighter leading-none">{t.mgmtConsole}</h1>
-             <button onClick={handleManualRefresh} className={`p-2 rounded-xl bg-white/5 ${isRefreshing ? 'animate-spin text-brand' : 'text-slate-500'}`}><RefreshCw size={18} /></button>
-          </div>
-          <p className="text-slate-500 font-black uppercase tracking-[0.3em] text-[9px] mt-2 italic">{t.officialControl}</p>
-        </div>
-        <div className="flex flex-wrap gap-1 bg-surface p-1 rounded-2xl border border-white/5">
-            {[
-              { id: 'overview', icon: BarChart3, label: t.stats },
-              { id: 'finance', icon: FileSpreadsheet, label: t.finance, badge: awaitingPaymentList.length },
-              { id: 'bookings', icon: ListFilter, label: t.sessions },
-              { id: 'applications', icon: UserCheck, label: t.recruits, badge: pendingApps.length },
-              { id: 'users', icon: Users, label: t.registry },
-              { id: 'reviews', icon: Star, label: t.moderation, badge: pendingReviews.length }
-            ].map(tab => (
-                <button key={tab.id} onClick={() => setActiveTab(tab.id as any)} className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-2 transition-all ${activeTab === tab.id ? 'bg-brand text-dark' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
-                    <tab.icon size={11} /> {tab.label}
-                    {tab.badge ? <span className="px-1.5 py-0.5 rounded-full text-[8px] bg-red-500 text-white">{tab.badge}</span> : null}
-                </button>
-            ))}
-        </div>
-      </div>
-
       <div className="space-y-8">
+        {/* OVERVIEW TAB - ACTIVE SESSIONS FEED */}
         {activeTab === 'overview' && (
            <div className="space-y-8 animate-in fade-in duration-500">
              <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-hidden shadow-xl">
@@ -178,18 +187,18 @@ const AdminPanel: React.FC = () => {
                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-3 italic">
                       <Target size={16} className="text-brand" /> Live Operation Feed
                    </h3>
-                   <span className="text-[10px] font-black text-brand bg-brand/10 px-3 py-1 rounded-lg uppercase italic border border-brand/20">REALTIME DATA</span>
+                   <span className="text-[10px] font-black text-brand bg-brand/10 px-3 py-1 rounded-lg uppercase italic border border-brand/20">PROTOCOL ACTIVE</span>
                 </div>
                 <div className="overflow-x-auto">
                    <table className="w-full text-left">
                       <thead className="bg-dark/40 text-[9px] font-black uppercase text-slate-500">
                          <tr><th className="p-5">Subject</th><th className="p-5">Time</th><th className="p-5">Coach</th><th className="p-5">Status</th><th className="p-5">Pin</th></tr>
                       </thead>
-                      <tbody className="divide-y divide-white/5 text-[10px] italic">
+                      <tbody className="divide-y divide-white/5 text-[10px] italic font-medium">
                          {safeBookings.filter(b => b.date === todayStr).length === 0 ? (
-                            <tr><td colSpan={5} className="p-10 text-center text-slate-600 font-black uppercase tracking-widest italic">No deployments logged for today.</td></tr>
+                            <tr><td colSpan={5} className="p-10 text-center text-slate-600 font-black uppercase tracking-widest italic">No active deployments found for today.</td></tr>
                          ) : safeBookings.filter(b => b.date === todayStr).map(b => (
-                            <tr key={b.id} className="hover:bg-white/5">
+                            <tr key={b.id} className="hover:bg-white/5 transition-colors">
                                <td className="p-5 font-black uppercase text-white">{b.customerName}</td>
                                <td className="p-5 font-bold text-slate-400">{b.time}</td>
                                <td className="p-5 uppercase font-bold text-slate-400">{cleanName(safeUsers.find(u => String(u.id) === String(b.trainerId))?.name)}</td>
@@ -204,6 +213,7 @@ const AdminPanel: React.FC = () => {
            </div>
         )}
 
+        {/* FINANCE TAB - VERIFICATION LOGIC FIX */}
         {activeTab === 'finance' && (
            <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-hidden shadow-2xl animate-in slide-in-from-bottom-2">
               <div className="p-6 border-b border-white/5 flex items-center justify-between bg-dark/20">
@@ -228,14 +238,18 @@ const AdminPanel: React.FC = () => {
                                {b.status === 'trainer_completed' ? (
                                   verifyingId === b.id ? (
                                      <div className="flex gap-2 animate-in slide-in-from-right-2">
-                                        <button onClick={() => handleVerifyPayment(b, 'cash')} className="px-4 py-2 bg-green-600 text-white rounded-lg text-[9px] font-black uppercase flex items-center gap-1"><Banknote size={10}/> CASH</button>
-                                        <button onClick={() => handleVerifyPayment(b, 'card')} className="px-4 py-2 bg-brand text-dark rounded-lg text-[9px] font-black uppercase flex items-center gap-1"><CreditCard size={10}/> CARD</button>
+                                        <button disabled={isVerifying} onClick={() => handleVerifyPayment(b, 'cash')} className="px-4 py-2 bg-green-600 text-white rounded-lg text-[9px] font-black uppercase flex items-center gap-1 shadow-lg hover:brightness-110 active:scale-95 disabled:opacity-50">
+                                            {isVerifying ? <Loader2 size={10} className="animate-spin" /> : <Banknote size={10}/>} CASH
+                                        </button>
+                                        <button disabled={isVerifying} onClick={() => handleVerifyPayment(b, 'card')} className="px-4 py-2 bg-brand text-dark rounded-lg text-[9px] font-black uppercase flex items-center gap-1 shadow-lg hover:brightness-110 active:scale-95 disabled:opacity-50">
+                                            {isVerifying ? <Loader2 size={10} className="animate-spin" /> : <CreditCard size={10}/>} CARD
+                                        </button>
                                         <button onClick={() => setVerifyingId(null)} className="px-3 py-2 bg-white/5 text-slate-400 rounded-lg"><X size={12}/></button>
                                      </div>
                                   ) : (
                                      <button onClick={() => setVerifyingId(b.id)} className="px-6 py-2.5 bg-brand text-dark rounded-xl text-[9px] font-black uppercase tracking-widest italic shadow-lg hover:scale-105 transition-all">Verify Pay</button>
                                   )
-                               ) : <div className="text-[8px] text-slate-500 uppercase font-black italic">Settled by {b.settledBy || 'SYS'}</div>}
+                               ) : <div className="text-[8px] text-slate-500 uppercase font-black italic">Settled by {b.settledBy || 'SYS'} at {b.settledAt?.split('T')[0]}</div>}
                                </div>
                             </td>
                          </tr>
@@ -246,27 +260,7 @@ const AdminPanel: React.FC = () => {
            </div>
         )}
 
-        {activeTab === 'bookings' && (
-           <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-hidden animate-in fade-in duration-500">
-              <table className="w-full text-left">
-                 <thead className="bg-dark/20 text-[9px] font-black uppercase text-slate-500">
-                    <tr><th className="p-5">Subject</th><th className="p-5">Date</th><th className="p-5">Officer</th><th className="p-5">Status</th><th className="p-5">Action</th></tr>
-                 </thead>
-                 <tbody className="divide-y divide-white/5 text-[10px] italic">
-                    {safeBookings.map(b => (
-                       <tr key={b.id} className="hover:bg-white/5">
-                          <td className="p-5 font-black uppercase text-white">{b.customerName}</td>
-                          <td className="p-5 text-slate-400">{b.date}</td>
-                          <td className="p-5 text-slate-400 uppercase font-bold">{cleanName(safeUsers.find(u => String(u.id) === String(b.trainerId))?.name)}</td>
-                          <td className="p-5"><span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ${b.status === 'completed' ? 'bg-brand text-dark' : 'bg-white/5 text-slate-500'}`}>{b.status}</span></td>
-                          <td className="p-5"><button onClick={() => confirmAction({ title: 'Delete Entry?', message: 'Irreversible deletion from mainframe.', onConfirm: () => deleteBooking(b.id) })} className="p-2 text-slate-500 hover:text-red-500 transition-colors"><Trash2 size={14}/></button></td>
-                       </tr>
-                    ))}
-                 </tbody>
-              </table>
-           </div>
-        )}
-
+        {/* RECRUITS TAB */}
         {activeTab === 'applications' && (
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in">
               {pendingApps.length === 0 ? <p className="text-center col-span-full py-20 text-slate-500 uppercase font-black italic tracking-widest">No pending recruitment requests found.</p> : pendingApps.map(u => (
@@ -289,6 +283,7 @@ const AdminPanel: React.FC = () => {
            </div>
         )}
 
+        {/* REGISTRY TAB */}
         {activeTab === 'users' && (
            <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-hidden animate-in fade-in duration-500 shadow-2xl">
               <div className="p-6 border-b border-white/5 bg-dark/20 flex items-center justify-between">
@@ -310,7 +305,7 @@ const AdminPanel: React.FC = () => {
                                </div>
                             </td>
                             <td className="p-5 text-slate-400 font-bold">{u.email}</td>
-                            <td className="p-5"><div className="flex flex-wrap gap-1">{(u.roles || []).map(r => <span key={r} className="px-1.5 py-0.5 bg-white/5 rounded text-[7px] font-black uppercase">{r}</span>)}</div></td>
+                            <td className="p-5"><div className="flex flex-wrap gap-1">{(u.roles || []).map(r => <span key={r} className="px-1.5 py-0.5 bg-white/5 rounded text-[7px] font-black uppercase tracking-widest italic">{r}</span>)}</div></td>
                             <td className="p-5 text-slate-500 font-bold">{(u.joinedDate || '').split('T')[0]}</td>
                             <td className="p-5"><div className="flex justify-end gap-2"><button onClick={() => setUserForRoles(u)} className="p-2 bg-white/5 rounded-lg text-brand hover:bg-brand hover:text-dark transition-all shadow-md"><Settings2 size={14}/></button><button onClick={() => confirmAction({ title: 'Delete Subject?', message: 'Irreversible termination of data.', onConfirm: () => deleteUser(u.id) })} className="p-2 text-slate-600 hover:text-red-500 transition-colors"><Trash2 size={14}/></button></div></td>
                          </tr>
@@ -318,22 +313,6 @@ const AdminPanel: React.FC = () => {
                    </tbody>
                 </table>
               </div>
-           </div>
-        )}
-
-        {activeTab === 'reviews' && (
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in duration-500">
-              {pendingReviews.length === 0 ? <p className="text-center col-span-2 py-20 text-slate-500 uppercase font-black italic tracking-widest">No feedback awaiting moderation.</p> : pendingReviews.map(r => (
-                 <div key={r.id} className="p-8 bg-surface rounded-[2.5rem] border border-white/10 shadow-xl relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-brand/40"></div>
-                    <div className="flex justify-between items-center mb-6">
-                       <div><h4 className="font-black uppercase italic text-white text-xs">{r.author || 'Anonymous'}</h4><p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest italic">{cleanName(safeUsers.find(u => u.id === r.trainerId)?.name) || 'Personnel'}</p></div>
-                       <div className="flex text-brand">{[...Array(Number(r.rating || 5))].map((_, i) => <Star key={i} size={8} fill="currentColor"/>)}</div>
-                    </div>
-                    <div className="bg-dark/40 p-5 rounded-2xl border border-white/5 mb-8 shadow-inner"><p className="text-xs text-slate-200 italic font-medium leading-relaxed whitespace-pre-wrap break-words">"{r.text || "No descriptive content logged."}"</p></div>
-                    <div className="flex gap-2"><button onClick={() => updateReview(r.id, { isPublished: true })} className="flex-1 py-4 bg-brand text-dark rounded-xl text-[9px] font-black uppercase shadow-lg hover:bg-white transition-all italic"><ThumbsUp size={12} className="inline mr-2"/> Approve</button><button onClick={() => deleteReview(r.id)} className="flex-1 py-4 bg-white/5 text-red-500 rounded-xl text-[9px] font-black uppercase border border-red-500/10 hover:bg-red-500 hover:text-white transition-all italic">Delete</button></div>
-                 </div>
-              ))}
            </div>
         )}
       </div>
