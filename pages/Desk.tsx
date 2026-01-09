@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, QrCode, User, Briefcase, Calendar, Clock, Banknote, CreditCard, CheckCircle2, ShieldCheck, Phone, X, Loader2, DollarSign, Wallet, Mail, MapPin, Languages, ChevronRight, AlertCircle, Timer, CalendarDays } from 'lucide-react';
+import { Search, QrCode, User, Briefcase, Calendar, Clock, Banknote, CreditCard, CheckCircle2, ShieldCheck, Phone, X, Loader2, DollarSign, Wallet, Mail, MapPin, Languages, ChevronRight, AlertCircle, Timer, CalendarDays, Check } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS } from '../constants';
 import { Booking } from '../types';
@@ -56,7 +56,7 @@ const Desk: React.FC = () => {
     
     confirmAction({
       title: language === 'bg' ? 'Потвърди плащане' : 'Confirm Payment',
-      message: `${language === 'bg' ? 'Приемане на плащане от' : 'Accept payment from'} ${foundBooking.customerName} - ${foundBooking.price.toFixed(2)} BGN (${method.toUpperCase()})`,
+      message: `${language === 'bg' ? 'Приемане на плащане от' : 'Accept payment from'} ${foundBooking.customerName} - ${foundBooking.price.toFixed(2)} € (${method.toUpperCase()})`,
       onConfirm: async () => {
         setIsProcessing(true);
         try {
@@ -73,15 +73,15 @@ const Desk: React.FC = () => {
     });
   };
 
-  const quickConfirm = async () => {
-    if (!foundBooking) return;
-    setIsProcessing(true);
-    try {
-      await updateBooking(foundBooking.id, { status: 'confirmed' });
-      setFoundBooking({ ...foundBooking, status: 'confirmed' });
-    } finally {
-      setIsProcessing(false);
-    }
+  const handleApprove = async (e: React.MouseEvent, booking: Booking) => {
+    e.stopPropagation();
+    confirmAction({
+      title: language === 'bg' ? 'Потвърди заявка' : 'Approve Request',
+      message: `${language === 'bg' ? 'Потвърждаване на тренировка за' : 'Confirm training for'} ${booking.customerName} @ ${booking.time}?`,
+      onConfirm: async () => {
+        await updateBooking(booking.id, { status: 'confirmed' });
+      }
+    });
   };
 
   const getTrainerName = (id: string) => users.find(u => String(u.id) === String(id))?.name.split('(')[0].trim() || 'Coach';
@@ -153,7 +153,7 @@ const Desk: React.FC = () => {
                      <div className="bg-dark/20 p-8 rounded-3xl border border-white/5 mb-8">
                         <div className="flex justify-between items-end mb-4">
                            <p className="text-[11px] font-black uppercase text-slate-500 tracking-widest italic">Service Balance</p>
-                           <p className="text-4xl font-black text-white italic tracking-tighter">{foundBooking.price.toFixed(2)} <span className="text-lg text-brand uppercase not-italic">BGN</span></p>
+                           <p className="text-4xl font-black text-white italic tracking-tighter">{foundBooking.price.toFixed(2)} <span className="text-lg text-brand uppercase not-italic">€</span></p>
                         </div>
                         <div className="grid grid-cols-2 gap-4 pt-8 border-t border-white/5">
                            <button 
@@ -221,7 +221,18 @@ const Desk: React.FC = () => {
                         <div className="flex-grow">
                            <div className="flex justify-between items-start mb-1">
                               <span className="text-sm font-black uppercase italic text-white tracking-tight group-hover:text-brand transition-colors">{b.customerName}</span>
-                              <span className="text-[8px] font-black text-slate-700 uppercase tracking-widest">{b.checkInCode}</span>
+                              <div className="flex items-center gap-2">
+                                 {b.status === 'pending' && (
+                                    <button 
+                                       onClick={(e) => handleApprove(e, b)}
+                                       className="p-1.5 bg-brand text-dark rounded-lg hover:bg-white transition-all shadow-md"
+                                       title="Approve Request"
+                                    >
+                                       <Check size={12} strokeWidth={4} />
+                                    </button>
+                                 )}
+                                 <span className="text-[8px] font-black text-slate-700 uppercase tracking-widest">{b.checkInCode}</span>
+                              </div>
                            </div>
                            <div className="flex items-center gap-3">
                               <span className="text-[9px] font-bold text-slate-500 uppercase flex items-center gap-1.5"><Clock size={10} className="text-brand"/> {b.time}</span>

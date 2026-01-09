@@ -42,19 +42,19 @@ const Home: React.FC = () => {
         
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 w-full flex flex-col items-center text-center pt-20">
             <Reveal>
-              <div className="inline-flex items-center gap-3 bg-white/10 backdrop-blur-md text-brand px-6 py-2.5 rounded-full text-[11px] font-black uppercase tracking-[0.3em] mb-8 border border-white/10 hover:bg-white/20 transition-all cursor-default">
+              <div className="inline-flex items-center gap-3 bg-white/10 backdrop-blur-md text-brand px-6 py-2.5 rounded-full text-[11px] font-black uppercase tracking-[0.3em] mb-8 border border-white/10 hover:bg-white/20 transition-all cursor-default italic">
                 <Zap size={14} className="text-brand fill-brand" /> {t.joinMovement}
               </div>
             </Reveal>
             
             <div className="mb-8 relative w-full max-w-full overflow-hidden flex flex-col items-center">
                 <Reveal delay={100} direction="up">
-                    <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 leading-[1.1] sm:leading-[0.85] uppercase italic drop-shadow-2xl break-words max-w-[90vw]">
+                    <h1 className="text-[11vw] sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 leading-[1] sm:leading-[0.85] uppercase italic drop-shadow-2xl break-all sm:break-words max-w-[90vw]">
                         {t.transform}
                     </h1>
                 </Reveal>
                 <Reveal delay={300} direction="up">
-                    <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tighter text-brand leading-[1.1] sm:leading-[0.85] uppercase italic drop-shadow-[0_0_30px_rgba(197,217,45,0.3)] break-words max-w-[90vw]">
+                    <h1 className="text-[11vw] sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tight text-brand leading-[1] sm:leading-[0.85] uppercase italic drop-shadow-[0_0_30px_rgba(197,217,45,0.3)] break-all sm:break-words max-w-[90vw]">
                         {t.yourself}
                     </h1>
                 </Reveal>

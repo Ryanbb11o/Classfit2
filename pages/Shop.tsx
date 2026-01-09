@@ -63,7 +63,7 @@ const Shop: React.FC = () => {
             <div className="px-2">
                 <h3 className="font-black uppercase italic text-lg text-white group-hover:text-brand transition-quick">{product.name}</h3>
                 <div className="flex items-center justify-between mt-2">
-                  <span className="text-2xl font-black italic text-white">{product.price.toFixed(2)} <span className="text-xs font-bold text-slate-500">BGN</span></span>
+                  <span className="text-2xl font-black italic text-white">{product.price.toFixed(2)} <span className="text-xs font-bold text-slate-500">€</span></span>
                 </div>
             </div>
           </div>
@@ -102,7 +102,7 @@ const Shop: React.FC = () => {
                         </h2>
                         <div className="flex items-baseline gap-2 mb-8">
                             <span className="text-4xl font-black italic text-brand">{selectedProduct.price.toFixed(2)}</span>
-                            <span className="text-sm font-bold text-slate-500 uppercase">BGN</span>
+                            <span className="text-sm font-bold text-slate-500 uppercase">€</span>
                         </div>
                         
                         <div className="p-4 bg-white/5 rounded-2xl border border-white/10 flex gap-4 mb-8">

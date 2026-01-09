@@ -15,31 +15,43 @@ const ConfirmModal: React.FC = () => {
                    confirmState.title?.toLowerCase().includes('reset') || 
                    confirmState.title?.toLowerCase().includes('cancel') ||
                    confirmState.title?.toLowerCase().includes('отказ') ||
-                   confirmState.title?.toLowerCase().includes('изтрий');
+                   confirmState.title?.toLowerCase().includes('изтрий') ||
+                   confirmState.title?.toLowerCase().includes('reject');
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-dark/90 backdrop-blur-md animate-in fade-in duration-300 text-left">
-       <div className="bg-surface rounded-[2.5rem] border border-white/10 p-10 w-full max-sm shadow-[0_0_50px_rgba(0,0,0,0.5)] relative animate-in zoom-in-95 duration-300 overflow-hidden">
-          <div className={`absolute -top-20 -left-20 w-40 h-40 rounded-full blur-[80px] ${isDelete ? 'bg-red-500/20' : 'bg-brand/20'}`}></div>
-          <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-8 shadow-xl ${isDelete ? 'bg-red-500/10 text-red-500 shadow-red-500/10' : 'bg-brand/10 text-brand shadow-brand/10'}`}>
-             {isDelete ? <AlertTriangle size={32} /> : <Check size={32} strokeWidth={3} />}
-          </div>
-          <h2 className="text-xl font-black uppercase italic text-white mb-2 tracking-tighter leading-none">
-            {confirmState.title}
-          </h2>
-          <p className="text-slate-400 text-[11px] mb-10 leading-relaxed font-medium italic">
-            {confirmState.message}
-          </p>
-          <div className="flex flex-col gap-3">
-             <button 
-                onClick={() => { confirmState.onConfirm(); closeConfirm(); }}
-                className={`w-full py-4 rounded-xl font-black uppercase tracking-widest text-[11px] transition-all shadow-lg active:scale-95 ${isDelete ? 'bg-red-500 text-white' : 'bg-brand text-dark'}`}
-             >
-                {confirmState.confirmText || (language === 'bg' ? 'Потвърди' : 'Confirm')}
-             </button>
-             <button onClick={closeConfirm} className="w-full py-4 bg-white/5 text-slate-500 rounded-xl font-black uppercase tracking-widest text-[11px]">
-                {confirmState.cancelText || (language === 'bg' ? 'Отказ' : 'Cancel')}
-             </button>
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-dark/98 backdrop-blur-md animate-in fade-in duration-300 text-left">
+       <div className="bg-surface rounded-[2rem] border border-white/10 p-8 w-full max-w-[340px] shadow-[0_20px_70px_rgba(0,0,0,0.8)] relative animate-in zoom-in-95 duration-300 overflow-hidden">
+          {/* Decorative Background Elements */}
+          <div className={`absolute -top-12 -right-12 w-32 h-32 rounded-full blur-[60px] opacity-20 ${isDelete ? 'bg-red-500' : 'bg-brand'}`}></div>
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+          
+          <div className="relative z-10 flex flex-col items-center text-center">
+            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 shadow-2xl transition-transform hover:scale-105 ${isDelete ? 'bg-red-500/10 text-red-500 border border-red-500/20 shadow-red-500/5' : 'bg-brand/10 text-brand border border-brand/20 shadow-brand/5'}`}>
+               {isDelete ? <AlertTriangle size={28} /> : <Check size={28} strokeWidth={3} />}
+            </div>
+            
+            <h2 className="text-lg font-black uppercase italic text-white mb-2 tracking-tighter leading-none">
+              {confirmState.title}
+            </h2>
+            
+            <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest leading-relaxed italic mb-8 px-2 opacity-80">
+              {confirmState.message}
+            </p>
+            
+            <div className="flex flex-col gap-2 w-full">
+               <button 
+                  onClick={() => { confirmState.onConfirm(); closeConfirm(); }}
+                  className={`w-full py-4 rounded-xl font-black uppercase tracking-[0.2em] text-[10px] italic transition-all shadow-xl active:scale-[0.98] ${isDelete ? 'bg-red-600 text-white hover:bg-red-500' : 'bg-brand text-dark hover:bg-white'}`}
+               >
+                  {confirmState.confirmText || (language === 'bg' ? 'Потвърди' : 'Confirm')}
+               </button>
+               <button 
+                  onClick={closeConfirm} 
+                  className="w-full py-4 bg-white/5 text-slate-500 hover:text-white hover:bg-white/10 rounded-xl font-black uppercase tracking-[0.2em] text-[10px] italic transition-all border border-white/5"
+               >
+                  {confirmState.cancelText || (language === 'bg' ? 'Отказ' : 'Cancel')}
+               </button>
+            </div>
           </div>
        </div>
     </div>
@@ -181,7 +193,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       </header>
 
       <div className={`fixed inset-0 z-[60] bg-dark/80 backdrop-blur-sm transition-opacity duration-300 ${isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} onClick={closeMenu}>
-        <div className={`absolute right-0 top-0 bottom-0 w-full max-w-sm bg-surface shadow-2xl p-10 flex flex-col transition-transform duration-300 ease-out border-l border-white/5 ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`} onClick={(e) => e.stopPropagation()}>
+        <div className={`absolute right-0 top-0 bottom-0 w-full max-sm bg-surface shadow-2xl p-10 flex flex-col transition-transform duration-300 ease-out border-l border-white/5 ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`} onClick={(e) => e.stopPropagation()}>
           <div className="flex items-center justify-between mb-16">
             <span className="text-xl font-black italic tracking-tighter text-white uppercase">Navigation</span>
             <button onClick={closeMenu} className="p-2 hover:bg-white/10 rounded-full transition-all text-white"><X size={24} /></button>

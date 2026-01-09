@@ -10,7 +10,7 @@ export const getTrainers = (lang: Language): Trainer[] => {
       id: '1',
       name: isBg ? 'Иван Петров' : 'Ivan Petrov',
       specialty: isBg ? 'Силови тренировки' : 'Strength Training',
-      price: 15,
+      price: 15, // EUR
       image: 'https://images.unsplash.com/photo-1594381898411-846e7d193883?q=80&w=400&auto=format&fit=crop',
       phone: '+359 88 123 4567',
       bio: isBg 
@@ -23,7 +23,7 @@ export const getTrainers = (lang: Language): Trainer[] => {
       id: '2',
       name: isBg ? 'Мария Иванова' : 'Maria Ivanova',
       specialty: isBg ? 'Йога и Пилатес' : 'Yoga & Pilates',
-      price: 15,
+      price: 15, // EUR
       image: 'https://images.unsplash.com/photo-1518611012118-296072bb5fe9?q=80&w=400&auto=format&fit=crop',
       phone: '+359 88 234 5678',
       bio: isBg
@@ -36,7 +36,7 @@ export const getTrainers = (lang: Language): Trainer[] => {
       id: '3',
       name: isBg ? 'Елена Костова' : 'Elena Kostova',
       specialty: isBg ? 'Кросфит' : 'Crossfit',
-      price: 15,
+      price: 15, // EUR
       image: 'https://images.unsplash.com/photo-1548690312-e3b507d8c110?q=80&w=400&auto=format&fit=crop',
       phone: '+359 88 345 6789',
       bio: isBg
@@ -54,7 +54,7 @@ export const getMemberships = (lang: Language): Membership[] => {
     {
       id: 'single',
       name: isBg ? 'Еднократна тренировка' : 'Single Visit',
-      price: '7.00',
+      price: '7.00', // EUR
       unit: isBg ? 'ПОСЕЩЕНИЕ' : 'VISIT',
       features: isBg 
         ? ['Достъп до цялото оборудване', 'Ползване на шкафче'] 
@@ -63,7 +63,7 @@ export const getMemberships = (lang: Language): Membership[] => {
     {
       id: 'unlimited_women',
       name: isBg ? 'Карта Жени (30 дни)' : 'Women Unlimited (30d)',
-      price: '70.00',
+      price: '35.00', // EUR (Adjusted from 70 BGN)
       unit: isBg ? 'МЕСЕЦ' : 'MONTH',
       features: isBg 
         ? ['Неограничени посещения', 'Професионално оборудване'] 
@@ -72,7 +72,7 @@ export const getMemberships = (lang: Language): Membership[] => {
     {
       id: 'unlimited_men',
       name: isBg ? 'Карта Мъже (30 дни)' : 'Men Unlimited (30d)',
-      price: '90.00',
+      price: '45.00', // EUR (Adjusted from 90 BGN)
       unit: isBg ? 'МЕСЕЦ' : 'MONTH',
       features: isBg 
         ? ['Неограничени посещения', 'Професионално оборудване'] 
@@ -85,7 +85,7 @@ export const getMemberships = (lang: Language): Membership[] => {
 export const getProducts = (lang: Language): Product[] => {
   const isBg = lang === 'bg';
   return [
-    { id: 'p1', name: 'ON Gold Standard Whey', price: 135.00, category: isBg ? 'Добавки' : 'Supplements', image: 'https://content.optimumnutrition.com/i/on/on-gold-standard-100-whey_Image_01?locale=en-us,en-gb,*&layer0=$MAIN$', description: 'Whey Protein' },
+    { id: 'p1', name: 'ON Gold Standard Whey', price: 69.00, category: isBg ? 'Добавки' : 'Supplements', image: 'https://content.optimumnutrition.com/i/on/on-gold-standard-100-whey_Image_01?locale=en-us,en-gb,*&layer0=$MAIN$', description: 'Whey Protein' },
   ];
 };
 
@@ -140,7 +140,7 @@ export const TRANSLATIONS = {
     basedOn: 'Базирано на 120+ отзива',
     selectTrainer: 'Избери треньор',
     trainer: 'Инструктор',
-    perSession: 'лв / тренировка',
+    perSession: '€ / тренировка',
     availableSlots: 'Свободни часове',
     finalize: 'Финализиране',
     reqSent: 'Заявката е изпратена!',
@@ -198,7 +198,6 @@ export const TRANSLATIONS = {
     deleteMsg: 'Изтрий',
     statusCompleted: 'Платен',
     statusTrainerCompleted: 'За плащане',
-    // Added missing keys for About and Contact pages
     ourDna: 'Нашето DNA',
     weAre: 'НИЕ СМЕ CLASSFIT',
     aboutDesc: 'Ние сме повече от фитнес зала. Ние сме общност, посветена на постигането на върхови резултати.',
@@ -209,7 +208,42 @@ export const TRANSLATIONS = {
     vision: 'Визия',
     visionDesc: 'Да бъдем стандарт за професионализъм и иновации във фитнес индустрията.',
     beLegendary: 'БЪДИ ЛЕГЕНДАРЕН',
-    phone: 'Телефон'
+    phone: 'Телефон',
+    // New Admin Translations
+    mgmtConsole: 'Конзола за Управление',
+    officialControl: 'Официален Център за Контрол',
+    stats: 'Статистика',
+    finance: 'Финанси',
+    sessions: 'Сесии',
+    recruits: 'Нови попълнения',
+    registry: 'Регистър',
+    moderation: 'Модерация',
+    gymNetProfit: 'Чиста Печалба за Залата',
+    grossIntake: 'Брутни приходи',
+    trainingsToday: 'Тренировки днес',
+    activeRegistry: 'Активен Регистър',
+    profitLedger: 'Дневник на печалбите (Gym Cuts)',
+    date: 'Дата',
+    coach: 'Треньор',
+    price: 'Цена',
+    gymCut: 'Залата (25%)',
+    trainerCut: 'Треньор',
+    viewFullRegistry: 'ВИЖ ЦЕЛИЯ РЕГИСТЪР',
+    finVerifyQueue: 'Опашка за финансова проверка',
+    awaiting: 'Очакващи',
+    client: 'Клиент',
+    verifyPay: 'Потвърди',
+    payCash: 'В БРОЙ',
+    payCard: 'КАРТА',
+    decline: 'Отказ',
+    verifiedBy: 'Потвърдено от',
+    viewMore: 'Виж повече',
+    sessionDetails: 'Детайли за Сесията',
+    permanentRemoval: 'Перманентно изтриване?',
+    nothingScheduled: 'Няма планирани тренировки.',
+    noFinancials: 'Няма финансови записи в матрицата.',
+    noVerifiedProfits: 'Няма записани потвърдени печалби.',
+    noReviews: 'Няма нови отзиви за одобрение.'
   },
   en: {
     home: 'Home',
@@ -247,7 +281,7 @@ export const TRANSLATIONS = {
     basedOn: '120+ reviews',
     selectTrainer: 'Select Trainer',
     trainer: 'Gym Coach',
-    perSession: 'lv / session',
+    perSession: '€ / session',
     availableSlots: 'Available slots',
     finalize: 'Finalize',
     reqSent: 'Request Sent!',
@@ -305,7 +339,6 @@ export const TRANSLATIONS = {
     deleteMsg: 'Delete',
     statusCompleted: 'Paid',
     statusTrainerCompleted: 'Awaiting Payment',
-    // Added missing keys for About and Contact pages
     ourDna: 'Our DNA',
     weAre: 'WE ARE CLASSFIT',
     aboutDesc: 'We are more than just a gym. We are a community dedicated to achieving peak performance.',
@@ -316,6 +349,41 @@ export const TRANSLATIONS = {
     vision: 'Vision',
     visionDesc: 'To be the standard for professionalism and innovation in the fitness industry.',
     beLegendary: 'BE LEGENDARY',
-    phone: 'Phone'
+    phone: 'Phone',
+    // New Admin Translations
+    mgmtConsole: 'Management Console',
+    officialControl: 'Official Control Center',
+    stats: 'Stats',
+    finance: 'Finance',
+    sessions: 'Sessions',
+    recruits: 'Recruits',
+    registry: 'Registry',
+    moderation: 'Moderation',
+    gymNetProfit: 'Gym Net Profit',
+    grossIntake: 'Gross Intake',
+    trainingsToday: 'Trainings Today',
+    activeRegistry: 'Active Registry',
+    profitLedger: 'Profit Ledger (Gym Cuts)',
+    date: 'Date',
+    coach: 'Coach',
+    price: 'Price',
+    gymCut: 'Gym (25%)',
+    trainerCut: 'Trainer',
+    viewFullRegistry: 'VIEW FULL REGISTRY',
+    finVerifyQueue: 'Financial Verification Queue',
+    awaiting: 'Awaiting',
+    client: 'Client',
+    verifyPay: 'Verify Pay',
+    payCash: 'CASH',
+    payCard: 'CARD',
+    decline: 'Decline',
+    verifiedBy: 'Verified by',
+    viewMore: 'View More',
+    sessionDetails: 'Session Details',
+    permanentRemoval: 'Permanent removal?',
+    nothingScheduled: 'Nothing scheduled.',
+    noFinancials: 'No financial records in the matrix.',
+    noVerifiedProfits: 'No verified profits recorded.',
+    noReviews: 'No new reviews to moderate.'
   }
 };

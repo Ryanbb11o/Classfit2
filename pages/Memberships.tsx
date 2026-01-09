@@ -36,7 +36,7 @@ const Memberships: React.FC = () => {
             <h3 className={`text-3xl font-black uppercase italic mb-6 tracking-tight ${tier.isPopular ? 'text-brand' : 'text-white'}`}>{tier.name}</h3>
             <div className="mb-10">
               <span className="text-5xl font-black italic">{tier.price}</span>
-              <span className="text-sm font-bold opacity-40 ml-2 italic text-slate-300">BGN / {tier.unit}</span>
+              <span className="text-sm font-bold opacity-40 ml-2 italic text-slate-300">€ / {tier.unit}</span>
             </div>
 
             <ul className="space-y-5 mb-12 flex-grow">
