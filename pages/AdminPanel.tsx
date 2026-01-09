@@ -3,7 +3,8 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { LayoutDashboard, ListFilter, Briefcase, UserCheck, FileSpreadsheet, Users, RefreshCw, Star, Trash2, X, Loader2, TrendingUp, Wallet, Check, Ban, Calendar, User, Phone, ShieldCheck, Key, Settings2, ChevronDown, ChevronUp, Info, Edit3, Save, Languages, ExternalLink, ThumbsUp, Activity, BarChart3, DollarSign, ArrowRight, Banknote, CreditCard, Clock, Eye } from 'lucide-react';
 import { useAppContext } from '../AppContext';
-import { TRANSLATIONS } from '../constants';
+// Import DEFAULT_PROFILE_IMAGE to fix the reference error in the user list
+import { TRANSLATIONS, DEFAULT_PROFILE_IMAGE } from '../constants';
 import { User as UserType, Booking, Review } from '../types';
 import RoleManagementModal from '../components/RoleManagementModal';
 
@@ -107,22 +108,22 @@ const AdminPanel: React.FC = () => {
   };
 
   const todayStr = new Date().toISOString().split('T')[0];
-  const awaitingPaymentList = bookings.filter(b => b.status === 'trainer_completed');
-  const pendingApps = users.filter(u => u.roles?.includes('trainer_pending'));
-  const pendingReviews = reviews.filter(r => !r.isPublished);
+  const awaitingPaymentList = (bookings || []).filter(b => b.status === 'trainer_completed');
+  const pendingApps = (users || []).filter(u => u.roles?.includes('trainer_pending'));
+  const pendingReviews = (reviews || []).filter(r => !r.isPublished);
   
-  const upcomingTrainings = bookings.filter(b => b.date >= todayStr && b.status !== 'completed' && b.status !== 'cancelled').slice(0, 5);
-  const completedTrainings = bookings.filter(b => b.status === 'completed').sort((a,b) => b.date.localeCompare(a.date)).slice(0, 5);
+  const upcomingTrainings = (bookings || []).filter(b => b.date >= todayStr && b.status !== 'completed' && b.status !== 'cancelled').slice(0, 5);
+  const completedTrainings = (bookings || []).filter(b => b.status === 'completed').sort((a,b) => b.date.localeCompare(a.date)).slice(0, 5);
 
   const cleanName = (name: string | undefined) => (name || 'Member').split('(')[0].trim();
 
   // Aggregate Stats
   const stats = useMemo(() => {
-    const totalSessions = bookings.length;
-    const completedSessions = bookings.filter(b => b.status === 'completed');
+    const bks = bookings || [];
+    const totalSessions = bks.length;
+    const completedSessions = bks.filter(b => b.status === 'completed');
     const totalRevenue = completedSessions.reduce((acc, b) => acc + b.price, 0);
     
-    // Calculate Gym Earnings
     const gymNetProfit = completedSessions.reduce((acc, b) => {
       if (b.commissionAmount !== undefined) return acc + b.commissionAmount;
       const rate = users.find(u => String(u.id) === String(b.trainerId))?.commissionRate || 25;
@@ -134,7 +135,7 @@ const AdminPanel: React.FC = () => {
       completedSessions: completedSessions.length, 
       totalRevenue, 
       gymNetProfit,
-      trainingsTodayCount: bookings.filter(b => b.date === todayStr).length
+      trainingsTodayCount: bks.filter(b => b.date === todayStr).length
     };
   }, [bookings, users, todayStr]);
 
@@ -174,7 +175,7 @@ const AdminPanel: React.FC = () => {
   return (
     <div className="max-w-[1400px] mx-auto px-4 py-16 animate-in fade-in duration-500 text-left">
       
-      {/* 1. TOP METRICS STRIP (HYPERLINKED WITH GLOW) */}
+      {/* TOP METRICS STRIP */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-12">
           <button 
             onClick={() => setActiveTab('finance')}
@@ -215,7 +216,7 @@ const AdminPanel: React.FC = () => {
             className="p-8 bg-surface border border-white/5 rounded-[2rem] hover:border-brand/40 hover:shadow-[0_0_30px_rgba(197,217,45,0.3)] transition-all group relative overflow-hidden active:scale-[0.98]"
           >
              <p className="text-[10px] font-black uppercase mb-2 text-slate-500 tracking-widest italic">{t.activeRegistry}</p>
-             <p className="text-4xl font-black italic text-white tracking-tighter">{users.length}</p>
+             <p className="text-4xl font-black italic text-white tracking-tighter">{(users || []).length}</p>
              <div className="mt-4 flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-brand opacity-0 group-hover:opacity-100 transition-all">
                 {t.viewMore} <ArrowRight size={10} />
              </div>
@@ -250,7 +251,7 @@ const AdminPanel: React.FC = () => {
       <div className="space-y-8">
         {activeTab === 'overview' && (
            <div className="space-y-8 animate-in fade-in duration-500">
-             {/* TRAINING LEDGER QUICK VIEW */}
+             {/* TRAINING LEDGER */}
              <div className="bg-surface rounded-[2.5rem] border border-white/5 p-8 shadow-xl">
                 <div className="flex items-center justify-between mb-8">
                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 flex items-center gap-3 italic">
@@ -292,46 +293,64 @@ const AdminPanel: React.FC = () => {
                    </div>
                 </div>
              </div>
+           </div>
+        )}
 
-             {/* PROFITS LEDGER - UPDATED WITH GYM PROFIT DISPLAY */}
-             <div className="bg-surface rounded-[2.5rem] border border-white/5 p-8 shadow-xl">
-                <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 mb-6 flex items-center gap-3 italic">
-                   <DollarSign size={16} className="text-brand"/> {t.profitLedger}
-                </h3>
-                <div className="overflow-x-auto">
-                   <table className="w-full text-left text-[10px]">
-                      <thead>
-                         <tr className="text-slate-600 uppercase border-b border-white/5 font-black tracking-widest">
-                            <th className="pb-4">{t.date}</th>
-                            <th className="pb-4">{t.coach}</th>
-                            <th className="pb-4">{t.price}</th>
-                            <th className="pb-4 text-brand">{t.gymCut}</th>
-                            <th className="pb-4">{t.trainerCut}</th>
+        {/* REGISTRY TAB - FIXED & RE-IMPLEMENTED */}
+        {activeTab === 'users' && (
+           <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-hidden animate-in fade-in duration-500 shadow-2xl">
+              <div className="p-6 border-b border-white/5 bg-dark/20 flex items-center justify-between">
+                 <h3 className="text-[11px] font-black uppercase tracking-widest text-white italic flex items-center gap-3">
+                    <Users size={18} className="text-brand"/> Membership Registry
+                 </h3>
+                 <span className="text-[9px] font-black uppercase text-slate-500 bg-white/5 px-3 py-1 rounded-full">{(users || []).length} Recorded Subjects</span>
+              </div>
+              <div className="max-h-[600px] overflow-y-auto custom-scrollbar">
+                <table className="w-full text-left">
+                   <thead className="bg-dark/10 text-[9px] font-black uppercase text-slate-500 sticky top-0 z-10 backdrop-blur-sm">
+                      <tr>
+                         <th className="p-5">{t.client}</th>
+                         <th className="p-5">{t.email}</th>
+                         <th className="p-5">{t.roles}</th>
+                         <th className="p-5">Joined</th>
+                         <th className="p-5 text-right">Protocol</th>
+                      </tr>
+                   </thead>
+                   <tbody className="divide-y divide-white/5 text-[10px] italic font-medium">
+                      {(users || []).length === 0 ? (
+                        <tr>
+                           <td colSpan={5} className="p-20 text-center text-slate-600 uppercase font-black italic tracking-widest">No subjects found in database.</td>
+                        </tr>
+                      ) : users.map(u => (
+                         <tr key={u.id} className="hover:bg-white/5 transition-colors group">
+                            <td className="p-5">
+                               <div className="flex items-center gap-4">
+                                  <img src={u.image || DEFAULT_PROFILE_IMAGE} className="w-8 h-8 rounded-lg object-cover grayscale group-hover:grayscale-0 transition-all" />
+                                  <span className="font-black uppercase italic text-white group-hover:text-brand transition-colors">{cleanName(u.name)}</span>
+                               </div>
+                            </td>
+                            <td className="p-5 text-slate-400 font-bold">{u.email}</td>
+                            <td className="p-5">
+                               <div className="flex flex-wrap gap-1">
+                                  {(u.roles || []).map(r => (
+                                     <span key={r} className={`px-1.5 py-0.5 rounded text-[7px] font-black uppercase ${r.includes('trainer') ? 'bg-brand/10 text-brand' : 'bg-white/5 text-slate-500'}`}>
+                                        {r.replace('_', ' ')}
+                                     </span>
+                                  ))}
+                               </div>
+                            </td>
+                            <td className="p-5 text-slate-500 font-bold">{(u.joinedDate || '').split('T')[0]}</td>
+                            <td className="p-5">
+                               <div className="flex justify-end gap-2">
+                                  <button onClick={() => setUserForRoles(u)} className="p-2 bg-white/5 rounded-lg text-brand hover:bg-brand hover:text-dark transition-all" title="Manage Protocol"><Settings2 size={12}/></button>
+                                  <button onClick={() => confirmAction({ title: t.deleteMsg, message: 'Initiate permanent termination of this subject?', onConfirm: () => deleteUser(u.id) })} className="p-2 text-slate-500 hover:text-red-500 transition-colors"><Trash2 size={12}/></button>
+                               </div>
+                            </td>
                          </tr>
-                      </thead>
-                      <tbody className="divide-y divide-white/5">
-                         {bookings.filter(b => b.status === 'completed').slice(0, 10).map(b => {
-                            const trainer = users.find(u => String(u.id) === String(b.trainerId));
-                            const rate = trainer?.commissionRate || 25;
-                            const gymCut = b.commissionAmount !== undefined ? b.commissionAmount : (b.price * (rate / 100));
-                            const trainerCut = b.trainerEarnings !== undefined ? b.trainerEarnings : (b.price - gymCut);
-                            return (
-                               <tr key={b.id} className="hover:bg-white/5 transition-colors group">
-                                  <td className="py-4 font-bold text-slate-400">{b.date}</td>
-                                  <td className="py-4 font-black uppercase italic text-white">{cleanName(trainer?.name)}</td>
-                                  <td className="py-4 font-bold text-slate-400">{b.price.toFixed(2)} €</td>
-                                  <td className="py-4 font-black text-brand italic group-hover:scale-105 transition-transform">+{gymCut.toFixed(2)} €</td>
-                                  <td className="py-4 font-bold text-slate-400">{trainerCut.toFixed(2)} €</td>
-                               </tr>
-                            );
-                         })}
-                      </tbody>
-                   </table>
-                   {bookings.filter(b => b.status === 'completed').length === 0 && (
-                     <div className="py-10 text-center text-slate-600 font-black uppercase italic text-[9px]">{t.noVerifiedProfits}</div>
-                   )}
-                </div>
-             </div>
+                      ))}
+                   </tbody>
+                </table>
+              </div>
            </div>
         )}
 
@@ -343,27 +362,28 @@ const AdminPanel: React.FC = () => {
                     <div className="absolute top-0 left-0 w-1 h-full bg-brand/40"></div>
                     <div className="flex justify-between items-center mb-4">
                        <div>
-                          <h4 className="font-black uppercase italic text-white text-xs">{r.author}</h4>
-                          <p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest">{cleanName(users.find(u => u.id === r.trainerId)?.name)}</p>
+                          <h4 className="font-black uppercase italic text-white text-xs">{r.author || 'Anonymous'}</h4>
+                          <p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest italic">{cleanName(users.find(u => u.id === r.trainerId)?.name) || 'Coach'}</p>
                        </div>
                        <div className="flex text-brand">
-                          {[...Array(r.rating)].map((_, i) => <Star key={i} size={8} fill="currentColor"/>)}
+                          {[...Array(Number(r.rating || 5))].map((_, i) => <Star key={i} size={8} fill="currentColor"/>)}
                        </div>
                     </div>
-                    {/* Fixed: Displaying text correctly using mapping from AppContext */}
-                    <div className="bg-dark/40 p-4 rounded-xl border border-white/5 mb-6">
-                       <p className="text-xs text-slate-300 italic font-medium leading-relaxed">"{r.text}"</p>
+                    <div className="bg-dark/40 p-4 rounded-xl border border-white/5 mb-6 shadow-inner">
+                       <p className="text-xs text-slate-300 italic font-medium leading-relaxed">
+                          "{r.text || "No feedback body provided."}"
+                       </p>
                     </div>
                     <div className="flex gap-2">
-                       <button onClick={() => updateReview(r.id, { isPublished: true })} className="flex-1 py-2 bg-brand text-dark rounded-lg text-[9px] font-black uppercase flex items-center justify-center gap-2 hover:bg-white transition-all"><ThumbsUp size={10}/> Approve</button>
-                       <button onClick={() => deleteReview(r.id)} className="flex-1 py-2 bg-white/5 text-red-500 rounded-lg text-[9px] font-black uppercase border border-red-500/10 hover:bg-red-500 hover:text-white transition-all">Delete</button>
+                       <button onClick={() => updateReview(r.id, { isPublished: true })} className="flex-1 py-2 bg-brand text-dark rounded-lg text-[9px] font-black uppercase flex items-center justify-center gap-2 hover:bg-white transition-all shadow-lg italic"><ThumbsUp size={10}/> Approve</button>
+                       <button onClick={() => deleteReview(r.id)} className="flex-1 py-2 bg-white/5 text-red-500 rounded-lg text-[9px] font-black uppercase border border-red-500/10 hover:bg-red-500 hover:text-white transition-all italic">Delete</button>
                     </div>
                  </div>
               ))}
            </div>
         )}
 
-        {/* Other tabs remain essentially same logic-wise */}
+        {/* FINANCE TAB */}
         {activeTab === 'finance' && (
            <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-hidden shadow-2xl animate-in slide-in-from-bottom-2">
               <div className="p-6 border-b border-white/5 flex items-center justify-between bg-dark/20">
@@ -377,10 +397,10 @@ const AdminPanel: React.FC = () => {
                    <thead className="bg-dark/10 text-[9px] font-black uppercase text-slate-500 sticky top-0 z-10 backdrop-blur-sm">
                       <tr><th className="p-4">{t.date}</th><th className="p-4">{t.client}</th><th className="p-4">{t.coach}</th><th className="p-4">{t.price}</th><th className="p-4">{t.status}</th><th className="p-4 text-center">{t.verifyPay}</th></tr>
                    </thead>
-                   <tbody className="divide-y divide-white/5 text-[10px]">
+                   <tbody className="divide-y divide-white/5 text-[10px] italic">
                       {bookings.filter(b => b.status === 'trainer_completed' || b.status === 'completed').sort((a,b) => b.date.localeCompare(a.date)).map(b => (
                          <tr key={b.id} className={`hover:bg-white/5 transition-colors ${b.status === 'trainer_completed' ? 'bg-brand/5' : ''}`}>
-                            <td className="p-4 font-bold text-slate-400 italic">{b.date} @ {formatTimeRange(b.time, b.duration)}</td>
+                            <td className="p-4 font-bold text-slate-400">{b.date} @ {formatTimeRange(b.time, b.duration)}</td>
                             <td className="p-4 uppercase italic text-white font-black">{b.customerName}</td>
                             <td className="p-4 uppercase font-bold text-slate-400">{cleanName(users.find(u => String(u.id) === String(b.trainerId))?.name)}</td>
                             <td className="p-4 font-black text-brand text-sm italic">{b.price.toFixed(2)} €</td>
@@ -392,32 +412,12 @@ const AdminPanel: React.FC = () => {
                                   {b.status === 'trainer_completed' && (
                                      verifyingId === b.id ? (
                                         <div className="flex gap-2 animate-in slide-in-from-right-2">
-                                           <button 
-                                              onClick={() => handleVerifyPayment(b, 'cash')} 
-                                              className="px-4 py-2 bg-green-600 text-white rounded-xl text-[9px] font-black uppercase flex items-center gap-2 hover:bg-green-500 transition-all shadow-lg italic"
-                                           >
-                                              <Banknote size={12} /> {t.payCash}
-                                           </button>
-                                           <button 
-                                              onClick={() => handleVerifyPayment(b, 'card')} 
-                                              className="px-4 py-2 bg-brand text-dark rounded-xl text-[9px] font-black uppercase flex items-center gap-2 hover:bg-white transition-all shadow-lg italic"
-                                           >
-                                              <CreditCard size={12} /> {t.payCard}
-                                           </button>
-                                           <button 
-                                              onClick={() => setVerifyingId(null)} 
-                                              className="px-4 py-2 bg-white/10 text-slate-400 rounded-xl text-[9px] font-black uppercase flex items-center gap-2 hover:bg-red-600 hover:text-white transition-all shadow-lg italic"
-                                           >
-                                              <X size={12} />
-                                           </button>
+                                           <button onClick={() => handleVerifyPayment(b, 'cash')} className="px-4 py-2 bg-green-600 text-white rounded-xl text-[9px] font-black uppercase flex items-center gap-2 hover:bg-green-500 transition-all shadow-lg italic"><Banknote size={12} /> {t.payCash}</button>
+                                           <button onClick={() => handleVerifyPayment(b, 'card')} className="px-4 py-2 bg-brand text-dark rounded-xl text-[9px] font-black uppercase flex items-center gap-2 hover:bg-white transition-all shadow-lg italic"><CreditCard size={12} /> {t.payCard}</button>
+                                           <button onClick={() => setVerifyingId(null)} className="px-4 py-2 bg-white/10 text-slate-400 rounded-xl text-[9px] font-black uppercase flex items-center gap-2 hover:bg-red-600 hover:text-white transition-all shadow-lg italic"><X size={12} /></button>
                                         </div>
                                      ) : (
-                                        <button 
-                                           onClick={() => setVerifyingId(b.id)} 
-                                           className="px-6 py-2.5 bg-brand text-dark rounded-xl text-[9px] font-black uppercase tracking-widest italic shadow-xl hover:scale-105 transition-all"
-                                        >
-                                           {t.verifyPay}
-                                        </button>
+                                        <button onClick={() => setVerifyingId(b.id)} className="px-6 py-2.5 bg-brand text-dark rounded-xl text-[9px] font-black uppercase tracking-widest italic shadow-xl hover:scale-105 transition-all">{t.verifyPay}</button>
                                      )
                                   )}
                                   {b.status === 'completed' && (

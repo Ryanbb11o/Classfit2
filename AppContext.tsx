@@ -126,14 +126,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       })));
 
       const { data: rData } = await supabase.from('reviews').select('*').order('created_at', { ascending: false });
-      if (rData) setReviews(rData.map((r: any) => ({
+      if (rData) {
+        setReviews(rData.map((r: any) => ({
           ...r,
           id: String(r.id),
           trainerId: String(r.trainer_id),
-          author: r.author_name || 'Unknown', // FIX: Explicit mapping
-          text: r.content || '', // FIX: Explicit mapping
-          isPublished: r.is_published || false
-      })));
+          author: r.author_name || 'Anonymous', 
+          text: r.content || r.text || '', // Defensive mapping: checking both fields
+          isPublished: r.is_published || false,
+          rating: Number(r.rating || 5),
+          time: r.created_at ? new Date(r.created_at).toLocaleDateString() : 'Recently'
+        })));
+      }
       
       const { data: uData } = await supabase.from('users').select('*').order('joined_date', { ascending: false });
       if (uData) {
