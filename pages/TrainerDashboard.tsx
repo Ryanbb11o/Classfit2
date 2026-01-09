@@ -6,6 +6,18 @@ import { useAppContext } from '../AppContext';
 import { TRANSLATIONS } from '../constants';
 import { Booking } from '../types';
 
+// Helper for time ranges
+const formatTimeRange = (startTime: string, durationMins: number = 60) => {
+  if (!startTime) return '';
+  const [hours, minutes] = startTime.split(':').map(Number);
+  const date = new Date();
+  date.setHours(hours, minutes, 0, 0);
+  const endDate = new Date(date.getTime() + durationMins * 60000);
+  const endHours = String(endDate.getHours()).padStart(2, '0');
+  const endMinutes = String(endDate.getMinutes()).padStart(2, '0');
+  return `${startTime} -> ${endHours}:${endMinutes}`;
+};
+
 const TrainerDashboard: React.FC = () => {
   const { currentUser, bookings, updateBooking, updateUser, language, refreshData, isLoading, confirmAction } = useAppContext();
   const navigate = useNavigate();
@@ -32,10 +44,10 @@ const TrainerDashboard: React.FC = () => {
   };
 
   const handleAction = (bookingId: string, action: 'confirmed' | 'cancelled' | 'trainer_completed') => {
-    const actionLabel = action === 'confirmed' ? 'Confirm' : action === 'cancelled' ? 'Cancel' : 'Complete';
+    const actionLabel = action === 'confirmed' ? t.confirm : action === 'cancelled' ? t.reject : t.complete;
     confirmAction({
       title: `${actionLabel} Session`,
-      message: `Are you sure you want to ${actionLabel.toLowerCase()} this training request?`,
+      message: `Are you sure you want to perform this action?`,
       onConfirm: async () => {
         await updateBooking(bookingId, { status: action });
       }
@@ -81,8 +93,8 @@ const TrainerDashboard: React.FC = () => {
     const isBlocked = currentBlocks.includes(dateStr);
     
     confirmAction({
-      title: isBlocked ? 'Unlock Day' : 'Block Day',
-      message: isBlocked ? `Make ${dateStr} available for bookings?` : `Block all new sessions on ${dateStr}? This will hide this day from customers.`,
+      title: isBlocked ? t.unlockDay : t.blockDay,
+      message: isBlocked ? `Make ${dateStr} available?` : `Block sessions on ${dateStr}?`,
       onConfirm: async () => {
         const newBlocks = isBlocked ? currentBlocks.filter(d => d !== dateStr) : [...currentBlocks, dateStr];
         await updateUser(currentUser.id, { blockedDates: newBlocks });
@@ -130,15 +142,15 @@ const TrainerDashboard: React.FC = () => {
       <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-8 mb-10">
         <div>
            <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand text-dark rounded-lg text-[9px] font-black uppercase tracking-widest mb-3 italic">
-              <ShieldCheck size={12} /> Coach Terminal
+              <ShieldCheck size={12} /> {t.coachTerminal}
            </div>
            <h1 className="text-3xl font-black uppercase italic tracking-tighter text-white leading-none">{currentUser.name.split('(')[0].trim()}</h1>
         </div>
         <div className="flex items-center gap-2 bg-surface p-1 rounded-xl border border-white/5">
             {[
-              { id: 'calendar', label: 'Schedule', icon: CalendarIcon },
-              { id: 'requests', label: 'Requests', icon: Clock, badge: pendingRequests.length },
-              { id: 'roster', label: 'Roster', icon: User }
+              { id: 'calendar', label: t.matrix, icon: CalendarIcon },
+              { id: 'requests', label: t.requests, icon: Clock, badge: pendingRequests.length },
+              { id: 'roster', label: t.roster, icon: User }
             ].map(tab => (
               <button key={tab.id} onClick={() => setActiveTab(tab.id as any)} className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-2 transition-all ${activeTab === tab.id ? 'bg-brand text-dark' : 'text-slate-400 hover:text-white'}`}>
                 <tab.icon size={12} /> {tab.label}
@@ -155,7 +167,7 @@ const TrainerDashboard: React.FC = () => {
               <div className="lg:col-span-8 bg-surface rounded-[2rem] border border-white/5 overflow-hidden shadow-xl">
                  <div className="p-6 border-b border-white/5 flex items-center justify-between">
                     <div className="flex items-center gap-3 text-white uppercase italic font-black text-sm tracking-widest">
-                       <CalendarIcon size={18} className="text-brand" /> Matrix View
+                       <CalendarIcon size={18} className="text-brand" /> {t.matrixView}
                     </div>
                     <div className="flex items-center gap-3">
                        <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))} className="p-1.5 hover:bg-white/5 rounded-lg"><ChevronLeft size={16} /></button>
@@ -177,26 +189,26 @@ const TrainerDashboard: React.FC = () => {
                        <div className="flex justify-between items-start mb-6">
                           <div>
                              <h3 className="text-lg font-black uppercase italic text-white tracking-tighter">{selectedDay.toLocaleDateString(undefined, { day: 'numeric', month: 'long' })}</h3>
-                             <p className="text-[8px] font-black uppercase tracking-widest text-slate-500 mt-1">Daily Log</p>
+                             <p className="text-[8px] font-black uppercase tracking-widest text-slate-500 mt-1">{t.dailyLog}</p>
                           </div>
                           <button onClick={() => handleToggleBlockDate(selectedDateStr || '')} className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-2 transition-all ${isSelectedBlocked ? 'bg-white text-dark' : 'bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500 hover:text-white'}`}>
-                             {isSelectedBlocked ? <Unlock size={12} /> : <Ban size={12} />} {isSelectedBlocked ? 'Open Day' : 'Block Day'}
+                             {isSelectedBlocked ? <Unlock size={12} /> : <Ban size={12} />} {isSelectedBlocked ? t.unlockDay : t.blockDay}
                           </button>
                        </div>
 
                        <div className="space-y-3">
                           {dayDetails.length === 0 ? (
                              <div className="py-12 text-center border-2 border-dashed border-white/5 rounded-2xl">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-600">No scheduled sessions</p>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-600">{t.nothingScheduled}</p>
                              </div>
                           ) : dayDetails.map(b => (
                              <div key={b.id} className="p-4 bg-dark/40 rounded-xl border border-white/5 group hover:border-brand/40 transition-all">
                                 <div className="flex justify-between items-start mb-2">
                                    <div className="flex items-center gap-2 text-brand font-black italic uppercase text-xs">
-                                      <Clock size={12}/> {b.time}
+                                      <Clock size={12}/> {formatTimeRange(b.time, b.duration)}
                                    </div>
                                    <div className="flex items-center gap-2">
-                                      <a href={getGoogleCalendarUrl(b)} target="_blank" rel="noopener noreferrer" className="p-1.5 bg-white/5 text-slate-400 hover:text-brand rounded transition-all" title="Sync to GCal"><CalendarPlus size={14}/></a>
+                                      <a href={getGoogleCalendarUrl(b)} target="_blank" rel="noopener noreferrer" className="p-1.5 bg-white/5 text-slate-400 hover:text-brand rounded transition-all" title={t.syncCal}><CalendarPlus size={14}/></a>
                                       <span className={`text-[7px] font-black uppercase px-1.5 py-0.5 rounded ${b.status === 'confirmed' ? 'bg-green-500 text-white' : 'bg-yellow-500 text-dark'}`}>{b.status}</span>
                                    </div>
                                 </div>
@@ -215,7 +227,7 @@ const TrainerDashboard: React.FC = () => {
                                   </div>
                                 ) : (
                                   <div className="flex justify-end mb-3">
-                                     <button onClick={() => { setEditingBookingId(b.id); setNewTime(b.time); }} className="text-[8px] font-black uppercase text-slate-600 hover:text-brand flex items-center gap-1 italic"><Edit3 size={10}/> Reschedule</button>
+                                     <button onClick={() => { setEditingBookingId(b.id); setNewTime(b.time); }} className="text-[8px] font-black uppercase text-slate-600 hover:text-brand flex items-center gap-1 italic"><Edit3 size={10}/> {t.reschedule}</button>
                                   </div>
                                 )}
 
@@ -236,19 +248,19 @@ const TrainerDashboard: React.FC = () => {
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {pendingRequests.length === 0 ? (
                  <div className="col-span-full py-24 text-center bg-surface/10 rounded-[2rem] border-2 border-dashed border-white/5">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 italic">No incoming requests.</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 italic">{t.nothingScheduled}</p>
                  </div>
               ) : pendingRequests.map(b => (
                  <div key={b.id} className="bg-surface rounded-[2rem] border border-white/10 p-6 shadow-xl relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-1.5 h-full bg-yellow-500"></div>
                     <div className="mb-6 flex justify-between items-start">
                        <div>
-                          <p className="text-[8px] font-black uppercase text-yellow-500 tracking-widest mb-1 italic">Pending Recruitment</p>
+                          <p className="text-[8px] font-black uppercase text-yellow-500 tracking-widest mb-1 italic">{t.pendingRecruitment}</p>
                           <h3 className="text-xl font-black uppercase italic text-white tracking-tighter leading-none">{b.customerName}</h3>
                        </div>
                        <div className="bg-dark/60 p-2 rounded-xl border border-white/5 text-center min-w-[70px]">
                           <p className="text-[8px] font-bold text-slate-500 uppercase">{b.date}</p>
-                          <p className="text-xs font-black text-brand italic">{b.time}</p>
+                          <p className="text-xs font-black text-brand italic">{formatTimeRange(b.time, b.duration)}</p>
                        </div>
                     </div>
                     
@@ -264,8 +276,8 @@ const TrainerDashboard: React.FC = () => {
                     </div>
 
                     <div className="flex gap-3">
-                       <button onClick={() => handleAction(b.id, 'confirmed')} className="flex-[2] py-4 bg-brand text-dark rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg hover:bg-white transition-all flex items-center justify-center gap-2 font-black italic"><Check size={14}/> Confirm</button>
-                       <button onClick={() => handleAction(b.id, 'cancelled')} className="flex-1 py-4 bg-red-500/10 text-red-500 border border-red-500/20 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all">Reject</button>
+                       <button onClick={() => handleAction(b.id, 'confirmed')} className="flex-[2] py-4 bg-brand text-dark rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg hover:bg-white transition-all flex items-center justify-center gap-2 font-black italic"><Check size={14}/> {t.confirm}</button>
+                       <button onClick={() => handleAction(b.id, 'cancelled')} className="flex-1 py-4 bg-red-500/10 text-red-500 border border-red-500/20 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all">{t.reject}</button>
                     </div>
                  </div>
               ))}
@@ -274,11 +286,11 @@ const TrainerDashboard: React.FC = () => {
 
         {activeTab === 'roster' && (
            <div className="space-y-6">
-              <h2 className="text-[10px] font-black uppercase tracking-widest text-slate-600 italic">Confirmed Transformation Queue</h2>
+              <h2 className="text-[10px] font-black uppercase tracking-widest text-slate-600 italic">{t.confirmedQueue}</h2>
               <div className="grid grid-cols-1 gap-4">
                  {rosterSessions.length === 0 ? (
                     <div className="py-24 text-center bg-surface/10 rounded-[2rem] border-2 border-dashed border-white/5">
-                       <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 italic">Roster is currently empty.</p>
+                       <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 italic">{t.rosterEmpty}</p>
                     </div>
                  ) : rosterSessions.map(b => (
                     <div key={b.id} className="bg-surface p-6 rounded-2xl border border-white/10 flex flex-col md:flex-row items-center justify-between gap-8 group hover:border-brand/40 transition-all">
@@ -288,7 +300,7 @@ const TrainerDashboard: React.FC = () => {
                              <h3 className="text-lg font-black uppercase italic text-white tracking-tighter mb-1">{b.customerName}</h3>
                              <div className="flex flex-wrap gap-4">
                                 <span className="flex items-center gap-2 text-[9px] font-bold text-slate-400 uppercase tracking-widest italic"><CalendarIcon size={12} className="text-brand"/> {b.date}</span>
-                                <span className="flex items-center gap-2 text-[9px] font-bold text-slate-400 uppercase tracking-widest italic"><Clock size={12} className="text-brand"/> {b.time}</span>
+                                <span className="flex items-center gap-2 text-[9px] font-bold text-slate-400 uppercase tracking-widest italic"><Clock size={12} className="text-brand"/> {formatTimeRange(b.time, b.duration)}</span>
                              </div>
                           </div>
                        </div>
@@ -299,10 +311,10 @@ const TrainerDashboard: React.FC = () => {
                              <span className="text-[10px] font-bold uppercase">{b.customerPhone}</span>
                           </div>
                           <a href={getGoogleCalendarUrl(b)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-3 px-6 py-3 bg-white/5 hover:bg-white hover:text-dark rounded-xl border border-white/10 text-[10px] font-black uppercase tracking-widest transition-all italic">
-                             <ExternalLink size={14}/> Sync Cal
+                             <ExternalLink size={14}/> {t.syncCal}
                           </a>
                           <button onClick={() => handleAction(b.id, 'trainer_completed')} className="flex items-center justify-center gap-3 px-6 py-3 bg-brand text-dark rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl hover:bg-white transition-all italic">
-                             <Check size={14}/> Complete
+                             <Check size={14}/> {t.complete}
                           </button>
                        </div>
                     </div>

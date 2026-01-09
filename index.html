@@ -24,6 +24,18 @@
             fontFamily: {
               sans: ['Inter', 'sans-serif'],
             },
+            animation: {
+              'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'scan': 'scan 2s linear infinite',
+            },
+            keyframes: {
+              scan: {
+                '0%': { transform: 'translateX(-100%)', opacity: '0' },
+                '20%': { opacity: '0.8' },
+                '80%': { opacity: '0.8' },
+                '100%': { transform: 'translateX(250%)', opacity: '0' },
+              }
+            }
           }
         }
       }
@@ -31,7 +43,6 @@
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
       
-      /* Mobile Scroll Fixes */
       html, body {
         background-color: #0f172a;
         color: #ffffff;
@@ -39,10 +50,8 @@
         padding: 0;
         width: 100%;
         min-height: 100%;
-        /* Prevent horizontal scroll while allowing vertical */
         overflow-x: hidden;
         overflow-y: auto;
-        /* Momentum scrolling for iOS */
         -webkit-overflow-scrolling: touch;
         position: relative;
       }
@@ -54,29 +63,15 @@
         flex-direction: column;
       }
 
-      .initial-loader {
-        position: fixed;
-        inset: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        background: #0f172a;
-        z-index: 9999;
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
       }
-
-      .spinner {
-        width: 40px;
-        height: 40px;
-        border: 3px solid rgba(197, 217, 45, 0.1);
-        border-top-color: #C5D92D;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-        margin-bottom: 20px;
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.02);
       }
-
-      @keyframes spin {
-        to { transform: rotate(360deg); }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(197, 217, 45, 0.2);
+        border-radius: 10px;
       }
     </style>
   <script type="importmap">
@@ -97,14 +92,7 @@
 </script>
 </head>
   <body>
-    <div id="root">
-      <div class="initial-loader">
-        <div class="spinner"></div>
-        <div style="font-family: sans-serif; font-size: 10px; font-weight: 900; letter-spacing: 0.3em; color: rgba(255,255,255,0.2); text-transform: uppercase;">
-          ClassFit Varna
-        </div>
-      </div>
-    </div>
+    <div id="root"></div>
     <script type="module" src="./index.tsx"></script>
   </body>
 </html>

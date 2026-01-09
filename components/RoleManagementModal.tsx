@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, CheckSquare, Loader2, Save, Languages, Percent, Image as ImageIcon, Briefcase, Target, User as UserIcon, Upload, Camera, RotateCcw, Check } from 'lucide-react';
 import { User, UserRole } from '../types';
-import { DEFAULT_PROFILE_IMAGE } from '../constants';
+import { DEFAULT_PROFILE_IMAGE, TRANSLATIONS } from '../constants';
 import { useAppContext } from '../AppContext';
 
 interface RoleManagementModalProps {
@@ -16,6 +16,7 @@ interface RoleManagementModalProps {
 
 const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose, onUpdate, language, isManagement, isSelf }) => {
   const { isAdmin } = useAppContext();
+  const t = TRANSLATIONS[language as keyof typeof TRANSLATIONS];
   const [selectedRoles, setSelectedRoles] = useState<UserRole[]>([]);
   const [editName, setEditName] = useState('');
   const [editSpecialty, setEditSpecialty] = useState('');
@@ -27,7 +28,6 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Security Logic: Only admins can see/edit roles of others. 
-  // No one (even admins) should accidentally downgrade themselves in this modal without careful thought.
   const canEditAuthority = isAdmin && !isSelf;
 
   useEffect(() => {
@@ -124,11 +124,11 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
                    {isTrainerMode ? <Briefcase size={16} /> : <UserIcon size={16} />}
                 </div>
                 <h2 className="text-3xl font-black uppercase italic text-white tracking-tighter leading-none">
-                   {isSelf ? 'PROFILE SETTINGS' : 'IDENTITY MGMT'}
+                   {isSelf ? t.profileSettingsAdmin : t.identityMgmt}
                 </h2>
              </div>
              <p className="text-slate-500 text-[11px] font-black uppercase tracking-widest italic ml-11">
-                {isSelf ? 'Customize your appearance on ClassFit' : 'Refine profile details and system access levels'}
+                {isSelf ? t.motivation : t.officialControl}
              </p>
           </div>
 
@@ -146,12 +146,12 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
                    <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
                 </div>
                 <div className="text-center">
-                   <p className="text-[11px] font-black uppercase text-white tracking-widest mb-1">Profile Photo</p>
+                   <p className="text-[11px] font-black uppercase text-white tracking-widest mb-1">{t.yourExperience}</p>
                    <button 
                     onClick={(e) => { e.stopPropagation(); handleResetImage(); }}
                     className="flex items-center gap-2 px-4 py-1.5 bg-white/5 hover:bg-white/10 text-white rounded-full text-[11px] font-black uppercase tracking-widest transition-all border border-white/10"
                    >
-                     <RotateCcw size={12} className="text-brand" /> Reset
+                     <RotateCcw size={12} className="text-brand" /> {t.deleteMsg}
                    </button>
                 </div>
             </div>
@@ -159,7 +159,7 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
             {/* Core Identity Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                   <label className="text-[11px] font-black uppercase text-slate-500 ml-2">Display Name</label>
+                   <label className="text-[11px] font-black uppercase text-slate-500 ml-2">{t.register}</label>
                    <input 
                       value={editName} 
                       onChange={(e) => setEditName(e.target.value)} 
@@ -168,7 +168,7 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
                 </div>
                 <div className="space-y-2">
                    <label className="text-[11px] font-black uppercase text-slate-500 ml-2">
-                      {isTrainerMode ? 'Specialty' : 'Primary Goal'}
+                      {isTrainerMode ? t.trainer : t.motivation}
                    </label>
                    <input 
                       value={editSpecialty} 
@@ -207,7 +207,7 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
               <div className="space-y-8 animate-in slide-in-from-top-2 border-t border-white/5 pt-10">
                  <div className="p-8 bg-[#1e293b]/50 rounded-[2.5rem] border border-white/10 relative group">
                    <div className="flex justify-between items-center mb-6">
-                      <label className="text-[11px] font-black uppercase text-brand tracking-widest">Commission Share (%)</label>
+                      <label className="text-[11px] font-black uppercase text-brand tracking-widest">{t.trainerCut} (%)</label>
                    </div>
                    <div className="relative">
                       <input 
@@ -221,7 +221,7 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
                  </div>
 
                  <div className="pt-6">
-                   <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-500 mb-6 italic">Authority Delegation</h3>
+                   <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-500 mb-6 italic">{t.mgmtConsole}</h3>
                    <div className="grid grid-cols-2 gap-2">
                       {roleOptions.map((opt) => {
                          const active = selectedRoles.includes(opt.id);
@@ -242,17 +242,6 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
                  </div>
               </div>
             )}
-            
-            <div className="space-y-2">
-               <label className="text-[11px] font-black uppercase text-slate-500 ml-2">Public Image Link</label>
-               <input 
-                  value={editImage.startsWith('data:') ? 'Custom Uploaded Image' : editImage} 
-                  onChange={(e) => setEditImage(e.target.value)} 
-                  disabled={editImage.startsWith('data:')}
-                  placeholder="https://..."
-                  className="w-full bg-[#131b27] border border-white/5 focus:border-brand rounded-2xl px-6 py-4 text-[11px] font-medium text-slate-400 outline-none transition-all truncate" 
-               />
-            </div>
           </div>
 
           <div className="pt-6">
@@ -263,7 +252,7 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ user, onClose
                    showSuccess ? 'bg-green-500 text-white' : 'bg-brand text-dark hover:brightness-110 active:scale-95'
                 }`}
              >
-                {isSaving ? <Loader2 className="animate-spin" /> : showSuccess ? 'Access Granted' : <><Save size={18}/> Commit Updates</>}
+                {isSaving ? <Loader2 className="animate-spin" /> : showSuccess ? t.reqSent : <><Save size={18}/> {t.commitUpdates}</>}
              </button>
           </div>
        </div>

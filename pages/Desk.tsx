@@ -6,6 +6,18 @@ import { useAppContext } from '../AppContext';
 import { TRANSLATIONS } from '../constants';
 import { Booking } from '../types';
 
+// Helper for time ranges
+const formatTimeRange = (startTime: string, durationMins: number = 60) => {
+  if (!startTime) return '';
+  const [hours, minutes] = startTime.split(':').map(Number);
+  const date = new Date();
+  date.setHours(hours, minutes, 0, 0);
+  const endDate = new Date(date.getTime() + durationMins * 60000);
+  const endHours = String(endDate.getHours()).padStart(2, '0');
+  const endMinutes = String(endDate.getMinutes()).padStart(2, '0');
+  return `${startTime} -> ${endHours}:${endMinutes}`;
+};
+
 const Desk: React.FC = () => {
   const { language, bookings, isCashier, users, updateBooking, confirmAction, refreshData } = useAppContext();
   const navigate = useNavigate();
@@ -92,10 +104,10 @@ const Desk: React.FC = () => {
     <div className="max-w-6xl mx-auto px-6 py-20 text-left">
       <div className="mb-16 text-center">
          <div className="inline-flex items-center gap-3 bg-brand/10 text-brand px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-[0.3em] mb-6 border border-brand/20 italic">
-            <QrCode size={14} /> Front Desk Terminal
+            <QrCode size={14} /> {t.mgmtConsole}
          </div>
          <h1 className="text-4xl md:text-5xl font-black uppercase italic mb-4 tracking-tighter text-white">Entry <span className="text-brand">Protocol</span></h1>
-         <p className="text-slate-500 font-black uppercase tracking-[0.2em] text-[10px] italic">Verify Code • Process Transaction • Grant Access</p>
+         <p className="text-slate-500 font-black uppercase tracking-[0.2em] text-[10px] italic">{t.officialControl}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
@@ -115,7 +127,7 @@ const Desk: React.FC = () => {
                      autoFocus
                      value={searchCode}
                      onChange={(e) => setSearchCode(e.target.value)}
-                     placeholder={language === 'bg' ? "ВЪВЕДЕТЕ КОД..." : "ENTER ENTRY PIN..."}
+                     placeholder={t.enterPin}
                      className="w-full bg-dark/50 border border-white/10 rounded-2xl py-6 pl-16 pr-6 text-2xl font-black uppercase tracking-[0.3em] text-brand outline-none focus:border-brand transition-all shadow-inner italic"
                   />
                   {searchCode && (
@@ -134,7 +146,7 @@ const Desk: React.FC = () => {
                         <div className="flex-grow">
                            <div className="flex justify-between items-start">
                               <div>
-                                 <p className="text-[10px] font-black uppercase text-brand italic tracking-widest mb-1">Active Subject</p>
+                                 <p className="text-[10px] font-black uppercase text-brand italic tracking-widest mb-1">{t.activeSubject}</p>
                                  <h2 className="text-2xl font-black uppercase italic text-white leading-none tracking-tighter">{foundBooking.customerName}</h2>
                               </div>
                               <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
@@ -145,14 +157,14 @@ const Desk: React.FC = () => {
                            </div>
                            <div className="flex gap-4 mt-4">
                               <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400"><Phone size={12} className="text-brand"/> {foundBooking.customerPhone || 'N/A'}</div>
-                              <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400"><Clock size={12} className="text-brand"/> {foundBooking.date} @ {foundBooking.time}</div>
+                              <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400"><Clock size={12} className="text-brand"/> {foundBooking.date} @ {formatTimeRange(foundBooking.time, foundBooking.duration)}</div>
                            </div>
                         </div>
                      </div>
 
                      <div className="bg-dark/20 p-8 rounded-3xl border border-white/5 mb-8">
                         <div className="flex justify-between items-end mb-4">
-                           <p className="text-[11px] font-black uppercase text-slate-500 tracking-widest italic">Service Balance</p>
+                           <p className="text-[11px] font-black uppercase text-slate-500 tracking-widest italic">{t.serviceBalance}</p>
                            <p className="text-4xl font-black text-white italic tracking-tighter">{foundBooking.price.toFixed(2)} <span className="text-lg text-brand uppercase not-italic">€</span></p>
                         </div>
                         <div className="grid grid-cols-2 gap-4 pt-8 border-t border-white/5">
@@ -161,14 +173,14 @@ const Desk: React.FC = () => {
                               disabled={isProcessing}
                               className="py-5 bg-white text-dark rounded-xl font-black uppercase tracking-widest text-[11px] hover:bg-brand transition-all flex items-center justify-center gap-3 shadow-xl italic"
                            >
-                              <Banknote size={18} /> {language === 'bg' ? 'В брой' : 'CASH'}
+                              <Banknote size={18} /> {t.payCash}
                            </button>
                            <button 
                               onClick={() => processPayment('card')}
                               disabled={isProcessing}
                               className="py-5 bg-brand text-dark rounded-xl font-black uppercase tracking-widest text-[11px] hover:bg-white transition-all flex items-center justify-center gap-3 shadow-xl italic"
                            >
-                              <CreditCard size={18} /> {language === 'bg' ? 'Карта' : 'CARD'}
+                              <CreditCard size={18} /> {t.payCard}
                            </button>
                         </div>
                      </div>
@@ -176,7 +188,7 @@ const Desk: React.FC = () => {
                ) : (
                   <div className="py-20 text-center opacity-10">
                      <QrCode size={100} className="mx-auto mb-6" />
-                     <p className="text-xl font-black uppercase italic tracking-[0.5em]">Scanning System Ready</p>
+                     <p className="text-xl font-black uppercase italic tracking-[0.5em]">{t.scanningSystemReady}</p>
                   </div>
                )}
             </div>
@@ -187,20 +199,20 @@ const Desk: React.FC = () => {
             <div className="bg-surface/50 rounded-[2.5rem] border border-white/5 p-8 flex flex-col h-full shadow-xl">
                <div className="flex items-center justify-between mb-8">
                   <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-3 italic">
-                     <CalendarDays size={16} className="text-brand" /> Operational Ledger
+                     <CalendarDays size={16} className="text-brand" /> {t.operationalLedger}
                   </h3>
                   <div className="flex bg-dark/40 p-1 rounded-xl border border-white/10">
                      <button 
                         onClick={() => setViewMode('today')}
                         className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all ${viewMode === 'today' ? 'bg-brand text-dark' : 'text-slate-500 hover:text-white'}`}
                      >
-                        Today
+                        {t.today}
                      </button>
                      <button 
                         onClick={() => setViewMode('upcoming')}
                         className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all ${viewMode === 'upcoming' ? 'bg-brand text-dark' : 'text-slate-500 hover:text-white'}`}
                      >
-                        Future
+                        {t.future}
                      </button>
                   </div>
                </div>
@@ -208,7 +220,7 @@ const Desk: React.FC = () => {
                <div className="space-y-3 overflow-y-auto max-h-[600px] pr-2 custom-scrollbar">
                   {filteredSessions.length === 0 ? (
                      <div className="py-20 text-center bg-dark/20 rounded-2xl border border-dashed border-white/5">
-                        <p className="text-[10px] font-black uppercase text-slate-600 tracking-widest italic">No active targets found.</p>
+                        <p className="text-[10px] font-black uppercase text-slate-600 tracking-widest italic">{t.noActiveTargets}</p>
                      </div>
                   ) : filteredSessions.map(b => (
                      <div 
@@ -235,7 +247,7 @@ const Desk: React.FC = () => {
                               </div>
                            </div>
                            <div className="flex items-center gap-3">
-                              <span className="text-[9px] font-bold text-slate-500 uppercase flex items-center gap-1.5"><Clock size={10} className="text-brand"/> {b.time}</span>
+                              <span className="text-[9px] font-bold text-slate-500 uppercase flex items-center gap-1.5"><Clock size={10} className="text-brand"/> {formatTimeRange(b.time, b.duration)}</span>
                               <span className="text-[9px] font-bold text-slate-500 uppercase flex items-center gap-1.5"><Calendar size={10} className="text-brand"/> {b.date.split('-').slice(1).join('/')}</span>
                            </div>
                         </div>

@@ -7,6 +7,18 @@ import { TRANSLATIONS } from '../constants';
 import { User as UserType, Booking, Review } from '../types';
 import RoleManagementModal from '../components/RoleManagementModal';
 
+// Helper to calculate end time for range display
+const formatTimeRange = (startTime: string, durationMins: number = 60) => {
+  if (!startTime) return '';
+  const [hours, minutes] = startTime.split(':').map(Number);
+  const date = new Date();
+  date.setHours(hours, minutes, 0, 0);
+  const endDate = new Date(date.getTime() + durationMins * 60000);
+  const endHours = String(endDate.getHours()).padStart(2, '0');
+  const endMinutes = String(endDate.getMinutes()).padStart(2, '0');
+  return `${startTime} -> ${endHours}:${endMinutes}`;
+};
+
 const SessionDetailsModal: React.FC<{ booking: Booking; trainerName: string; onClose: () => void; t: any }> = ({ booking, trainerName, onClose, t }) => {
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-dark/98 backdrop-blur-md animate-in fade-in duration-300 text-left">
@@ -34,7 +46,7 @@ const SessionDetailsModal: React.FC<{ booking: Booking; trainerName: string; onC
                 </div>
                 <div>
                    <label className="text-[9px] font-black uppercase text-slate-500 tracking-[0.2em] block mb-2">Time</label>
-                   <p className="text-sm font-black text-white">{booking.time}</p>
+                   <p className="text-sm font-black text-white">{formatTimeRange(booking.time, booking.duration)}</p>
                 </div>
              </div>
              <div className="space-y-6">
@@ -43,11 +55,11 @@ const SessionDetailsModal: React.FC<{ booking: Booking; trainerName: string; onC
                    <p className="text-xl font-black text-brand italic">{booking.price.toFixed(2)} €</p>
                 </div>
                 <div>
-                   <label className="text-[9px] font-black uppercase text-slate-500 tracking-[0.2em] block mb-2">Method</label>
+                   <label className="text-[9px] font-black uppercase text-slate-500 tracking-[0.2em] block mb-2">{t.method}</label>
                    <p className="text-sm font-black uppercase text-white">{booking.paymentMethod || 'Unsettled'}</p>
                 </div>
                 <div>
-                   <label className="text-[9px] font-black uppercase text-slate-500 tracking-[0.2em] block mb-2">Status</label>
+                   <label className="text-[9px] font-black uppercase text-slate-500 tracking-[0.2em] block mb-2">{t.status}</label>
                    <span className="px-2 py-1 bg-brand/10 text-brand rounded text-[9px] font-black uppercase italic">{booking.status}</span>
                 </div>
              </div>
@@ -67,7 +79,7 @@ const SessionDetailsModal: React.FC<{ booking: Booking; trainerName: string; onC
           )}
 
           <button onClick={onClose} className="w-full py-4 bg-white/5 hover:bg-white/10 text-white rounded-xl font-black uppercase tracking-widest text-[11px] italic transition-all border border-white/10">
-             Close Console
+             {t.closeConsole}
           </button>
        </div>
     </div>
@@ -161,6 +173,55 @@ const AdminPanel: React.FC = () => {
 
   return (
     <div className="max-w-[1400px] mx-auto px-4 py-16 animate-in fade-in duration-500 text-left">
+      
+      {/* 1. TOP METRICS STRIP (HYPERLINKED WITH GLOW) */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-12">
+          <button 
+            onClick={() => setActiveTab('finance')}
+            className="p-8 bg-brand text-dark rounded-[2rem] shadow-xl hover:shadow-[0_0_40px_rgba(197,217,45,0.7)] transition-all group relative overflow-hidden active:scale-[0.98]"
+          >
+             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-12 transition-transform"><TrendingUp size={60}/></div>
+             <p className="text-[10px] font-black uppercase mb-2 opacity-70 tracking-widest italic">{t.gymNetProfit}</p>
+             <p className="text-4xl font-black italic tracking-tighter">{stats.gymNetProfit.toFixed(2)} €</p>
+             <div className="mt-4 flex items-center gap-2 text-[9px] font-black uppercase tracking-widest opacity-60">
+                {t.viewMore} <ArrowRight size={10} />
+             </div>
+          </button>
+
+          <button 
+            onClick={() => setActiveTab('finance')}
+            className="p-8 bg-surface border border-white/5 rounded-[2rem] hover:border-brand/40 hover:shadow-[0_0_30px_rgba(197,217,45,0.3)] transition-all group relative overflow-hidden active:scale-[0.98]"
+          >
+             <p className="text-[10px] font-black uppercase mb-2 text-slate-500 tracking-widest italic">{t.grossIntake}</p>
+             <p className="text-4xl font-black italic text-white tracking-tighter">{stats.totalRevenue.toFixed(2)} €</p>
+             <div className="mt-4 flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-brand opacity-0 group-hover:opacity-100 transition-all">
+                {t.viewMore} <ArrowRight size={10} />
+             </div>
+          </button>
+
+          <button 
+            onClick={() => setActiveTab('bookings')}
+            className="p-8 bg-surface border border-white/5 rounded-[2rem] hover:border-brand/40 hover:shadow-[0_0_30px_rgba(197,217,45,0.3)] transition-all group relative overflow-hidden active:scale-[0.98]"
+          >
+             <p className="text-[10px] font-black uppercase mb-2 text-slate-500 tracking-widest italic">{t.trainingsToday}</p>
+             <p className="text-4xl font-black italic text-brand tracking-tighter">{stats.trainingsTodayCount}</p>
+             <div className="mt-4 flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-brand opacity-0 group-hover:opacity-100 transition-all">
+                {t.viewMore} <ArrowRight size={10} />
+             </div>
+          </button>
+
+          <button 
+            onClick={() => setActiveTab('users')}
+            className="p-8 bg-surface border border-white/5 rounded-[2rem] hover:border-brand/40 hover:shadow-[0_0_30px_rgba(197,217,45,0.3)] transition-all group relative overflow-hidden active:scale-[0.98]"
+          >
+             <p className="text-[10px] font-black uppercase mb-2 text-slate-500 tracking-widest italic">{t.activeRegistry}</p>
+             <p className="text-4xl font-black italic text-white tracking-tighter">{users.length}</p>
+             <div className="mt-4 flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-brand opacity-0 group-hover:opacity-100 transition-all">
+                {t.viewMore} <ArrowRight size={10} />
+             </div>
+          </button>
+      </div>
+
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
         <div>
           <div className="flex items-center gap-4">
@@ -188,9 +249,9 @@ const AdminPanel: React.FC = () => {
 
       <div className="space-y-8">
         {activeTab === 'overview' && (
-           <div className="space-y-8">
-             {/* TOP LEDGER QUICK VIEW */}
-             <div className="bg-surface rounded-[2rem] border border-white/5 p-8 shadow-xl">
+           <div className="space-y-8 animate-in fade-in duration-500">
+             {/* TRAINING LEDGER QUICK VIEW */}
+             <div className="bg-surface rounded-[2.5rem] border border-white/5 p-8 shadow-xl">
                 <div className="flex items-center justify-between mb-8">
                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 flex items-center gap-3 italic">
                       <ListFilter size={16} className="text-brand" /> {t.trainingLedger}
@@ -199,11 +260,11 @@ const AdminPanel: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                    <div className="space-y-4">
                       <p className="text-[9px] font-black uppercase text-brand/60 tracking-widest mb-2 italic border-b border-white/5 pb-2">{t.upcoming}</p>
-                      {upcomingTrainings.length === 0 ? <p className="text-[9px] text-slate-600 italic">No upcoming sessions.</p> : upcomingTrainings.map(b => (
+                      {upcomingTrainings.length === 0 ? <p className="text-[9px] text-slate-600 italic">{t.nothingScheduled}</p> : upcomingTrainings.map(b => (
                          <div key={b.id} className="flex items-center justify-between p-3 bg-dark/40 rounded-xl border border-white/5">
                             <div>
                                <p className="text-[10px] font-black uppercase text-white italic">{b.customerName}</p>
-                               <p className="text-[8px] font-bold text-slate-500 uppercase">{b.date} @ {b.time}</p>
+                               <p className="text-[8px] font-bold text-slate-500 uppercase">{b.date} @ {formatTimeRange(b.time, b.duration)}</p>
                             </div>
                             <span className="text-[8px] font-black text-slate-700 uppercase tracking-widest">{b.checkInCode}</span>
                          </div>
@@ -211,44 +272,29 @@ const AdminPanel: React.FC = () => {
                    </div>
                    <div className="space-y-4">
                       <p className="text-[9px] font-black uppercase text-slate-600 tracking-widest mb-2 italic border-b border-white/5 pb-2">{t.past}</p>
-                      {completedTrainings.length === 0 ? <p className="text-[9px] text-slate-600 italic">No completed sessions.</p> : completedTrainings.map(b => (
-                         <div key={b.id} className="flex items-center justify-between p-3 bg-dark/20 rounded-xl border border-white/5 grayscale">
-                            <div>
-                               <p className="text-[10px] font-black uppercase text-slate-400 italic">{b.customerName}</p>
-                               <p className="text-[8px] font-bold text-slate-600 uppercase">{b.date}</p>
+                      {completedTrainings.length === 0 ? <p className="text-[9px] text-slate-600 italic">{t.noVerifiedProfits}</p> : completedTrainings.map(b => {
+                         const trainer = users.find(u => String(u.id) === String(b.trainerId));
+                         const rate = trainer?.commissionRate || 25;
+                         const gymProfit = b.commissionAmount !== undefined ? b.commissionAmount : (b.price * (rate / 100));
+                         return (
+                            <div key={b.id} className="flex items-center justify-between p-3 bg-dark/20 rounded-xl border border-white/5 hover:bg-brand/5 transition-all group cursor-default">
+                               <div>
+                                  <p className="text-[10px] font-black uppercase text-slate-400 italic group-hover:text-white">{b.customerName}</p>
+                                  <p className="text-[8px] font-bold text-slate-600 uppercase">{b.date}</p>
+                               </div>
+                               <div className="flex items-center gap-2">
+                                  <span className="text-[11px] font-black text-brand italic">+{gymProfit.toFixed(2)} €</span>
+                                  <Check size={10} className="text-brand" />
+                               </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                               <span className="text-[10px] font-black text-brand italic">+{b.price} €</span>
-                               <Check size={10} className="text-brand" />
-                            </div>
-                         </div>
-                      ))}
+                         );
+                      })}
                    </div>
                 </div>
              </div>
 
-             {/* STATS CARDS */}
-             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="p-6 bg-brand text-dark rounded-[1.5rem] shadow-xl">
-                   <p className="text-[9px] font-black uppercase mb-1 opacity-60">{t.gymNetProfit}</p>
-                   <p className="text-3xl font-black italic tracking-tighter">{stats.gymNetProfit.toFixed(0)} €</p>
-                </div>
-                <div className="p-6 bg-surface border border-white/5 rounded-[1.5rem]">
-                   <p className="text-[9px] font-black uppercase mb-1 text-slate-500">{t.grossIntake}</p>
-                   <p className="text-3xl font-black italic text-white tracking-tighter">{stats.totalRevenue.toFixed(0)} €</p>
-                </div>
-                <div className="p-6 bg-surface border border-white/5 rounded-[1.5rem]">
-                   <p className="text-[9px] font-black uppercase mb-1 text-slate-500">{t.trainingsToday}</p>
-                   <p className="text-3xl font-black italic text-brand tracking-tighter">{stats.trainingsTodayCount}</p>
-                </div>
-                <div className="p-6 bg-surface border border-white/5 rounded-[1.5rem]">
-                   <p className="text-[9px] font-black uppercase mb-1 text-slate-500">{t.totalMembers}</p>
-                   <p className="text-3xl font-black italic text-white tracking-tighter">{users.length}</p>
-                </div>
-             </div>
-
-             {/* PROFITS LEDGER */}
-             <div className="bg-surface rounded-[2.5rem] border border-white/5 p-8">
+             {/* PROFITS LEDGER - UPDATED WITH GYM PROFIT DISPLAY */}
+             <div className="bg-surface rounded-[2.5rem] border border-white/5 p-8 shadow-xl">
                 <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 mb-6 flex items-center gap-3 italic">
                    <DollarSign size={16} className="text-brand"/> {t.profitLedger}
                 </h3>
@@ -270,11 +316,11 @@ const AdminPanel: React.FC = () => {
                             const gymCut = b.commissionAmount !== undefined ? b.commissionAmount : (b.price * (rate / 100));
                             const trainerCut = b.trainerEarnings !== undefined ? b.trainerEarnings : (b.price - gymCut);
                             return (
-                               <tr key={b.id} className="hover:bg-white/5 transition-colors">
+                               <tr key={b.id} className="hover:bg-white/5 transition-colors group">
                                   <td className="py-4 font-bold text-slate-400">{b.date}</td>
                                   <td className="py-4 font-black uppercase italic text-white">{cleanName(trainer?.name)}</td>
                                   <td className="py-4 font-bold text-slate-400">{b.price.toFixed(2)} €</td>
-                                  <td className="py-4 font-black text-brand italic">+{gymCut.toFixed(2)} €</td>
+                                  <td className="py-4 font-black text-brand italic group-hover:scale-105 transition-transform">+{gymCut.toFixed(2)} €</td>
                                   <td className="py-4 font-bold text-slate-400">{trainerCut.toFixed(2)} €</td>
                                </tr>
                             );
@@ -289,8 +335,37 @@ const AdminPanel: React.FC = () => {
            </div>
         )}
 
+        {/* MODERATION TAB - FIXED REVIEW BODY DISPLAY */}
+        {activeTab === 'reviews' && (
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in duration-500">
+              {pendingReviews.length === 0 ? <p className="text-center col-span-2 py-20 text-slate-500 italic uppercase font-black text-[9px]">{t.noReviews}</p> : pendingReviews.map(r => (
+                 <div key={r.id} className="p-6 bg-surface rounded-2xl border border-white/10 shadow-xl relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-brand/40"></div>
+                    <div className="flex justify-between items-center mb-4">
+                       <div>
+                          <h4 className="font-black uppercase italic text-white text-xs">{r.author}</h4>
+                          <p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest">{cleanName(users.find(u => u.id === r.trainerId)?.name)}</p>
+                       </div>
+                       <div className="flex text-brand">
+                          {[...Array(r.rating)].map((_, i) => <Star key={i} size={8} fill="currentColor"/>)}
+                       </div>
+                    </div>
+                    {/* Fixed: Displaying text correctly using mapping from AppContext */}
+                    <div className="bg-dark/40 p-4 rounded-xl border border-white/5 mb-6">
+                       <p className="text-xs text-slate-300 italic font-medium leading-relaxed">"{r.text}"</p>
+                    </div>
+                    <div className="flex gap-2">
+                       <button onClick={() => updateReview(r.id, { isPublished: true })} className="flex-1 py-2 bg-brand text-dark rounded-lg text-[9px] font-black uppercase flex items-center justify-center gap-2 hover:bg-white transition-all"><ThumbsUp size={10}/> Approve</button>
+                       <button onClick={() => deleteReview(r.id)} className="flex-1 py-2 bg-white/5 text-red-500 rounded-lg text-[9px] font-black uppercase border border-red-500/10 hover:bg-red-500 hover:text-white transition-all">Delete</button>
+                    </div>
+                 </div>
+              ))}
+           </div>
+        )}
+
+        {/* Other tabs remain essentially same logic-wise */}
         {activeTab === 'finance' && (
-           <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-hidden shadow-2xl">
+           <div className="bg-surface rounded-[2.5rem] border border-white/5 overflow-hidden shadow-2xl animate-in slide-in-from-bottom-2">
               <div className="p-6 border-b border-white/5 flex items-center justify-between bg-dark/20">
                  <h3 className="text-[11px] font-black uppercase tracking-widest text-white italic flex items-center gap-3">
                     <DollarSign size={18} className="text-brand"/> {t.finVerifyQueue}
@@ -300,12 +375,12 @@ const AdminPanel: React.FC = () => {
               <div className="max-h-[600px] overflow-y-auto custom-scrollbar">
                 <table className="w-full text-left border-collapse">
                    <thead className="bg-dark/10 text-[9px] font-black uppercase text-slate-500 sticky top-0 z-10 backdrop-blur-sm">
-                      <tr><th className="p-4">Date</th><th className="p-4">Client</th><th className="p-4">Coach</th><th className="p-4">Amount</th><th className="p-4">Status</th><th className="p-4 text-center">Action</th></tr>
+                      <tr><th className="p-4">{t.date}</th><th className="p-4">{t.client}</th><th className="p-4">{t.coach}</th><th className="p-4">{t.price}</th><th className="p-4">{t.status}</th><th className="p-4 text-center">{t.verifyPay}</th></tr>
                    </thead>
                    <tbody className="divide-y divide-white/5 text-[10px]">
                       {bookings.filter(b => b.status === 'trainer_completed' || b.status === 'completed').sort((a,b) => b.date.localeCompare(a.date)).map(b => (
                          <tr key={b.id} className={`hover:bg-white/5 transition-colors ${b.status === 'trainer_completed' ? 'bg-brand/5' : ''}`}>
-                            <td className="p-4 font-bold text-slate-400 italic">{b.date} @ {b.time}</td>
+                            <td className="p-4 font-bold text-slate-400 italic">{b.date} @ {formatTimeRange(b.time, b.duration)}</td>
                             <td className="p-4 uppercase italic text-white font-black">{b.customerName}</td>
                             <td className="p-4 uppercase font-bold text-slate-400">{cleanName(users.find(u => String(u.id) === String(b.trainerId))?.name)}</td>
                             <td className="p-4 font-black text-brand text-sm italic">{b.price.toFixed(2)} €</td>
@@ -347,7 +422,7 @@ const AdminPanel: React.FC = () => {
                                   )}
                                   {b.status === 'completed' && (
                                      <div className="flex items-center gap-2 text-[9px] font-black text-slate-600 uppercase italic">
-                                        <Check size={12} className="text-brand"/> {t.verifiedBy} {b.settledBy || 'System'}
+                                        <Check size={12} className="text-brand"/> {t.verifiedBy} {b.settledBy || t.system}
                                      </div>
                                   )}
                                </div>
@@ -357,85 +432,6 @@ const AdminPanel: React.FC = () => {
                    </tbody>
                 </table>
               </div>
-              {bookings.filter(b => b.status === 'trainer_completed' || b.status === 'completed').length === 0 && (
-                <div className="py-24 text-center text-slate-500 italic uppercase font-black text-[10px]">{t.noFinancials}</div>
-              )}
-           </div>
-        )}
-
-        {activeTab === 'bookings' && (
-           <div className="bg-surface rounded-[2rem] border border-white/5 overflow-hidden">
-              <table className="w-full text-left">
-                 <thead className="bg-dark/20 text-[9px] font-black uppercase text-slate-500">
-                    <tr><th className="p-5">{t.client}</th><th className="p-5">{t.date}</th><th className="p-5">Time</th><th className="p-5">Status</th><th className="p-5">Manage</th></tr>
-                 </thead>
-                 <tbody className="divide-y divide-white/5 text-[10px] italic">
-                    {bookings.sort((a,b) => b.date.localeCompare(a.date)).map(b => (
-                       <tr key={b.id} className="hover:bg-white/5 transition-colors">
-                          <td className="p-5 font-black uppercase">{b.customerName}</td>
-                          <td className="p-5 text-slate-400">{b.date}</td>
-                          <td className="p-5 text-slate-400">{b.time}</td>
-                          <td className="p-5">
-                             <span className={`px-2 py-1 rounded text-[8px] font-black uppercase ${b.status === 'completed' ? 'text-brand' : 'text-slate-500'}`}>{b.status}</span>
-                          </td>
-                          <td className="p-5">
-                             <div className="flex items-center gap-3">
-                                <button onClick={() => setDetailedBooking(b)} className="p-2 text-slate-400 hover:text-brand transition-colors"><Eye size={12}/></button>
-                                <button onClick={() => confirmAction({ title: 'Delete Booking', message: t.permanentRemoval, onConfirm: () => deleteBooking(b.id) })} className="p-2 text-slate-500 hover:text-red-500 transition-colors"><Trash2 size={12}/></button>
-                             </div>
-                          </td>
-                       </tr>
-                    ))}
-                 </tbody>
-              </table>
-           </div>
-        )}
-
-        {/* Other tabs translated and clarified */}
-        {activeTab === 'users' && (
-           <div className="bg-surface rounded-[2rem] border border-white/5 overflow-hidden">
-              <table className="w-full text-left">
-                 <thead className="bg-dark/20 text-[9px] font-black uppercase text-slate-500">
-                    <tr><th className="p-5">User</th><th className="p-5">Email</th><th className="p-5">Roles</th><th className="p-5">Joined</th><th className="p-5">Actions</th></tr>
-                 </thead>
-                 <tbody className="divide-y divide-white/5 text-[10px] italic">
-                    {users.map(u => (
-                       <tr key={u.id} className="hover:bg-white/5 transition-colors">
-                          <td className="p-5 font-black uppercase">{cleanName(u.name)}</td>
-                          <td className="p-5 text-slate-400">{u.email}</td>
-                          <td className="p-5 flex gap-1">
-                             {u.roles.map(r => <span key={r} className="px-1.5 py-0.5 bg-white/5 rounded text-[7px] font-black uppercase">{r}</span>)}
-                          </td>
-                          <td className="p-5 text-slate-500">{u.joinedDate.split('T')[0]}</td>
-                          <td className="p-5 flex gap-2">
-                             <button onClick={() => setUserForRoles(u)} className="p-2 bg-white/5 rounded-lg text-brand hover:bg-brand hover:text-dark transition-all"><Settings2 size={12}/></button>
-                             <button onClick={() => confirmAction({ title: 'Delete User', message: 'Delete account permanently?', onConfirm: () => deleteUser(u.id) })} className="p-2 text-slate-500 hover:text-red-500"><Trash2 size={12}/></button>
-                          </td>
-                       </tr>
-                    ))}
-                 </tbody>
-              </table>
-           </div>
-        )}
-
-        {/* REVIEWS TAB */}
-        {activeTab === 'reviews' && (
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {pendingReviews.length === 0 ? <p className="text-center col-span-2 py-20 text-slate-500 italic uppercase font-black text-[9px]">{t.noReviews}</p> : pendingReviews.map(r => (
-                 <div key={r.id} className="p-6 bg-surface rounded-2xl border border-white/10 shadow-xl">
-                    <div className="flex justify-between items-center mb-4">
-                       <h4 className="font-black uppercase italic text-white text-xs">{r.author}</h4>
-                       <div className="flex text-brand">
-                          {[...Array(r.rating)].map((_, i) => <Star key={i} size={8} fill="currentColor"/>)}
-                       </div>
-                    </div>
-                    <p className="text-xs text-slate-400 mb-6 italic">"{r.text}"</p>
-                    <div className="flex gap-2">
-                       <button onClick={() => updateReview(r.id, { isPublished: true })} className="flex-1 py-2 bg-brand text-dark rounded-lg text-[9px] font-black uppercase flex items-center justify-center gap-2"><ThumbsUp size={10}/> Approve</button>
-                       <button onClick={() => deleteReview(r.id)} className="flex-1 py-2 bg-white/5 text-red-500 rounded-lg text-[9px] font-black uppercase border border-red-500/10 hover:bg-red-500 hover:text-white transition-all">Delete</button>
-                    </div>
-                 </div>
-              ))}
            </div>
         )}
       </div>

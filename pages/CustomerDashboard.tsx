@@ -1,12 +1,76 @@
 
 import React, { useState, useMemo } from 'react';
-import { Calendar, Star, LogOut, Loader2, X, Settings2, Trash2, Sparkles, Clock, MapPin, CheckCircle2, User, Heart, Search, Briefcase, ShieldCheck, Globe, Navigation, ExternalLink, ArrowRight, PhoneCall, Ticket } from 'lucide-react';
+import { Calendar, Star, LogOut, Loader2, X, Settings2, Trash2, Sparkles, Clock, MapPin, CheckCircle2, User, Heart, Search, Briefcase, ShieldCheck, Globe, Navigation, ExternalLink, ArrowRight, PhoneCall, Ticket, Info, ChevronRight, AlertTriangle } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, getTrainers, DEFAULT_PROFILE_IMAGE } from '../constants';
 import { useNavigate } from 'react-router-dom';
 import { Trainer, Booking } from '../types';
 import { GoogleGenAI, Type } from "@google/genai";
 import RoleManagementModal from '../components/RoleManagementModal';
+
+// Helper for time ranges
+const formatTimeRange = (startTime: string, durationMins: number = 60) => {
+  if (!startTime) return '';
+  const [hours, minutes] = startTime.split(':').map(Number);
+  const date = new Date();
+  date.setHours(hours, minutes, 0, 0);
+  const endDate = new Date(date.getTime() + durationMins * 60000);
+  const endHours = String(endDate.getHours()).padStart(2, '0');
+  const endMinutes = String(endDate.getMinutes()).padStart(2, '0');
+  return `${startTime} -> ${endHours}:${endMinutes}`;
+};
+
+const CancellationModal: React.FC<{ 
+  onClose: () => void; 
+  onConfirm: (reason: string) => void;
+  t: any;
+}> = ({ onClose, onConfirm, t }) => {
+  const [reason, setReason] = useState('');
+  const reasons = [t.cancelInjury, t.cancelSchedule, t.cancelPersonal, t.cancelOther];
+
+  return (
+    <div className="fixed inset-0 z-[700] flex items-center justify-center p-6 bg-dark/95 backdrop-blur-xl animate-in fade-in duration-300">
+       <div className="bg-surface border border-white/10 rounded-[2.5rem] p-10 w-full max-w-md shadow-2xl relative italic">
+          <div className="absolute top-0 left-0 w-full h-1 bg-red-500"></div>
+          <button onClick={onClose} className="absolute top-6 right-8 p-2 bg-white/5 rounded-full text-slate-500 hover:text-white transition-all"><X size={20}/></button>
+          
+          <div className="text-center mb-8">
+             <div className="w-16 h-16 bg-red-500/10 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl">
+                <AlertTriangle size={32} />
+             </div>
+             <h2 className="text-2xl font-black uppercase italic text-white tracking-tighter">{t.cancelSession}</h2>
+             <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mt-2">{t.cancelReason}</p>
+          </div>
+
+          <div className="space-y-3 mb-8">
+             {reasons.map((r) => (
+                <button 
+                  key={r} 
+                  onClick={() => setReason(r)}
+                  className={`w-full p-4 rounded-xl border text-[11px] font-black uppercase tracking-widest transition-all text-left flex justify-between items-center ${reason === r ? 'bg-red-500/10 border-red-500 text-red-500' : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10'}`}
+                >
+                   {r}
+                   {reason === r && <CheckCircle2 size={14} className="animate-in zoom-in" />}
+                </button>
+             ))}
+          </div>
+
+          <div className="flex flex-col gap-3">
+             <button 
+                disabled={!reason}
+                onClick={() => onConfirm(reason)}
+                className={`w-full py-5 rounded-xl font-black uppercase italic tracking-widest text-xs transition-all shadow-xl ${reason ? 'bg-red-600 text-white hover:bg-red-500 active:scale-95' : 'bg-white/5 text-slate-700 cursor-not-allowed border border-white/5'}`}
+             >
+                {t.deleteBooking}
+             </button>
+             <button onClick={onClose} className="w-full py-4 text-slate-500 font-black uppercase text-[10px] tracking-[0.2em] hover:text-white transition-colors">
+                Back to Session
+             </button>
+          </div>
+       </div>
+    </div>
+  );
+};
 
 const ReviewModal: React.FC<{ 
   booking: Booking | null; 
@@ -78,12 +142,55 @@ const ReviewModal: React.FC<{
   );
 };
 
+const SessionProgressLine: React.FC<{ status: string, t: any }> = ({ status, t }) => {
+  const steps = [
+    { key: 'pending', label: t.statusRequested },
+    { key: 'confirmed', label: t.statusConfirmed },
+    { key: 'completed', label: t.statusCompletedLive }
+  ];
+
+  let progress = 0;
+  if (status === 'pending') progress = 20;
+  if (status === 'confirmed') progress = 60;
+  if (status === 'completed' || status === 'trainer_completed') progress = 100;
+
+  return (
+    <div className="flex flex-col gap-3 flex-grow w-full max-w-lg">
+       <div className="flex justify-between px-1 mb-1">
+          {steps.map((step, idx) => {
+             const active = status === step.key || 
+                            (step.key === 'completed' && (status === 'trainer_completed' || status === 'completed')) || 
+                            (step.key === 'pending' && (status === 'confirmed' || status === 'completed' || status === 'trainer_completed')) || 
+                            (step.key === 'confirmed' && (status === 'completed' || status === 'trainer_completed'));
+             return (
+                <div key={step.key} className="flex flex-col items-center gap-1.5 min-w-[60px]">
+                   <div className={`w-3 h-3 rounded-full border-2 transition-all duration-700 ${active ? 'bg-brand border-brand shadow-[0_0_15px_rgba(197,217,45,0.8)]' : 'bg-dark border-slate-700'}`}></div>
+                   <span className={`text-[8px] font-black uppercase tracking-tighter italic ${active ? 'text-white' : 'text-slate-600'}`}>{step.label}</span>
+                </div>
+             )
+          })}
+       </div>
+       <div className="h-2 bg-dark border border-white/5 rounded-full overflow-hidden relative shadow-inner">
+          <div 
+             className="h-full bg-gradient-to-r from-brand/80 to-brand transition-all duration-1000 ease-out relative"
+             style={{ width: `${progress}%` }}
+          >
+             {progress > 0 && progress < 100 && (
+               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent w-32 animate-scan pointer-events-none"></div>
+             )}
+          </div>
+       </div>
+    </div>
+  );
+};
+
 const CustomerDashboard: React.FC = () => {
   const { language, bookings, updateBooking, deleteBooking, currentUser, logout, users, addReview, refreshData, confirmAction, isManagement, isAdmin, isCashier, updateUser } = useAppContext();
   const t = TRANSLATIONS[language];
   const navigate = useNavigate();
 
   const [bookingToReview, setBookingToReview] = useState<Booking | null>(null);
+  const [bookingToCancel, setBookingToCancel] = useState<Booking | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
 
   const allTrainers = useMemo(() => {
@@ -112,6 +219,13 @@ const CustomerDashboard: React.FC = () => {
     await addReview({ trainerId, author: currentUser.name.split('(')[0].trim(), rating, text, isAiEnhanced: isAi, bookingId: id });
     await updateBooking(id, { hasBeenReviewed: true });
     setBookingToReview(null);
+    await refreshData();
+  };
+
+  const handleCancelBooking = async (reason: string) => {
+    if (!bookingToCancel) return;
+    await updateBooking(bookingToCancel.id, { status: 'cancelled' });
+    setBookingToCancel(null);
     await refreshData();
   };
 
@@ -169,44 +283,101 @@ const CustomerDashboard: React.FC = () => {
       )}
 
       <div className="space-y-8">
-        <h2 className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-600 italic text-center sm:text-left">SESSION HISTORY</h2>
+        <h2 className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-600 italic text-center sm:text-left">LIVE SESSION HISTORY</h2>
         <div className="grid grid-cols-1 gap-6">
           {myBookings.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(booking => {
               const trainer = allTrainers.find(tr => tr.id === booking.trainerId);
               const canReview = booking.status === 'completed' && !booking.hasBeenReviewed;
+              const isCancelled = booking.status === 'cancelled';
+              
               return (
-                  <div key={booking.id} className="bg-surface/50 border border-white/10 rounded-[1.5rem] p-6 hover:border-brand/40 transition-all duration-500 group flex flex-col lg:flex-row gap-6 items-start lg:items-center">
-                      <div className="flex items-center gap-6 flex-grow w-full">
-                         <div className="w-16 h-16 rounded-2xl overflow-hidden bg-dark border-2 border-white/10 shrink-0 group-hover:border-brand transition-all duration-700">
-                           <img src={trainer?.image || DEFAULT_PROFILE_IMAGE} className="w-full h-full object-cover" />
+                  <div key={booking.id} className={`bg-surface/60 border border-white/5 rounded-[3rem] p-10 hover:border-brand/40 transition-all duration-500 group relative flex flex-col lg:flex-row gap-12 items-start lg:items-center ${isCancelled ? 'opacity-50 grayscale' : 'shadow-2xl'}`}>
+                      
+                      {/* 1. TRAINER PROFILE PICTURE ANCHOR */}
+                      <div className="flex items-center gap-8 min-w-[320px] shrink-0">
+                         <div className="relative group/avatar">
+                            <div className="w-24 h-24 rounded-[2rem] overflow-hidden bg-dark border-2 border-white/10 group-hover:border-brand transition-all duration-700 shadow-xl">
+                               <img src={trainer?.image || DEFAULT_PROFILE_IMAGE} className="w-full h-full object-cover group-hover/avatar:scale-110 transition-transform duration-1000" />
+                            </div>
+                            {!isCancelled && booking.status !== 'completed' && (
+                               <div className="absolute -top-2 -right-2 w-6 h-6 bg-brand rounded-full border-4 border-surface animate-pulse shadow-[0_0_15px_rgba(197,217,45,0.6)]"></div>
+                            )}
                          </div>
                          <div className="flex-grow">
-                            <p className="text-[8px] font-black uppercase text-brand italic tracking-widest">{trainer?.specialty || 'ELITE PERSONNEL'}</p>
-                            <h3 className="font-black uppercase italic text-xl text-white tracking-tighter group-hover:text-brand transition-colors">{trainer?.name || 'Unknown Coach'}</h3>
-                            <div className="flex gap-4 pt-2">
-                               <div className="flex items-center gap-2 text-xs font-black uppercase text-slate-400 italic"><Clock size={12} className="text-brand" /> {booking.date} @ {booking.time}</div>
-                               <div className="flex items-center gap-2 text-xs font-black uppercase text-slate-400 italic"><MapPin size={12} className="text-brand" /> VARNA</div>
+                            <p className="text-[10px] font-black uppercase text-brand italic tracking-[0.2em] mb-1">{trainer?.specialty || 'Personnel'}</p>
+                            <h3 className="font-black uppercase italic text-2xl text-white tracking-tighter group-hover:text-brand transition-colors leading-none mb-3">{trainer?.name || 'Coach'}</h3>
+                            <div className="flex gap-4">
+                               <div className="flex items-center gap-2 text-[10px] font-black uppercase text-slate-500 italic"><Clock size={12} className="text-brand" /> {booking.date}</div>
                             </div>
                          </div>
                       </div>
-                      <div className="flex gap-4 w-full lg:w-auto items-center">
-                         <div className="bg-dark/80 p-3 px-6 rounded-xl border border-white/5 flex flex-col items-center justify-center min-w-[120px]">
-                            <p className="text-[7px] font-black uppercase text-slate-600 mb-0.5 tracking-widest">ENTRY PIN</p>
-                            <p className="text-2xl font-black text-brand tracking-widest italic">{booking.checkInCode || 'N/A'}</p>
+
+                      {/* 2. LIVE PROGRESS BAR WITH SCAN PULSE */}
+                      {!isCancelled ? (
+                         <div className="flex-grow w-full flex justify-center lg:justify-start">
+                            <SessionProgressLine status={booking.status} t={t} />
                          </div>
-                         <div className="flex gap-2">
-                           {canReview && <button onClick={() => setBookingToReview(booking)} className="px-5 py-3 bg-brand text-dark rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-md">REVIEW</button>}
-                           <a href={`tel:${trainer?.phone}`} className="w-10 h-10 bg-white/5 hover:bg-white hover:text-dark text-white rounded-xl flex items-center justify-center border border-white/10 transition-all"><PhoneCall size={16} /></a>
-                           <button onClick={() => confirmAction({ title: t.deleteBooking, message: t.sure, onConfirm: () => deleteBooking(booking.id) })} className="w-10 h-10 bg-white/5 hover:bg-red-500 hover:text-white text-slate-500 rounded-xl flex items-center justify-center border border-white/10 transition-all"><Trash2 size={16}/></button>
+                      ) : (
+                         <div className="flex-grow text-center lg:text-left flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center text-red-500"><X size={20} /></div>
+                            <span className="px-5 py-2 bg-red-500/10 text-red-500 rounded-full text-[10px] font-black uppercase tracking-[0.3em] italic border border-red-500/20">Protocol Terminated</span>
+                         </div>
+                      )}
+
+                      {/* 3. STATUS DATA & ACTIONS */}
+                      <div className="flex flex-col sm:flex-row gap-6 w-full lg:w-auto items-center shrink-0">
+                         <div className="flex flex-col items-center bg-dark/60 px-8 py-5 rounded-[2rem] border border-white/5 min-w-[160px] italic shadow-inner">
+                            <p className="text-[9px] font-black uppercase text-slate-500 mb-2 tracking-[0.2em]">{formatTimeRange(booking.time, booking.duration)}</p>
+                            <p className="text-3xl font-black text-white tracking-widest italic leading-none"><span className="text-slate-700 text-[10px] mr-2">PIN</span>{booking.checkInCode || '---'}</p>
+                         </div>
+                         
+                         <div className="flex gap-3">
+                            {canReview && (
+                               <button 
+                                 onClick={() => setBookingToReview(booking)} 
+                                 className="px-8 py-5 bg-brand text-dark rounded-2xl font-black uppercase tracking-widest text-[11px] hover:bg-white transition-all shadow-xl italic"
+                               >
+                                  Post Review
+                               </button>
+                            )}
+                            <button 
+                               onClick={() => confirmAction({ title: t.viewInfo, message: `Access Point: ${booking.gymAddress || t.address}`, onConfirm: () => {} })} 
+                               className="w-14 h-14 bg-white/5 hover:bg-white hover:text-dark text-white rounded-2xl flex items-center justify-center border border-white/10 transition-all group/btn shadow-lg"
+                               title="View Info"
+                            >
+                               <Info size={24} className="group-hover/btn:scale-110 transition-transform" />
+                            </button>
+                            
+                            {!isCancelled && booking.status !== 'completed' && booking.status !== 'trainer_completed' && (
+                               <button 
+                                 onClick={() => setBookingToCancel(booking)} 
+                                 className="w-14 h-14 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-2xl flex items-center justify-center border border-red-500/10 transition-all group/btn shadow-lg"
+                                 title="Cancel Session"
+                               >
+                                  <Trash2 size={22} className="group-hover/btn:rotate-12 transition-transform" />
+                               </button>
+                            )}
                          </div>
                       </div>
                   </div>
               )
           })}
+
+          {myBookings.length === 0 && (
+             <div className="py-40 text-center bg-surface/30 rounded-[4rem] border-2 border-dashed border-white/5 shadow-inner">
+                <div className="w-20 h-20 bg-white/5 rounded-3xl flex items-center justify-center mx-auto mb-8 text-slate-700">
+                   <Calendar size={40} />
+                </div>
+                <p className="text-xl font-black uppercase italic text-slate-500 tracking-tight">{t.noBookings}</p>
+                <button onClick={() => navigate('/booking')} className="mt-10 px-12 py-6 bg-brand text-dark rounded-full font-black uppercase text-xs tracking-[0.2em] hover:bg-white transition-all italic shadow-2xl shadow-brand/20 active:scale-95">{t.makeFirst}</button>
+             </div>
+          )}
         </div>
       </div>
+
       {showEditModal && <RoleManagementModal user={currentUser} onClose={() => setShowEditModal(false)} onUpdate={async (uid, updates) => await updateUser(uid, updates)} language={language} isManagement={isManagement} isSelf={true} />}
       {bookingToReview && <ReviewModal booking={bookingToReview} trainerName={allTrainers.find(tImg => tImg.id === bookingToReview.trainerId)?.name || 'Coach'} onClose={() => setBookingToReview(null)} onSubmit={handleReviewSubmit} />}
+      {bookingToCancel && <CancellationModal t={t} onClose={() => setBookingToCancel(null)} onConfirm={handleCancelBooking} />}
     </div>
   );
 };

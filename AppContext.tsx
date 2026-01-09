@@ -130,6 +130,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           ...r,
           id: String(r.id),
           trainerId: String(r.trainer_id),
+          author: r.author_name || 'Unknown', // FIX: Explicit mapping
+          text: r.content || '', // FIX: Explicit mapping
           isPublished: r.is_published || false
       })));
       
@@ -172,7 +174,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const updateUser = async (id: string, updates: Partial<User>) => {
     const dbUpdates: any = { ...updates };
-    // MAPPING FIX: Map camelCase to snake_case for DB columns
     if (updates.commissionRate !== undefined) { dbUpdates.commission_rate = updates.commissionRate; delete dbUpdates.commissionRate; }
     if (updates.blockedDates !== undefined) { dbUpdates.blocked_dates = updates.blockedDates; delete dbUpdates.blockedDates; }
     if (updates.joinedDate !== undefined) { dbUpdates.joined_date = updates.joinedDate; delete dbUpdates.joinedDate; }
