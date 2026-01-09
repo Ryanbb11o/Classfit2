@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { Calendar, Star, LogOut, Loader2, X, Settings2, Trash2, AlertCircle, Sparkles, Languages, Clock, MapPin, CheckCircle2, User, Heart, Search, Briefcase, ShieldCheck, Globe, Navigation, Phone, ExternalLink, ArrowRight, PhoneCall, Zap, Ticket } from 'lucide-react';
+import { Calendar, Star, LogOut, Loader2, X, Settings2, Trash2, Sparkles, Clock, MapPin, CheckCircle2, User, Heart, Search, Briefcase, ShieldCheck, Globe, Navigation, ExternalLink, ArrowRight, PhoneCall, Ticket } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { TRANSLATIONS, getTrainers, DEFAULT_PROFILE_IMAGE } from '../constants';
 import { useNavigate } from 'react-router-dom';
@@ -53,21 +53,13 @@ const ReviewModal: React.FC<{
     <div className="fixed inset-0 z-[600] flex items-center justify-center p-6 bg-dark/98 backdrop-blur-md animate-in fade-in duration-500">
        <div className="bg-[#1a2332] rounded-[2.5rem] border border-white/10 w-full max-w-lg p-10 text-center relative shadow-2xl italic">
           <div className="absolute top-0 left-0 w-full h-1 bg-brand"></div>
-          <button onClick={onClose} className="absolute top-6 right-6 p-2 bg-white/5 rounded-full text-slate-500 hover:text-white transition-all"><X size={20} /></button>
-          
-          <div className="w-20 h-20 bg-brand/10 text-brand rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-xl">
-            <Heart size={32} className="fill-brand" />
-          </div>
-          
-          <h2 className="text-2xl font-black uppercase italic text-white mb-6 tracking-tighter leading-none">
-            REview <span className="text-brand">{trainerName}</span>
-          </h2>
-          
+          <button onClick={onClose} className="absolute top-6 right-8 p-2 bg-white/5 rounded-full text-slate-500 hover:text-white transition-all"><X size={20} /></button>
+          <div className="w-16 h-16 bg-brand/10 text-brand rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl"><Heart size={28} className="fill-brand" /></div>
+          <h2 className="text-2xl font-black uppercase italic text-white mb-6 tracking-tighter">Review <span className="text-brand">{trainerName}</span></h2>
           <form onSubmit={(e) => { e.preventDefault(); setIsSubmitting(true); onSubmit(booking.id, rating, comment, isAiEnhanced, booking.trainerId).finally(() => setIsSubmitting(false)); }} className="space-y-8 text-left">
              <div className="flex justify-center gap-4 mb-8">
-                {[1,2,3,4,5].map(s => <button key={s} type="button" onClick={() => setRating(s)} className="p-2 transition-all hover:scale-125"><Star size={32} className={`${s <= rating ? 'text-brand fill-brand drop-shadow-[0_0_20px_rgba(197,217,45,0.4)]' : 'text-slate-800'}`} /></button>)}
+                {[1,2,3,4,5].map(s => <button key={s} type="button" onClick={() => setRating(s)} className="p-1 transition-all hover:scale-125"><Star size={24} className={`${s <= rating ? 'text-brand fill-brand drop-shadow-[0_0_15px_rgba(197,217,45,0.4)]' : 'text-slate-800'}`} /></button>)}
              </div>
-             
              <div className="space-y-4">
                 <div className="flex items-center justify-between px-2">
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 italic">YOUR FEEDBACK</label>
@@ -77,8 +69,7 @@ const ReviewModal: React.FC<{
                 </div>
                 <textarea rows={4} value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Type your experience here..." className="w-full bg-dark/50 border border-white/10 focus:border-brand rounded-2xl px-6 py-4 text-white text-sm outline-none resize-none transition-all italic font-medium shadow-inner" />
              </div>
-             
-             <button type="submit" disabled={isSubmitting} className="w-full py-4 bg-brand text-dark rounded-xl font-black uppercase tracking-widest text-[11px] hover:bg-white transition-all shadow-xl shadow-brand/10">
+             <button type="submit" disabled={isSubmitting} className="w-full py-4 bg-brand text-dark rounded-xl font-black uppercase tracking-widest text-[11px] hover:bg-white transition-all shadow-xl">
                {isSubmitting ? <Loader2 className="animate-spin mx-auto" size={24} /> : 'SUBMIT PERFORMANCE REVIEW'}
              </button>
           </form>
@@ -127,43 +118,28 @@ const CustomerDashboard: React.FC = () => {
   const hasStaffAccess = isCashier || isAdmin || currentUser.roles?.includes('trainer');
 
   return (
-    <div className="max-w-[1400px] mx-auto px-6 py-16 animate-in fade-in duration-700 text-left selection:bg-brand selection:text-dark">
-      {/* Profile Header Console - Tightened Proportions */}
+    <div className="max-w-[1400px] mx-auto px-6 py-16 animate-in fade-in duration-700 text-left">
       <div className="flex flex-col lg:flex-row items-center justify-between gap-10 mb-16 bg-surface p-10 rounded-[3rem] border border-white/10 shadow-xl relative overflow-hidden group">
-         <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-brand/5 rounded-full blur-[100px] pointer-events-none transition-all duration-1000"></div>
          <div className="flex flex-col md:flex-row items-center gap-10 relative z-10 text-center md:text-left w-full lg:w-auto">
             <div className="relative">
-              <div className="w-32 h-32 md:w-40 md:h-40 rounded-full p-1.5 bg-gradient-to-tr from-brand to-transparent shrink-0 overflow-hidden shadow-xl">
+              <div className="w-24 h-24 md:w-32 md:h-32 rounded-full p-1.5 bg-gradient-to-tr from-brand to-transparent shrink-0 overflow-hidden shadow-xl">
                   <img src={currentUser.image || DEFAULT_PROFILE_IMAGE} className="w-full h-full object-cover rounded-full group-hover:scale-105 transition-all duration-1000" />
               </div>
-              <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-brand text-dark rounded-2xl flex items-center justify-center border-4 border-surface shadow-xl rotate-12 transition-transform">
-                 <ShieldCheck size={20} />
+              <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-brand text-dark rounded-xl flex items-center justify-center border-4 border-surface shadow-xl rotate-12 transition-transform">
+                 <ShieldCheck size={14} />
               </div>
             </div>
             <div className="flex-grow">
-                <h1 className="text-3xl md:text-5xl font-black uppercase italic text-white mb-4 tracking-tighter leading-[0.8] drop-shadow-lg">{currentUser.name.split('(')[0].trim()}</h1>
-                <div className="flex flex-wrap justify-center md:justify-start gap-3 mb-6">
+                <h1 className="text-3xl md:text-4xl font-black uppercase italic text-white mb-3 tracking-tighter leading-none">{currentUser.name.split('(')[0].trim()}</h1>
+                <div className="flex flex-wrap justify-center md:justify-start gap-2 mb-4">
                    {currentUser.roles?.map(role => (
-                     <span key={role} className="text-brand bg-brand/10 text-[9px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full border border-brand/20 shadow-md italic">
+                     <span key={role} className="text-brand bg-brand/10 text-[8px] font-black uppercase tracking-widest px-3 py-1 rounded-full border border-brand/20 shadow-md italic">
                        {role.toUpperCase()}
                      </span>
                    ))}
-                   <button onClick={() => setShowEditModal(true)} className="bg-white/5 hover:bg-white hover:text-dark text-white text-[9px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full border border-white/10 transition-all flex items-center gap-2 group/btn italic">
-                     <Settings2 size={12} className="group-hover/btn:rotate-90 transition-transform" /> {t.profileSettings}
+                   <button onClick={() => setShowEditModal(true)} className="bg-white/5 hover:bg-white hover:text-dark text-white text-[8px] font-black uppercase tracking-widest px-3 py-1 rounded-full border border-white/10 transition-all flex items-center gap-2 group/btn italic">
+                     <Settings2 size={10} className="group-hover/btn:rotate-90 transition-transform" /> {t.profileSettings}
                    </button>
-                </div>
-                
-                <div className="flex flex-col sm:flex-row items-center justify-center md:justify-start gap-8">
-                   <div className="flex items-center gap-3 text-slate-500 font-black uppercase tracking-widest text-[10px] italic">
-                      <Globe size={14} className="text-brand" /> {language === 'bg' ? 'ЕЗИЦИ' : 'DIALECTS'}
-                   </div>
-                   <div className="flex flex-wrap justify-center gap-3">
-                      {currentUser.languages?.map(lang => (
-                        <span key={lang} className="text-white text-xs font-black uppercase italic tracking-widest bg-white/5 px-4 py-1 rounded-lg border border-white/5">
-                          {lang}
-                        </span>
-                      ))}
-                   </div>
                 </div>
             </div>
          </div>
@@ -176,17 +152,17 @@ const CustomerDashboard: React.FC = () => {
         <div className="mb-16">
            <h2 className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-600 italic mb-6 text-center sm:text-left">SYSTEM PORTALS</h2>
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {isCashier && <button onClick={() => navigate('/desk')} className="group p-8 bg-brand text-dark rounded-[2rem] flex items-center justify-between transition-all hover:scale-[1.02] shadow-xl font-black uppercase italic text-xl tracking-tighter">
-                <div className="flex items-center gap-6"><Search size={28}/> FRONT DESK</div>
-                <ArrowRight size={24} className="group-hover:translate-x-1 transition-transform" />
+              {isCashier && <button onClick={() => navigate('/desk')} className="group p-6 bg-brand text-dark rounded-[2rem] flex items-center justify-between transition-all hover:scale-[1.01] shadow-xl font-black uppercase italic text-xl tracking-tighter">
+                <div className="flex items-center gap-6"><Search size={24}/> FRONT DESK</div>
+                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
               </button>}
-              {currentUser.roles?.includes('trainer') && <button onClick={() => navigate('/trainer')} className="group p-8 bg-surface border border-brand/40 text-brand rounded-[2rem] flex items-center justify-between transition-all hover:scale-[1.02] shadow-lg font-black uppercase italic text-xl tracking-tighter">
-                <div className="flex items-center gap-6"><Briefcase size={28}/> COACH TERMINAL</div>
-                <ArrowRight size={24} className="group-hover:translate-x-1 transition-transform" />
+              {currentUser.roles?.includes('trainer') && <button onClick={() => navigate('/trainer')} className="group p-6 bg-surface border border-brand/40 text-brand rounded-[2rem] flex items-center justify-between transition-all hover:scale-[1.01] shadow-lg font-black uppercase italic text-xl tracking-tighter">
+                <div className="flex items-center gap-6"><Briefcase size={24}/> COACH TERMINAL</div>
+                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
               </button>}
-              {isAdmin && <button onClick={() => navigate('/admin')} className="group p-8 bg-surface border border-red-500/40 text-red-500 rounded-[2rem] flex items-center justify-between transition-all hover:scale-[1.02] shadow-lg font-black uppercase italic text-xl tracking-tighter">
-                <div className="flex items-center gap-6"><ShieldCheck size={28}/> ADMIN CONSOLE</div>
-                <ArrowRight size={24} className="group-hover:translate-x-1 transition-transform" />
+              {isAdmin && <button onClick={() => navigate('/admin')} className="group p-6 bg-surface border border-red-500/40 text-red-500 rounded-[2rem] flex items-center justify-between transition-all hover:scale-[1.01] shadow-lg font-black uppercase italic text-xl tracking-tighter">
+                <div className="flex items-center gap-6"><ShieldCheck size={24}/> ADMIN CONSOLE</div>
+                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
               </button>}
            </div>
         </div>
@@ -194,99 +170,43 @@ const CustomerDashboard: React.FC = () => {
 
       <div className="space-y-8">
         <h2 className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-600 italic text-center sm:text-left">SESSION HISTORY</h2>
-        {myBookings.length === 0 ? (
-            <div className="text-center py-32 bg-surface/10 rounded-[2.5rem] border-2 border-dashed border-white/5 italic">
-                <Calendar size={40} className="mx-auto mb-8 text-slate-800" />
-                <p className="text-slate-500 font-black uppercase tracking-widest text-[11px] mb-8">NO ACTIVE SESSIONS LOGGED.</p>
-                <button onClick={() => navigate('/booking')} className="px-12 py-5 bg-brand text-dark rounded-full font-black uppercase tracking-widest text-[10px] shadow-xl hover:bg-white transition-all italic">INITIALIZE FIRST SESSION</button>
-            </div>
-        ) : (
-            <div className="grid grid-cols-1 gap-6">
-              {myBookings.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(booking => {
-                  const trainer = allTrainers.find(tr => tr.id === booking.trainerId);
-                  const canReview = booking.status === 'completed' && !booking.hasBeenReviewed;
-                  
-                  return (
-                      <div key={booking.id} className="bg-surface/50 border border-white/10 rounded-[2rem] p-6 md:p-8 hover:border-brand/40 transition-all duration-700 group relative overflow-hidden flex flex-col xl:flex-row gap-8 items-start xl:items-center shadow-lg">
-                          <div className="flex items-center gap-6 flex-grow w-full">
-                             <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl overflow-hidden bg-dark border-2 border-white/10 shrink-0 group-hover:border-brand transition-all duration-700">
-                               <img src={trainer?.image || DEFAULT_PROFILE_IMAGE} className="w-full h-full object-cover" />
-                             </div>
-                             <div className="flex-grow space-y-2">
-                                <div className="space-y-0.5">
-                                   <p className="text-[9px] font-black uppercase text-brand italic tracking-widest">{trainer?.specialty || 'ELITE PERSONNEL'}</p>
-                                   <h3 className="font-black uppercase italic text-xl md:text-2xl text-white tracking-tighter leading-tight group-hover:text-brand transition-colors">{trainer?.name || 'Unknown Coach'}</h3>
-                                </div>
-                                <div className="flex flex-wrap gap-6 pt-2">
-                                   <div className="flex items-center gap-2 text-xs font-black uppercase text-slate-300 italic"><Clock size={16} className="text-brand" /> {booking.date} @ {booking.time}</div>
-                                   <div className="flex items-center gap-2 text-xs font-black uppercase text-slate-300 italic"><MapPin size={16} className="text-brand" /> VARNA</div>
-                                </div>
-                             </div>
-                          </div>
-                          
-                          <div className="flex flex-row xl:flex-col gap-4 w-full xl:w-auto shrink-0 items-center justify-between xl:justify-center">
-                             <div className="bg-dark/80 backdrop-blur-md p-4 px-8 rounded-2xl border border-white/5 flex flex-col items-center justify-center min-w-[160px] group-hover:border-brand/20 transition-colors">
-                                <p className="text-[8px] font-black uppercase text-slate-600 mb-1 tracking-widest">ENTRY PIN</p>
-                                <p className="text-3xl font-black text-brand tracking-widest italic">{booking.checkInCode || 'N/A'}</p>
-                             </div>
-                             <div className={`px-5 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest border italic ${
-                               booking.status === 'completed' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 
-                               booking.status === 'confirmed' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' : 
-                               booking.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' : 
-                               'bg-white/5 text-slate-500 border-white/20'
-                             }`}>
-                               {booking.status.replace('_', ' ')}
-                             </div>
-                          </div>
-
-                          <div className="flex flex-row gap-3 w-full xl:w-auto">
-                             {canReview ? (
-                               <button onClick={() => setBookingToReview(booking)} className="flex-1 xl:w-48 px-6 py-4 bg-brand text-dark rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-md flex items-center justify-center gap-2 italic">
-                                 <Star size={16} fill="currentColor"/> REVIEW
-                               </button>
-                             ) : booking.hasBeenReviewed ? (
-                               <div className="flex-1 xl:w-48 px-6 py-4 bg-white/5 text-brand rounded-xl text-[9px] font-black uppercase tracking-widest border border-brand/20 flex items-center justify-center gap-2 italic opacity-60">
-                                 <CheckCircle2 size={16}/> LOGGED
-                               </div>
-                             ) : null}
-                             
-                             <div className="flex gap-2">
-                               <a href={`tel:${trainer?.phone}`} className="w-12 h-12 bg-white/5 hover:bg-white hover:text-dark text-white rounded-xl flex items-center justify-center border border-white/10 transition-all group/icon shadow-md">
-                                  <PhoneCall size={18} className="text-brand group-hover/icon:text-dark" />
-                               </a>
-                               <a href="https://www.google.com/maps/search/?api=1&query=ClassFit+Varna+Studentska+1A" target="_blank" rel="noopener noreferrer" className="w-12 h-12 bg-white/5 hover:bg-brand hover:text-dark text-white rounded-xl flex items-center justify-center border border-white/10 transition-all group/icon shadow-md">
-                                  <Navigation size={18} className="text-brand group-hover/icon:text-dark" />
-                               </a>
-                               <button onClick={() => confirmAction({ title: t.deleteBooking, message: t.sure, onConfirm: () => deleteBooking(booking.id) })} className="w-12 h-12 bg-white/5 hover:bg-red-500 hover:text-white text-slate-500 rounded-xl flex items-center justify-center border border-white/10 transition-all">
-                                 <Trash2 size={18}/>
-                               </button>
-                             </div>
-                          </div>
+        <div className="grid grid-cols-1 gap-6">
+          {myBookings.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(booking => {
+              const trainer = allTrainers.find(tr => tr.id === booking.trainerId);
+              const canReview = booking.status === 'completed' && !booking.hasBeenReviewed;
+              return (
+                  <div key={booking.id} className="bg-surface/50 border border-white/10 rounded-[1.5rem] p-6 hover:border-brand/40 transition-all duration-500 group flex flex-col lg:flex-row gap-6 items-start lg:items-center">
+                      <div className="flex items-center gap-6 flex-grow w-full">
+                         <div className="w-16 h-16 rounded-2xl overflow-hidden bg-dark border-2 border-white/10 shrink-0 group-hover:border-brand transition-all duration-700">
+                           <img src={trainer?.image || DEFAULT_PROFILE_IMAGE} className="w-full h-full object-cover" />
+                         </div>
+                         <div className="flex-grow">
+                            <p className="text-[8px] font-black uppercase text-brand italic tracking-widest">{trainer?.specialty || 'ELITE PERSONNEL'}</p>
+                            <h3 className="font-black uppercase italic text-xl text-white tracking-tighter group-hover:text-brand transition-colors">{trainer?.name || 'Unknown Coach'}</h3>
+                            <div className="flex gap-4 pt-2">
+                               <div className="flex items-center gap-2 text-xs font-black uppercase text-slate-400 italic"><Clock size={12} className="text-brand" /> {booking.date} @ {booking.time}</div>
+                               <div className="flex items-center gap-2 text-xs font-black uppercase text-slate-400 italic"><MapPin size={12} className="text-brand" /> VARNA</div>
+                            </div>
+                         </div>
                       </div>
-                  )
-              })}
-            </div>
-        )}
+                      <div className="flex gap-4 w-full lg:w-auto items-center">
+                         <div className="bg-dark/80 p-3 px-6 rounded-xl border border-white/5 flex flex-col items-center justify-center min-w-[120px]">
+                            <p className="text-[7px] font-black uppercase text-slate-600 mb-0.5 tracking-widest">ENTRY PIN</p>
+                            <p className="text-2xl font-black text-brand tracking-widest italic">{booking.checkInCode || 'N/A'}</p>
+                         </div>
+                         <div className="flex gap-2">
+                           {canReview && <button onClick={() => setBookingToReview(booking)} className="px-5 py-3 bg-brand text-dark rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-md">REVIEW</button>}
+                           <a href={`tel:${trainer?.phone}`} className="w-10 h-10 bg-white/5 hover:bg-white hover:text-dark text-white rounded-xl flex items-center justify-center border border-white/10 transition-all"><PhoneCall size={16} /></a>
+                           <button onClick={() => confirmAction({ title: t.deleteBooking, message: t.sure, onConfirm: () => deleteBooking(booking.id) })} className="w-10 h-10 bg-white/5 hover:bg-red-500 hover:text-white text-slate-500 rounded-xl flex items-center justify-center border border-white/10 transition-all"><Trash2 size={16}/></button>
+                         </div>
+                      </div>
+                  </div>
+              )
+          })}
+        </div>
       </div>
-
-      {showEditModal && (
-        <RoleManagementModal 
-          user={currentUser} 
-          onClose={() => setShowEditModal(false)} 
-          onUpdate={async (uid, updates) => await updateUser(uid, updates)} 
-          language={language} 
-          isManagement={isManagement} 
-          isSelf={true}
-        />
-      )}
-      {bookingToReview && (
-        <ReviewModal 
-          booking={bookingToReview} 
-          trainerName={allTrainers.find(tImg => tImg.id === bookingToReview.trainerId)?.name || 'Coach'}
-          onClose={() => setBookingToReview(null)} 
-          onSubmit={handleReviewSubmit} 
-        />
-      )}
+      {showEditModal && <RoleManagementModal user={currentUser} onClose={() => setShowEditModal(false)} onUpdate={async (uid, updates) => await updateUser(uid, updates)} language={language} isManagement={isManagement} isSelf={true} />}
+      {bookingToReview && <ReviewModal booking={bookingToReview} trainerName={allTrainers.find(tImg => tImg.id === bookingToReview.trainerId)?.name || 'Coach'} onClose={() => setBookingToReview(null)} onSubmit={handleReviewSubmit} />}
     </div>
   );
 };

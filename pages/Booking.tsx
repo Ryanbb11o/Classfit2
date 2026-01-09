@@ -152,7 +152,7 @@ const BookingPage: React.FC = () => {
         <>
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
             <div>
-              <h1 className="text-4xl md:text-6xl font-black uppercase italic mb-4 tracking-tighter text-white leading-none">
+              <h1 className="text-4xl md:text-5xl font-black uppercase italic mb-4 tracking-tighter text-white leading-none">
                 ELITE <span className="text-brand">PERSONNEL</span>
               </h1>
               <div className="flex items-center gap-3 bg-white/5 w-fit px-4 py-2 rounded-xl border border-white/10">
@@ -168,7 +168,7 @@ const BookingPage: React.FC = () => {
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {trainers.map((trainer) => (
-              <div key={trainer.id} onClick={() => setSelectedTrainer(trainer)} className="group relative bg-surface rounded-[2rem] overflow-hidden cursor-pointer hover:-translate-y-2 transition-all duration-500 border border-white/5 hover:border-brand/40 shadow-xl">
+              <div key={trainer.id} onClick={() => setSelectedTrainer(trainer)} className="group relative bg-surface rounded-[2rem] overflow-hidden cursor-pointer hover:-translate-y-1 transition-all duration-500 border border-white/5 hover:border-brand/40 shadow-xl">
                 <div className="aspect-[4/5] overflow-hidden relative">
                    <img src={trainer.image} className="w-full h-full object-cover grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" />
                    <div className="absolute inset-0 bg-gradient-to-t from-dark/95 via-dark/10 to-transparent"></div>
@@ -208,7 +208,6 @@ const BookingPage: React.FC = () => {
           </button>
           
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-            {/* LEFT COLUMN: Profile Info */}
             <div className="lg:col-span-4 space-y-6">
                <div className="bg-surface rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl">
                   <div className="relative aspect-square overflow-hidden">
@@ -265,7 +264,6 @@ const BookingPage: React.FC = () => {
                </div>
             </div>
 
-            {/* RIGHT COLUMN: Calendar & Slots */}
             <div className="lg:col-span-8 space-y-8">
                <div className="bg-surface/30 backdrop-blur-md p-8 md:p-10 rounded-[3rem] border border-white/10 shadow-2xl italic">
                   <div className="flex flex-col sm:flex-row justify-between items-center gap-6 mb-10">
@@ -340,45 +338,13 @@ const BookingPage: React.FC = () => {
                              </div>
                              <span className="text-[8px] font-black text-slate-700 uppercase tracking-widest">VERIFIED SQUAD</span>
                           </div>
-                          <p className="text-xs text-slate-400 italic font-medium leading-relaxed group-hover:text-white transition-colors">"Exceptional coaching and discipline. Saw major strength gains in just 4 weeks. Best training in Varna."</p>
+                          <p className="text-xs text-slate-400 italic font-medium leading-relaxed group-hover:text-white transition-colors">"Exceptional coaching and discipline. Saw major strength gains in just 4 weeks."</p>
                        </div>
                      ))}
                   </div>
                </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {showGuestForm && (
-        <div className="fixed inset-0 z-[500] flex items-center justify-center p-6 bg-dark/98 backdrop-blur-md animate-in fade-in duration-500">
-           <div className="bg-[#1a2332] rounded-[2.5rem] p-10 max-w-md w-full border border-white/10 shadow-2xl relative italic">
-              <div className="absolute top-0 left-0 w-full h-1 bg-brand"></div>
-              <button onClick={()=>setShowGuestForm(false)} className="absolute top-8 right-8 p-2 bg-white/5 rounded-full text-slate-500 hover:text-white transition-all"><X size={20}/></button>
-              
-              <div className="mb-10 text-center">
-                 <h2 className="text-3xl font-black uppercase italic text-white tracking-tighter mb-2">IDENTIFICATION</h2>
-                 <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest italic">GUEST CHECK-IN REQUIRED</p>
-              </div>
-
-              <form onSubmit={(e)=>{e.preventDefault(); finalizeBooking(guestName, guestPhone, undefined, guestEmail)}} className="space-y-5">
-                <div className="space-y-1.5">
-                   <label className="text-[10px] font-black uppercase text-slate-600 tracking-widest ml-2">FULL NAME</label>
-                   <input type="text" placeholder="John Doe" required value={guestName} onChange={(e)=>setGuestName(e.target.value)} className="w-full bg-[#131b27] border border-white/10 focus:border-brand rounded-xl px-5 py-4 text-sm font-black text-white outline-none transition-all shadow-inner" />
-                </div>
-                <div className="space-y-1.5">
-                   <label className="text-[10px] font-black uppercase text-slate-600 tracking-widest ml-2">PHONE</label>
-                   <input type="tel" placeholder="+359..." required value={guestPhone} onChange={(e)=>setGuestPhone(e.target.value)} className="w-full bg-[#131b27] border border-white/10 focus:border-brand rounded-xl px-5 py-4 text-sm font-black text-white outline-none transition-all shadow-inner" />
-                </div>
-                <div className="space-y-1.5">
-                   <label className="text-[10px] font-black uppercase text-slate-600 tracking-widest ml-2">EMAIL</label>
-                   <input type="email" placeholder="john@email.com" required value={guestEmail} onChange={(e)=>setGuestEmail(e.target.value)} className="w-full bg-[#131b27] border border-white/10 focus:border-brand rounded-xl px-5 py-4 text-sm font-black text-white outline-none transition-all shadow-inner" />
-                </div>
-                <button type="submit" disabled={isSubmitting} className="w-full py-5 bg-brand text-dark rounded-xl font-black uppercase tracking-widest text-[11px] shadow-xl mt-6 hover:bg-white transition-all transform hover:scale-[1.02]">
-                   {isSubmitting ? <Loader2 className="animate-spin mx-auto" size={24}/> : 'INITIALIZE SESSION'}
-                </button>
-              </form>
-           </div>
         </div>
       )}
     </div>
