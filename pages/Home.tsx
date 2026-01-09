@@ -14,7 +14,6 @@ const Home: React.FC = () => {
 
   return (
     <div className="flex flex-col">
-      {/* CSS for Marquee Animation */}
       <style>{`
         @keyframes scroll {
           0% { transform: translateX(0); }
@@ -25,9 +24,7 @@ const Home: React.FC = () => {
         }
       `}</style>
 
-      {/* Hero Section with Video Background */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Video Background */}
         <div className="absolute inset-0 z-0">
           <video 
             autoPlay 
@@ -37,11 +34,8 @@ const Home: React.FC = () => {
             className="w-full h-full object-cover grayscale opacity-60 scale-105"
             poster="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop"
           >
-            {/* High-intensity lifting and coaching video */}
             <source src="https://videos.pexels.com/video-files/4761612/4761612-hd_1920_1080_25fps.mp4" type="video/mp4" />
-            Your browser does not support the video tag.
           </video>
-          {/* Dark Overlay for Text Readability */}
           <div className="absolute inset-0 bg-gradient-to-t from-dark via-dark/80 to-dark/40"></div>
           <div className="absolute inset-0 bg-dark/30 backdrop-blur-[1px]"></div>
         </div>
@@ -53,21 +47,21 @@ const Home: React.FC = () => {
               </div>
             </Reveal>
             
-            <div className="mb-8 relative w-full max-w-full overflow-hidden">
+            <div className="mb-8 relative w-full max-w-full overflow-hidden flex flex-col items-center">
                 <Reveal delay={100} direction="up">
-                    <h1 className="text-4xl sm:text-7xl md:text-8xl lg:text-[9rem] font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 leading-[0.85] uppercase italic drop-shadow-2xl break-words">
+                    <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 leading-[1.1] sm:leading-[0.85] uppercase italic drop-shadow-2xl break-words max-w-[90vw]">
                         {t.transform}
                     </h1>
                 </Reveal>
                 <Reveal delay={300} direction="up">
-                    <h1 className="text-4xl sm:text-7xl md:text-8xl lg:text-[9rem] font-black tracking-tighter text-brand leading-[0.85] uppercase italic drop-shadow-[0_0_30px_rgba(197,217,45,0.3)] break-words">
+                    <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tighter text-brand leading-[1.1] sm:leading-[0.85] uppercase italic drop-shadow-[0_0_30px_rgba(197,217,45,0.3)] break-words max-w-[90vw]">
                         {t.yourself}
                     </h1>
                 </Reveal>
             </div>
             
             <Reveal delay={500}>
-              <p className="text-base sm:text-lg md:text-2xl text-slate-300 mb-12 font-medium max-w-2xl leading-relaxed italic mx-auto drop-shadow-md px-4">
+              <p className="text-base sm:text-lg md:text-xl text-slate-300 mb-12 font-medium max-w-2xl leading-relaxed italic mx-auto drop-shadow-md px-4">
                 {t.motivation}
               </p>
             </Reveal>
@@ -76,13 +70,13 @@ const Home: React.FC = () => {
               <div className="flex flex-col sm:flex-row gap-4 justify-center px-4 w-full sm:w-auto">
                 <button 
                   onClick={() => navigate('/booking')}
-                  className="w-full sm:w-auto px-8 sm:px-12 py-5 sm:py-6 bg-brand text-dark rounded-full font-black uppercase italic tracking-[0.2em] hover:bg-white hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3 group shadow-[0_0_40px_rgba(197,217,45,0.3)]"
+                  className="w-full sm:w-auto px-10 py-5 bg-brand text-dark rounded-full font-black uppercase italic tracking-[0.2em] hover:bg-white hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3 group shadow-[0_0_40px_rgba(197,217,45,0.3)] text-xs sm:text-sm"
                 >
                   {t.bookNow} <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                 </button>
                 <button 
                   onClick={() => navigate('/memberships')}
-                  className="w-full sm:w-auto px-8 sm:px-12 py-5 sm:py-6 bg-white/5 backdrop-blur-md border border-white/20 text-white rounded-full font-black uppercase italic tracking-[0.2em] hover:bg-white hover:text-dark hover:border-white transition-all duration-300"
+                  className="w-full sm:w-auto px-10 py-5 bg-white/5 backdrop-blur-md border border-white/20 text-white rounded-full font-black uppercase italic tracking-[0.2em] hover:bg-white hover:text-dark hover:border-white transition-all duration-300 text-xs sm:text-sm"
                 >
                   {t.memberships}
                 </button>
@@ -90,7 +84,6 @@ const Home: React.FC = () => {
             </Reveal>
         </div>
 
-        {/* Scroll Indicator */}
         <div className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce opacity-50 hidden sm:block">
            <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center pt-2">
               <div className="w-1 h-2 bg-white rounded-full"></div>
@@ -98,49 +91,47 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* Infinite Marquee Bar */}
       <div className="bg-brand border-y border-white/10 py-3 overflow-hidden relative z-20">
         <div className="flex whitespace-nowrap animate-scroll">
            {[...Array(10)].map((_, i) => (
-              <span key={i} className="text-dark font-black italic uppercase tracking-[0.2em] text-sm mx-8 flex items-center gap-4">
-                 CLASSFIT VARNA <span className="w-2 h-2 bg-dark rounded-full"></span> ELITE TRAINING <span className="w-2 h-2 bg-dark rounded-full"></span> NO EXCUSES <span className="w-2 h-2 bg-dark rounded-full"></span>
+              <span key={i} className="text-dark font-black italic uppercase tracking-[0.2em] text-[10px] mx-8 flex items-center gap-4">
+                 CLASSFIT VARNA <span className="w-1.5 h-1.5 bg-dark rounded-full"></span> ELITE TRAINING <span className="w-1.5 h-1.5 bg-dark rounded-full"></span> NO EXCUSES <span className="w-1.5 h-1.5 bg-dark rounded-full"></span>
               </span>
            ))}
         </div>
       </div>
 
-      {/* Highlights Grid */}
-      <section className="py-24 sm:py-32 bg-surface border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-12 sm:gap-16">
-          <Reveal delay={0} className="h-full">
-            <div className="group h-full">
-              <div className="w-16 h-16 bg-white/5 text-brand rounded-2xl flex items-center justify-center mb-8 shadow-sm group-hover:bg-brand group-hover:text-dark transition-all duration-500 transform group-hover:-translate-y-2">
-                <MapPin size={28} />
+      <section className="py-24 bg-surface border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-12">
+          <Reveal delay={0}>
+            <div className="group">
+              <div className="w-14 h-14 bg-white/5 text-brand rounded-2xl flex items-center justify-center mb-6 group-hover:bg-brand group-hover:text-dark transition-all duration-500">
+                <MapPin size={24} />
               </div>
-              <h3 className="text-xl font-black uppercase italic mb-4 tracking-tight text-white">{t.location}</h3>
-              <p className="text-slate-400 font-medium leading-relaxed italic">{t.locationDesc}</p>
+              <h3 className="text-lg font-black uppercase italic mb-3 text-white tracking-tight">{t.location}</h3>
+              <p className="text-slate-400 text-sm italic font-medium">{t.locationDesc}</p>
             </div>
           </Reveal>
           
-          <Reveal delay={100} className="h-full">
-            <div className="group h-full">
-              <div className="w-16 h-16 bg-white/5 text-brand rounded-2xl flex items-center justify-center mb-8 shadow-sm group-hover:bg-brand group-hover:text-dark transition-all duration-500 transform group-hover:-translate-y-2">
-                <Award size={28} />
+          <Reveal delay={100}>
+            <div className="group">
+              <div className="w-14 h-14 bg-white/5 text-brand rounded-2xl flex items-center justify-center mb-6 group-hover:bg-brand group-hover:text-dark transition-all duration-500">
+                <Award size={24} />
               </div>
-              <h3 className="text-xl font-black uppercase italic mb-4 tracking-tight text-white">{language === 'bg' ? 'ЕКСПЕРТИЗА' : 'EXPERTISE'}</h3>
-              <p className="text-slate-400 font-medium leading-relaxed italic">
+              <h3 className="text-lg font-black uppercase italic mb-3 text-white tracking-tight">{language === 'bg' ? 'ЕКСПЕРТИЗА' : 'EXPERTISE'}</h3>
+              <p className="text-slate-400 text-sm italic font-medium">
                 {language === 'bg' ? 'Най-високо квалифицираните треньори в региона.' : 'Top tier qualified coaches in the region.'}
               </p>
             </div>
           </Reveal>
 
-          <Reveal delay={200} className="h-full">
-            <div className="group h-full">
-              <div className="w-16 h-16 bg-white/5 text-brand rounded-2xl flex items-center justify-center mb-8 shadow-sm group-hover:bg-brand group-hover:text-dark transition-all duration-500 transform group-hover:-translate-y-2">
-                <Users size={28} />
+          <Reveal delay={200}>
+            <div className="group">
+              <div className="w-14 h-14 bg-white/5 text-brand rounded-2xl flex items-center justify-center mb-6 group-hover:bg-brand group-hover:text-dark transition-all duration-500">
+                <Users size={24} />
               </div>
-              <h3 className="text-xl font-black uppercase italic mb-4 tracking-tight text-white">{language === 'bg' ? 'ОБЩНОСТ' : 'COMMUNITY'}</h3>
-              <p className="text-slate-400 font-medium leading-relaxed italic">
+              <h3 className="text-lg font-black uppercase italic mb-3 text-white tracking-tight">{language === 'bg' ? 'ОБЩНОСТ' : 'COMMUNITY'}</h3>
+              <p className="text-slate-400 text-sm italic font-medium">
                 {language === 'bg' ? 'Присъединете се към семейството на ClassFit.' : 'Join the growing ClassFit family.'}
               </p>
             </div>
@@ -148,115 +139,63 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* Location specific section - Varna Levski/Studentska */}
-      <section className="py-24 sm:py-32 bg-dark">
+      <section className="py-24 bg-dark">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="bg-surface rounded-[2rem] sm:rounded-[3rem] border border-white/10 p-8 md:p-16 flex flex-col md:flex-row items-center gap-12 overflow-hidden relative shadow-2xl">
-            <div className="flex-1 relative z-10">
+          <div className="bg-surface rounded-[2.5rem] border border-white/10 p-10 md:p-16 flex flex-col md:flex-row items-center gap-12 shadow-2xl overflow-hidden">
+            <div className="flex-1">
               <Reveal>
-                <div className="text-brand font-black uppercase tracking-[0.3em] text-[11px] mb-4 italic">{t.locationVarna}</div>
-                <h2 className="text-3xl sm:text-4xl md:text-5xl font-black uppercase italic text-white mb-6 leading-none">
+                <div className="text-brand font-black uppercase tracking-[0.3em] text-[10px] mb-4 italic">{t.locationVarna}</div>
+                <h2 className="text-3xl md:text-5xl font-black uppercase italic text-white mb-6 leading-none">
                   {language === 'bg' ? 'В СЪРЦЕТО НА' : 'IN THE HEART OF'} <span className="text-brand">ВАРНА</span>
                 </h2>
-                <p className="text-slate-400 font-medium italic mb-8 leading-relaxed text-sm sm:text-base">
+                <p className="text-slate-400 font-medium italic mb-8 leading-relaxed text-sm">
                   {t.locationDesc}
                 </p>
                 <div className="space-y-4">
-                  {/* Fixed Lucide icons by removing invalid 'sm' prop */}
-                  <div className="flex items-center gap-4 text-white font-black uppercase italic tracking-widest text-[10px] sm:text-[11px]">
-                    <Navigation className="text-brand" size={18} /> {t.address}
+                  <div className="flex items-center gap-4 text-white font-black uppercase italic tracking-widest text-[10px]">
+                    <Navigation className="text-brand" size={16} /> {t.address}
                   </div>
-                  <div className="flex items-center gap-4 text-white font-black uppercase italic tracking-widest text-[10px] sm:text-[11px]">
-                    <MapPin className="text-brand" size={18} /> {t.stop}
+                  <div className="flex items-center gap-4 text-white font-black uppercase italic tracking-widest text-[10px]">
+                    <MapPin className="text-brand" size={16} /> {t.stop}
                   </div>
                 </div>
                 <a 
                   href="https://www.google.com/maps/search/?api=1&query=ClassFit+Varna+Studentska+1A"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 mt-10 px-6 sm:px-8 py-4 bg-white text-dark rounded-full font-black uppercase italic tracking-widest text-[10px] sm:text-[11px] hover:bg-brand transition-colors shadow-lg"
+                  className="inline-flex items-center gap-2 mt-10 px-8 py-4 bg-white text-dark rounded-full font-black uppercase italic tracking-widest text-[10px] hover:bg-brand transition-colors shadow-lg"
                 >
                   {t.viewOnGoogle} <ArrowRight size={14} />
                 </a>
               </Reveal>
             </div>
-            <div className="flex-1 w-full h-[300px] sm:h-[400px] rounded-2xl sm:rounded-3xl overflow-hidden grayscale hover:grayscale-0 transition-all duration-700 border-2 border-white/5 relative group">
+            <div className="flex-1 w-full h-[300px] rounded-3xl overflow-hidden border-2 border-white/5 group">
               <img 
                 src="https://images.unsplash.com/photo-1571902943202-507ec2618e8f?q=80&w=1975&auto=format&fit=crop" 
-                alt="Gym Interior" 
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
+                className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000"
               />
-              <div className="absolute inset-0 bg-dark/40 group-hover:bg-transparent transition-colors"></div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Motivational Accent Section */}
-      <section className="py-24 sm:py-40 bg-dark overflow-hidden relative border-t border-white/5">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center gap-12 sm:gap-20">
-          <div className="flex-1 space-y-8">
-            <Reveal>
-              <h2 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tighter uppercase italic leading-tight text-white" style={{ whiteSpace: 'pre-line' }}>
-                {t.pushBoundaries}
-              </h2>
-            </Reveal>
-            <Reveal delay={100}>
-              <p className="text-sm sm:text-lg text-slate-400 font-medium italic leading-relaxed">
-                {t.pushDesc}
-              </p>
-            </Reveal>
-            <Reveal delay={200}>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                {t.features.map((item: string, i: number) => (
-                  <div key={i} className="flex items-center gap-3 text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-slate-500">
-                     <CheckCircle size={16} className="text-brand" /> {item}
-                  </div>
-                ))}
-              </div>
-            </Reveal>
-          </div>
-          <div className="flex-1 relative w-full">
-             <Reveal delay={300} width="100%">
-               <div className="aspect-square bg-brand rounded-full absolute -top-10 -left-10 w-2/3 h-2/3 blur-[80px] sm:blur-[120px] opacity-10 pointer-events-none"></div>
-               <div className="aspect-[4/3] rounded-2xl sm:rounded-[2.5rem] overflow-hidden shadow-2xl relative z-10 border-4 sm:border-8 border-white/5 group">
-                  <img 
-                    src="https://images.unsplash.com/photo-1593079831268-3381b0db4a77?q=80&w=2069&auto=format&fit=crop" 
-                    alt="Focus" 
-                    className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-dark/20">
-                     {/* Fixed Lucide icon by removing invalid 'sm' prop */}
-                     <div className="w-16 h-16 sm:w-20 h-20 bg-brand text-dark rounded-full flex items-center justify-center">
-                        <Play size={24} fill="currentColor" className="ml-1"/>
-                     </div>
-                  </div>
-               </div>
-             </Reveal>
-          </div>
-        </div>
-      </section>
-
-      {/* Google Reviews Section */}
       <GoogleReviews />
 
-      {/* CTA Section */}
-      <section className="bg-surface py-24 sm:py-32 text-center relative overflow-hidden">
+      <section className="bg-surface py-24 text-center relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-1 bg-brand"></div>
         <div className="max-w-4xl mx-auto px-6 relative z-10">
            <Reveal>
-             <h2 className="text-3xl sm:text-4xl md:text-6xl font-black uppercase italic tracking-tighter text-white mb-10">{t.readyLevel}</h2>
+             <h2 className="text-3xl md:text-5xl font-black uppercase italic tracking-tighter text-white mb-10">{t.readyLevel}</h2>
            </Reveal>
            <Reveal delay={100}>
              <button 
                onClick={() => navigate('/memberships')}
-               className="w-full sm:w-auto px-10 sm:px-16 py-5 sm:py-6 bg-brand text-dark rounded-full font-black uppercase italic tracking-[0.3em] hover:bg-white transition-all duration-300 shadow-2xl shadow-brand/20 hover:scale-105 text-xs sm:text-sm"
+               className="px-12 py-6 bg-brand text-dark rounded-full font-black uppercase italic tracking-[0.3em] hover:bg-white transition-all shadow-2xl text-xs"
              >
                {t.joinClassfit}
              </button>
            </Reveal>
         </div>
-        <div className="absolute inset-0 opacity-5 bg-[radial-gradient(#C5D92D_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none"></div>
       </section>
     </div>
   );

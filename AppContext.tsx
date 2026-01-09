@@ -172,9 +172,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const updateUser = async (id: string, updates: Partial<User>) => {
     const dbUpdates: any = { ...updates };
-    if (updates.commissionRate) { dbUpdates.commission_rate = updates.commissionRate; delete dbUpdates.commissionRate; }
-    if (updates.blockedDates) { dbUpdates.blocked_dates = updates.blockedDates; delete dbUpdates.blockedDates; }
-    if (updates.joinedDate) { dbUpdates.joined_date = updates.joinedDate; delete dbUpdates.joinedDate; }
+    // MAPPING FIX: Map camelCase to snake_case for DB columns
+    if (updates.commissionRate !== undefined) { dbUpdates.commission_rate = updates.commissionRate; delete dbUpdates.commissionRate; }
+    if (updates.blockedDates !== undefined) { dbUpdates.blocked_dates = updates.blockedDates; delete dbUpdates.blockedDates; }
+    if (updates.joinedDate !== undefined) { dbUpdates.joined_date = updates.joinedDate; delete dbUpdates.joinedDate; }
 
     if (isDemoMode) {
         const updatedUsers = users.map(u => u.id === id ? { ...u, ...updates } : u);
@@ -191,7 +192,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const { error } = await supabase.from('users').update(dbUpdates).eq('id', id);
     if (error) {
         console.error("Supabase update error:", error);
-        throw new Error("Failed to update user profile in database.");
+        throw new Error(`Failed to update user profile: ${error.message}`);
     }
     await refreshData();
   };
