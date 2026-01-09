@@ -20,7 +20,7 @@ const BookingPage: React.FC = () => {
         const displayName = match ? match[1] : u.name;
         const displaySpecialty = match ? match[2] : (language === 'bg' ? 'Персонален треньор' : 'Personal Trainer');
         return {
-          id: u.id,
+          id: String(u.id), // FORCE STRING
           name: displayName,
           specialty: displaySpecialty,
           price: 20, 
@@ -46,7 +46,7 @@ const BookingPage: React.FC = () => {
   const [guestEmail, setGuestEmail] = useState('');
 
   const getReviewCount = (trainerId: string) => {
-    return liveReviews.filter(r => r.trainerId === trainerId && r.isPublished).length + 32;
+    return liveReviews.filter(r => String(r.trainerId) === String(trainerId) && r.isPublished).length + 32;
   };
 
   useEffect(() => { if (selectedTrainer) window.scrollTo({ top: 0, behavior: 'smooth' }); }, [selectedTrainer]);
@@ -82,10 +82,10 @@ const BookingPage: React.FC = () => {
     setIsSubmitting(true);
     const bookingId = Math.random().toString(36).substr(2, 9).toUpperCase();
     const newBooking: Booking = {
-      id: bookingId,
+      id: String(bookingId),
       checkInCode: bookingId.substring(0, 6),
-      trainerId: selectedTrainer.id,
-      userId: userId, 
+      trainerId: String(selectedTrainer.id), // ENSURE STRING
+      userId: userId ? String(userId) : undefined, 
       customerName: name,
       customerPhone: phone,
       customerEmail: email,
@@ -272,7 +272,7 @@ const BookingPage: React.FC = () => {
                     </h3>
                     <div className="flex items-center gap-4 bg-dark/60 p-1.5 rounded-xl border border-white/10">
                        <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))} className="p-2 text-slate-500 hover:text-brand transition-colors"><ChevronLeft size={18}/></button>
-                       <span className="text-[10px] font-black uppercase tracking-widest text-white min-w-[150px] text-center">{currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' })}</span>
+                       <span className="text-[10px] font-black uppercase tracking-widest text-white min-w-[1400px] text-center">{currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' })}</span>
                        <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))} className="p-2 text-slate-500 hover:text-brand transition-colors"><ChevronRight size={18}/></button>
                     </div>
                   </div>
@@ -321,26 +321,6 @@ const BookingPage: React.FC = () => {
                          )}
                        </button>
                     </div>
-                  </div>
-               </div>
-
-               <div className="p-10 bg-surface/10 rounded-[3rem] border border-white/10 shadow-xl">
-                  <div className="flex items-center gap-4 mb-10">
-                    <MessageSquare className="text-brand" size={24} />
-                    <h3 className="text-xl font-black uppercase italic text-white tracking-tighter">CLIENT REVIEWS</h3>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                     {[...Array(2)].map((_, i) => (
-                       <div key={i} className="p-6 bg-dark/60 rounded-2xl border border-white/5 space-y-4 shadow-lg group">
-                          <div className="flex justify-between items-start">
-                             <div className="flex gap-1.5 text-brand">
-                                {[...Array(5)].map((_, j) => <Star key={j} size={10} fill="currentColor" />)}
-                             </div>
-                             <span className="text-[8px] font-black text-slate-700 uppercase tracking-widest">VERIFIED SQUAD</span>
-                          </div>
-                          <p className="text-xs text-slate-400 italic font-medium leading-relaxed group-hover:text-white transition-colors">"Exceptional coaching and discipline. Saw major strength gains in just 4 weeks."</p>
-                       </div>
-                     ))}
                   </div>
                </div>
             </div>

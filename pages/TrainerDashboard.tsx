@@ -20,6 +20,8 @@ const TrainerDashboard: React.FC = () => {
     if (!isLoading && (!currentUser || !currentUser.roles?.includes('trainer'))) {
       navigate('/login');
     }
+    // Force refresh on mount to ensure bookings are loaded
+    refreshData();
   }, [currentUser, isLoading]);
 
   const handleRefresh = async () => {
@@ -51,7 +53,12 @@ const TrainerDashboard: React.FC = () => {
     return `https://www.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${startDate}/${endDate}&details=${details}&location=ClassFit+Varna`;
   };
 
-  const myBookings = useMemo(() => bookings.filter(b => b.trainerId === currentUser?.id), [bookings, currentUser]);
+  // STRICT ID COMPARISON: Use String() to ensure IDs match regardless of type (uuid vs string)
+  const myBookings = useMemo(() => {
+    if (!currentUser) return [];
+    return bookings.filter(b => String(b.trainerId) === String(currentUser.id));
+  }, [bookings, currentUser]);
+
   const pendingRequests = useMemo(() => myBookings.filter(b => b.status === 'pending'), [myBookings]);
   const rosterSessions = useMemo(() => myBookings.filter(b => b.status === 'confirmed').sort((a,b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time)), [myBookings]);
 
@@ -97,7 +104,7 @@ const TrainerDashboard: React.FC = () => {
                 <span className={`text-[9px] font-black uppercase ${isSelected ? 'text-brand' : isBlocked ? 'text-red-500/50' : 'text-slate-500'}`}>{i}</span>
                 <div className="flex flex-col gap-1">
                    {isBlocked && <div className="text-[7px] font-black text-red-500 uppercase tracking-tighter bg-red-500/10 px-1 rounded">BLOCKED</div>}
-                   {hasPending && <div className="w-1.5 h-1.5 rounded-full bg-yellow-500"></div>}
+                   {hasPending && <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></div>}
                    {hasConfirmed && <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>}
                 </div>
             </div>
