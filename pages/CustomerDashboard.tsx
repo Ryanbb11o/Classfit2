@@ -93,7 +93,15 @@ const CustomerDashboard: React.FC = () => {
     const staticTrainers = getTrainers(language);
     const dynamicTrainers: Trainer[] = users
       .filter(u => u.roles?.includes('trainer'))
-      .map(u => ({ id: u.id, name: u.name.split('(')[0].trim(), specialty: u.name.match(/\((.*)\)/)?.[1] || t.trainer, price: 20, image: u.image || DEFAULT_PROFILE_IMAGE, phone: u.phone || '', availability: [] }));
+      .map(u => ({ 
+        id: u.id, 
+        name: u.name.split('(')[0].trim(), 
+        specialty: u.name.match(/\((.*)\)/)?.[1] || t.trainer, 
+        price: 20, 
+        image: u.image || DEFAULT_PROFILE_IMAGE, 
+        phone: u.phone || '', 
+        availability: [] 
+      }));
     return [...staticTrainers, ...dynamicTrainers];
   }, [language, users, t]);
 
@@ -121,8 +129,12 @@ const CustomerDashboard: React.FC = () => {
             </div>
             <div>
                 <h1 className="text-3xl font-black uppercase italic text-white mb-2 tracking-tighter">{currentUser.name.split('(')[0].trim()}</h1>
-                <div className="flex flex-wrap gap-2 mb-3">
-                   <span className="text-brand bg-brand/10 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border border-brand/20">{(currentUser.roles?.[0] || 'member').toUpperCase()}</span>
+                <div className="flex flex-wrap gap-2 mb-4">
+                   {currentUser.roles?.map(role => (
+                     <span key={role} className="text-brand bg-brand/10 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border border-brand/20">
+                       {role.toUpperCase()}
+                     </span>
+                   ))}
                    <button onClick={() => setShowEditModal(true)} className="bg-white/5 hover:bg-brand hover:text-dark text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border border-white/10 transition-all flex items-center gap-1.5"><Settings2 size={10} /> {t.profileSettings}</button>
                 </div>
                 
@@ -130,7 +142,7 @@ const CustomerDashboard: React.FC = () => {
                 {currentUser.languages && currentUser.languages.length > 0 && (
                   <div className="flex items-center gap-3">
                      <div className="flex items-center gap-1.5 text-slate-500 font-black uppercase tracking-widest text-[9px]">
-                        <Globe size={10} className="text-brand" /> Spoken:
+                        <Globe size={10} className="text-brand" /> {language === 'bg' ? 'Езици:' : 'Spoken:'}
                      </div>
                      <div className="flex flex-wrap gap-1.5">
                         {currentUser.languages.map(lang => (
@@ -169,7 +181,9 @@ const CustomerDashboard: React.FC = () => {
         ) : (
             myBookings.map(booking => {
                 const trainer = allTrainers.find(tr => tr.id === booking.trainerId);
-                const canReview = (booking.status === 'confirmed' || booking.status === 'completed' || booking.status === 'trainer_completed') && !booking.hasBeenReviewed;
+                // REQUIREMENT: Review button only after status is 'completed' (paid)
+                const canReview = booking.status === 'completed' && !booking.hasBeenReviewed;
+                
                 return (
                     <div key={booking.id} className="bg-surface/50 border border-white/10 rounded-[2.5rem] p-8 hover:border-brand transition-all flex flex-col md:flex-row gap-8 items-start md:items-center">
                         <div className="w-16 h-16 rounded-2xl overflow-hidden bg-dark border border-white/5 shrink-0">
@@ -182,12 +196,22 @@ const CustomerDashboard: React.FC = () => {
                         </div>
                         <div className="text-center p-4 bg-dark/40 rounded-2xl border border-white/5 min-w-[120px]">
                            <p className="text-[9px] font-black uppercase text-slate-600 mb-1">PIN</p>
-                           <p className="text-xl font-black text-white tracking-widest italic">{booking.checkInCode}</p>
+                           <p className="text-xl font-black text-white tracking-widest italic">{booking.checkInCode || 'N/A'}</p>
                         </div>
-                        <div className="flex gap-2">
-                           {canReview && <button onClick={() => setBookingToReview(booking)} className="px-5 py-3 bg-brand text-dark rounded-xl text-[10px] font-black uppercase hover:bg-white transition-all shadow-lg flex items-center gap-2"><Star size={12} fill="currentColor"/> {t.leaveReview}</button>}
-                           {booking.hasBeenReviewed && <span className="px-5 py-3 bg-white/5 text-slate-500 rounded-xl text-[10px] font-black uppercase border border-white/10 italic flex items-center gap-2"><CheckCircle2 size={12} className="text-brand"/> Feedback Sent</span>}
-                           <button onClick={() => confirmAction({ title: t.deleteBooking, message: t.sure, onConfirm: () => deleteBooking(booking.id) })} className="p-3 bg-white/5 hover:text-red-500 rounded-xl transition-all"><Trash2 size={16}/></button>
+                        <div className="flex flex-col gap-2 min-w-[150px]">
+                           {canReview && <button onClick={() => setBookingToReview(booking)} className="w-full px-5 py-3 bg-brand text-dark rounded-xl text-[10px] font-black uppercase hover:bg-white transition-all shadow-lg flex items-center justify-center gap-2"><Star size={12} fill="currentColor"/> {t.leaveReview}</button>}
+                           {booking.hasBeenReviewed && <span className="w-full px-5 py-3 bg-white/5 text-slate-500 rounded-xl text-[10px] font-black uppercase border border-white/10 italic flex items-center justify-center gap-2"><CheckCircle2 size={12} className="text-brand"/> Feedback Sent</span>}
+                           
+                           <div className="flex gap-2">
+                             <div className={`flex-grow px-3 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest text-center border ${
+                               booking.status === 'completed' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 
+                               booking.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' : 
+                               'bg-white/5 text-slate-500 border-white/10'
+                             }`}>
+                               {booking.status.replace('_', ' ')}
+                             </div>
+                             <button onClick={() => confirmAction({ title: t.deleteBooking, message: t.sure, onConfirm: () => deleteBooking(booking.id) })} className="p-3 bg-white/5 hover:text-red-500 rounded-xl transition-all border border-white/10"><Trash2 size={16}/></button>
+                           </div>
                         </div>
                     </div>
                 )

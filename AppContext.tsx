@@ -113,7 +113,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       if (bData) setBookings(bData.map((b: any) => ({
           ...b,
           id: String(b.id),
-          checkInCode: b.check_in_code || '', // CRITICAL FIX: Explicit mapping
+          checkInCode: b.check_in_code || '', 
           trainerId: String(b.trainer_id),
           userId: b.user_id ? String(b.user_id) : undefined,
           customerName: b.customer_name || 'Unknown',
@@ -122,6 +122,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           date: b.booking_date || '',
           time: b.booking_time || '',
           price: Number(b.price || 0),
+          status: b.status,
           hasBeenReviewed: b.has_been_reviewed || false
       })));
 
@@ -136,7 +137,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       
       // 3. Fetch Users
       const { data: uData } = await supabase.from('users').select('*').order('joined_date', { ascending: false });
-      if (uData) setUsers(uData.map((u: any) => {
+      if (uData) {
+        const mappedUsers = uData.map((u: any) => {
           let roles: UserRole[] = u.roles || (u.role ? [u.role as UserRole] : ['user']);
           if (u.email === MASTER_EMAIL) roles = Array.from(new Set([...roles, 'management', 'admin']));
           return {
@@ -152,7 +154,20 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             languages: u.languages || ['Bulgarian'],
             bio: u.bio || ''
           };
-      }));
+        });
+        setUsers(mappedUsers);
+
+        // Update current user from fresh data if they are logged in
+        const currentStoredUser = localStorage.getItem('classfit_user');
+        if (currentStoredUser) {
+           const parsed = JSON.parse(currentStoredUser);
+           const freshSelf = mappedUsers.find(u => u.id === parsed.id);
+           if (freshSelf) {
+             setCurrentUser(freshSelf);
+             localStorage.setItem('classfit_user', JSON.stringify(freshSelf));
+           }
+        }
+      }
     } catch (e) {
       console.error("Refresh failed:", e);
     }
@@ -165,24 +180,20 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       delete dbUpdates.commissionRate;
     }
 
-    const prevUsers = [...users];
-    const updatedUsers = users.map(u => u.id === id ? { ...u, ...updates } : u);
-    setUsers(updatedUsers);
-    
-    if (currentUser?.id === id) {
-      const newUser = { ...currentUser, ...updates };
-      setCurrentUser(newUser);
-      localStorage.setItem('classfit_user', JSON.stringify(newUser));
-    }
-
     if (isDemoMode) {
+        const updatedUsers = users.map(u => u.id === id ? { ...u, ...updates } : u);
+        setUsers(updatedUsers);
+        if (currentUser?.id === id) {
+          const newUser = { ...currentUser, ...updates };
+          setCurrentUser(newUser);
+          localStorage.setItem('classfit_user', JSON.stringify(newUser));
+        }
         localStorage.setItem('classfit_users', JSON.stringify(updatedUsers));
         return;
     }
 
     const { error } = await supabase.from('users').update(dbUpdates).eq('id', id);
     if (error) {
-        setUsers(prevUsers);
         alert("Failed to update user profile in database.");
         return;
     }
@@ -191,24 +202,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const updateBooking = async (id: string, updates: Partial<Booking>) => {
     const dbUpdates: any = { ...updates };
-    // Handle mapping for camelCase fields to snake_case in DB
     if (updates.checkInCode) { dbUpdates.check_in_code = updates.checkInCode; delete dbUpdates.checkInCode; }
     if (updates.hasBeenReviewed !== undefined) { dbUpdates.has_been_reviewed = updates.hasBeenReviewed; delete dbUpdates.hasBeenReviewed; }
 
-    const previousBookings = [...bookings];
-    const newBookings = bookings.map(b => b.id === id ? { ...b, ...updates } : b);
-    setBookings(newBookings);
-
     if (isDemoMode) {
+      const newBookings = bookings.map(b => b.id === id ? { ...b, ...updates } : b);
+      setBookings(newBookings);
       localStorage.setItem('classfit_bookings', JSON.stringify(newBookings));
       return;
     }
 
     const { error } = await supabase.from('bookings').update(dbUpdates).eq('id', id);
-    if (error) {
-       setBookings(previousBookings); 
-       return;
-    }
+    if (error) return;
     await refreshData();
   };
 
@@ -304,11 +309,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const addBooking = async (booking: Booking) => {
     if (isDemoMode) {
       setBookings([booking, ...bookings]);
+      localStorage.setItem('classfit_bookings', JSON.stringify([booking, ...bookings]));
       return;
     }
     const { error } = await supabase.from('bookings').insert([{
       id: booking.id, 
-      check_in_code: booking.checkInCode, // Ensure snake_case for Supabase
+      check_in_code: booking.checkInCode, 
       trainer_id: booking.trainerId, 
       user_id: booking.userId,
       customer_name: booking.customerName, 
@@ -323,7 +329,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       gym_address: GYM_ADDRESS
     }]);
     if (error) throw error;
-    await refreshData(); // Auto-updates all components including Profile
+    await refreshData(); 
   };
 
   const deleteBooking = async (id: string) => {
